@@ -820,24 +820,28 @@ export default function App() {
 
           <div className="group">
             <label htmlFor="delay">시작 전 대기</label>
-            <div className="time-inputs">
-              <input
-                id="delay"
-                type="number"
-                min="0"
-                max="60"
-                step="1"
-                value={delay}
-                onChange={(e) => setDelay(e.target.value)}
-              />
-              <span className="unit">초</span>
-              <button className="btn small savePresetBtn" onClick={savePreset}>
-                💾 현재 설정 저장
-              </button>
+            <div className="delayGrid">
+              <div className="time-inputs">
+                <input
+                  id="delay"
+                  type="number"
+                  min="0"
+                  max="60"
+                  step="1"
+                  value={delay}
+                  onChange={(e) => setDelay(e.target.value)}
+                />
+                <span className="unit">초</span>
+              </div>
+              <div className="actionCol">
+                <button className="btn savePresetBtn" onClick={savePreset}>
+                  💾 현재 설정 저장
+                </button>
+                <button className="btn ghost resetAllBtn" onClick={resetAll}>
+                  🧹 전체 초기화
+                </button>
+              </div>
             </div>
-            <button className="btn ghost small resetAllBtn" onClick={resetAll}>
-              🧹 전체 초기화
-            </button>
           </div>
 
           <div className="group">

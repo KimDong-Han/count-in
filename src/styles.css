@@ -36,9 +36,11 @@ h1{font-size:20px;font-weight:800;letter-spacing:-.01em;line-height:1.2}
 h1 .accent{color:var(--glow)}
 .sub{color:var(--muted);font-size:12.5px;margin-top:6px;line-height:1.5}
 
-/* '시작 전 대기' 줄 오른쪽 빈 공간에 저장 버튼 */
-.savePresetBtn{margin-left:auto;box-shadow:none;white-space:nowrap}
-.resetAllBtn{align-self:flex-start;white-space:nowrap}
+/* '시작 전 대기': 왼쪽 입력 + 오른쪽에 저장/초기화 세로 스택 */
+.delayGrid{display:flex;align-items:flex-start;gap:10px}
+.actionCol{margin-left:auto;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.actionCol .btn{white-space:nowrap;box-shadow:none;font-size:13px;padding:9px 12px}
+.actionCol .resetAllBtn{font-size:12px;padding:7px 12px}
 
 /* 저장한 곡 프리셋 */
 .presets{background:#161232;border:1px solid var(--line);border-radius:14px;padding:12px 12px 13px}
