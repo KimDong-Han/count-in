@@ -91,6 +91,7 @@ export function useYouTube(){
     mute: useCallback(() => call('mute'), []),
     unMute: useCallback(() => call('unMute'), []),
     setVolume: useCallback((v) => call('setVolume', v), []),
+    setRate: useCallback((r) => call('setPlaybackRate', r), []),
     loadVideoById: useCallback((id) => call('loadVideoById', id), []),
     getTime: useCallback(() => call('getCurrentTime') || 0, []),
     getDuration: useCallback(() => call('getDuration') || 0, []),

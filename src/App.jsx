@@ -19,6 +19,7 @@ export default function App(){
   const [url, setUrl] = useState('')
   const [delay, setDelay] = useState(4)
   const [volume, setVolume] = useState(80)
+  const [rate, setRate] = useState(1)                      // 재생 속도 0.5 | 0.75 | 1
   const [soundMode, setSoundMode] = useState('stick')     // 'stick' | 'beep' | 'off'
   const [flipMode, setFlipMode] = useState('cue')          // 'cue' | 'interval' | 'even'
   const [ivMin, setIvMin] = useState(0)
@@ -41,6 +42,7 @@ export default function App(){
   const cuesRef = useRef([])          // parseTime 적용된 숫자 배열
   const cueTextRef = useRef([])
   const volumeRef = useRef(volume)
+  const rateRef = useRef(rate)
   const soundModeRef = useRef(soundMode)
   const loopRef = useRef(loopOn)
   const ivRef = useRef({ m: 0, s: 20 })
@@ -58,6 +60,7 @@ export default function App(){
   useEffect(() => { totalRef.current = pdf.total }, [pdf.total])
   useEffect(() => { flipModeRef.current = flipMode }, [flipMode])
   useEffect(() => { volumeRef.current = volume }, [volume])
+  useEffect(() => { rateRef.current = rate; if(armedRef.current) yt.setRate(rate) }, [rate]) // eslint-disable-line
   useEffect(() => { soundModeRef.current = soundMode }, [soundMode])
   useEffect(() => { loopRef.current = loopOn }, [loopOn])
   useEffect(() => { ivRef.current = { m: ivMin, s: ivSec } }, [ivMin, ivSec])
@@ -243,7 +246,7 @@ export default function App(){
     const preset = {
       id: 'p' + Date.now(),
       name: trimmed,
-      url, delay, volume, soundMode, flipMode, ivMin, ivSec, loopOn,
+      url, delay, volume, rate, soundMode, flipMode, ivMin, ivSec, loopOn,
       cues: cueTextRef.current.slice(),
       pageCount: pdf.total,
     }
@@ -261,6 +264,7 @@ export default function App(){
     setUrl(p.url ?? '')
     setDelay(p.delay ?? 4)
     setVolume(p.volume ?? 80)
+    setRate(p.rate ?? 1); rateRef.current = p.rate ?? 1
     setSoundMode(p.soundMode ?? 'stick'); soundModeRef.current = p.soundMode ?? 'stick'
     setFlipMode(p.flipMode ?? 'cue'); flipModeRef.current = p.flipMode ?? 'cue'
     setIvMin(p.ivMin ?? 0); setIvSec(p.ivSec ?? 20); ivRef.current = { m: p.ivMin ?? 0, s: p.ivSec ?? 20 }
@@ -295,6 +299,7 @@ export default function App(){
     pdf.show(1)
     buildSchedule()               // duration 확보 후 스케줄 계산
     yt.seek(0); yt.unMute(); yt.setVolume(volumeRef.current); yt.play()
+    yt.setRate(rateRef.current)
     startFollowing()
   }, [pdf, buildSchedule, yt, startFollowing])
 
@@ -530,6 +535,16 @@ export default function App(){
               <input id="vol" type="range" min="0" max="100" value={volume}
                      onChange={e => setVolume(parseInt(e.target.value, 10))} />
               <span className="vol-val">{volume}%</span>
+            </div>
+          </div>
+
+          <div className="group">
+            <label>재생 속도</label>
+            <div className="seg">
+              {[[0.5, '0.5배'], [0.75, '0.75배'], [1, '원속']].map(([r, t]) => (
+                <button key={r} type="button" className={rate === r ? 'active' : ''}
+                        onClick={() => { setRate(r); rateRef.current = r; yt.setRate(r) }}>{t}</button>
+              ))}
             </div>
           </div>
 
