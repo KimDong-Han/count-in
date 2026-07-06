@@ -1033,6 +1033,9 @@ export default function App() {
           >
             {focus ? "↙ 설정 보기" : "⤢ 악보 크게"}
           </button>
+          <span className="kbhint">
+            <b>Space</b> 시작/일시정지 · <b>←/→</b> 페이지 넘기기(설정한 시간에 자동 시작)
+          </span>
           <div className="spacer"></div>
           <div className="page-ind">
             <b>{pdf.total ? pdf.pageNum : "–"}</b> / {pdf.total || "–"}

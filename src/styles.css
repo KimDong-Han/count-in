@@ -167,6 +167,8 @@ input[type=range]::-moz-range-thumb{
 
 .navbar{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
 .navbar .spacer{flex:1}
+.kbhint{font-size:11px;color:var(--muted);line-height:1.35;margin-left:4px}
+.kbhint b{color:var(--ink);font-weight:600;font-size:11px}
 /* 상단 조작 버튼은 작게 — 악보 영역을 최대한 확보 */
 .navbar .btn{padding:7px 13px;font-size:13px;border-radius:9px;box-shadow:none}
 .page-ind{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
