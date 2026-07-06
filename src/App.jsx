@@ -348,7 +348,13 @@ export default function App() {
     setMsg(
       extractId(url)
         ? { text: '"' + trimmed + '" 설정을 저장했어요.', kind: "ok" }
-        : { text: '"' + trimmed + '" 저장됨 · 유튜브 링크가 비어 있어서 링크는 저장되지 않았어요.', kind: "err" },
+        : {
+            text:
+              '"' +
+              trimmed +
+              '" 저장됨 · 유튜브 링크가 비어 있어서 링크는 저장되지 않았어요.',
+            kind: "err",
+          },
     );
   };
   const loadPreset = (p) => {
@@ -534,7 +540,8 @@ export default function App() {
     yt.ensure(ytInnerRef.current, id, {
       onReady: () => {
         applyVolume();
-        if (preLoadRef.current) primePlayer(id); // 미리 재생(버퍼) 준비
+        if (preLoadRef.current)
+          primePlayer(id); // 미리 재생(버퍼) 준비
         else yt.cueById(id); // 준비만, 재생은 카운트 후에
         runCountdown(secs);
       },
@@ -708,7 +715,7 @@ export default function App() {
           </h1>
           <p className="sub">
             유튜브 반주와 악보 PDF를 넣고, 각 쪽 넘길 시각을 정해두면 그 시각에
-            딱딱 넘어가요.
+            넘어가요.
           </p>
         </header>
 
@@ -728,7 +735,11 @@ export default function App() {
                     <button
                       className="presetLoad"
                       onClick={() => loadPreset(p)}
-                      title={p.url ? "불러오기 · " + p.url : "불러오기 · ⚠ 저장된 링크 없음"}
+                      title={
+                        p.url
+                          ? "불러오기 · " + p.url
+                          : "불러오기 · ⚠ 저장된 링크 없음"
+                      }
                     >
                       {p.name}
                     </button>
@@ -900,7 +911,7 @@ export default function App() {
             <label>카운트 소리</label>
             <div className="seg">
               {[
-                ["stick", "딱딱"],
+                ["stick", "탁탁"],
                 ["beep", "삑삑"],
                 ["off", "끄기"],
               ].map(([k, t]) => (
