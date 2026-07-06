@@ -668,6 +668,29 @@ export default function App() {
     }
   };
 
+  // ↑↓ 볼륨 조절
+  const nudgeVolume = (delta) => {
+    setVolume((v) => {
+      const nv = Math.max(0, Math.min(100, v + delta));
+      volumeRef.current = nv;
+      if (armedRef.current) {
+        yt.unMute();
+        yt.setVolume(nv);
+      }
+      return nv;
+    });
+  };
+  // 숫자키: 해당 쪽으로 바로 이동 (재생 중엔 그 쪽에 설정된 시각이 있어야 반주도 따라가며 유지됨)
+  const goToPage = (n) => {
+    if (totalRef.current === 0) return;
+    const target = Math.max(1, Math.min(totalRef.current, n));
+    const pt = pageTimesRef.current;
+    if (armedRef.current && isFinite(pt[target - 1])) {
+      yt.seek(pt[target - 1] || 0);
+    }
+    pdf.show(target);
+  };
+
   // ---- 키보드 ----
   const kbRef = useRef({});
   kbRef.current = {
@@ -676,6 +699,8 @@ export default function App() {
     tap,
     stopPlayback,
     cancelCountdown,
+    nudgeVolume,
+    goToPage,
     overlayOpen: countText != null,
   };
   useEffect(() => {
@@ -693,12 +718,25 @@ export default function App() {
         h.jump(1);
       } else if (e.code === "ArrowLeft") {
         h.jump(-1);
+      } else if (e.code === "ArrowUp") {
+        e.preventDefault();
+        h.nudgeVolume(5);
+      } else if (e.code === "ArrowDown") {
+        e.preventDefault();
+        h.nudgeVolume(-5);
       } else if (e.code === "KeyM") {
         h.tap();
       } else if (e.code === "Enter") {
         if (totalRef.current > 0) setFocus((f) => !f);
       } else if (e.code === "Escape") {
         h.stopPlayback();
+      } else {
+        const m = e.code.match(/^(?:Digit|Numpad)([0-9])$/);
+        if (m) {
+          const d = parseInt(m[1], 10);
+          if (d === 0) h.stopPlayback(); // 0 = 처음으로
+          else h.goToPage(d); // 1~9 = 해당 쪽
+        }
       }
     };
     window.addEventListener("keydown", onKey);
@@ -1061,7 +1099,7 @@ export default function App() {
             {focus ? "↙ 설정 보기" : "⤢ 악보 크게"}
           </button>
           <span className="kbhint">
-            <b>Space</b> 시작/일시정지 · <b>←/→</b> 페이지 넘기기(설정한 시간에 자동 시작) · <b>Enter</b> 크게보기 · <b>Esc</b> 처음으로
+            <b>Space</b> 재생 · <b>←→</b> 페이지 · <b>↑↓</b> 볼륨 · <b>1~9</b> 해당 쪽(시간 입력 시) · <b>Enter</b> 크게 · <b>0/Esc</b> 처음
           </span>
           <div className="spacer"></div>
           <div className="page-ind">
