@@ -397,6 +397,24 @@ export default function App() {
     persistPresets(presets.filter((p) => p.id !== id));
   };
 
+  // 저장한 곡(프리셋)만 남기고 나머지 전부 기본값으로 초기화
+  const resetAll = () => {
+    if (!window.confirm("저장한 곡은 그대로 두고, 링크·악보·타이밍·설정을 모두 초기화할까요?")) return;
+    stopPlayback();
+    setUrl("");
+    setDelay(4);
+    setVolume(80);
+    setRate(1); rateRef.current = 1;
+    setSoundMode("stick"); soundModeRef.current = "stick";
+    setFlipMode("cue"); flipModeRef.current = "cue";
+    setIvMin(0); setIvSec(20); ivRef.current = { m: 0, s: 20 };
+    setLoopOn(false); loopRef.current = false;
+    setPreLoad(true); preLoadRef.current = true;
+    setCueText([]); recomputeCues([]); setTapCursor(0);
+    pdf.reset();
+    setMsg({ text: "저장한 곡을 뺀 나머지를 초기화했어요.", kind: "ok" });
+  };
+
   // ---- 재생 흐름 ----
   const applyVolume = useCallback(() => {
     yt.unMute();
@@ -817,6 +835,9 @@ export default function App() {
                 💾 현재 설정 저장
               </button>
             </div>
+            <button className="btn ghost small resetAllBtn" onClick={resetAll}>
+              🧹 전체 초기화
+            </button>
           </div>
 
           <div className="group">

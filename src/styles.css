@@ -38,6 +38,7 @@ h1 .accent{color:var(--glow)}
 
 /* '시작 전 대기' 줄 오른쪽 빈 공간에 저장 버튼 */
 .savePresetBtn{margin-left:auto;box-shadow:none;white-space:nowrap}
+.resetAllBtn{align-self:flex-start;white-space:nowrap}
 
 /* 저장한 곡 프리셋 */
 .presets{background:#161232;border:1px solid var(--line);border-radius:14px;padding:12px 12px 13px}

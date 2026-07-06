@@ -58,5 +58,18 @@ export function usePdf(canvasRef, stageRef){
     renderPage(num)
   }, [renderPage])
 
-  return { total, pageNum, pageNumRef, load, show, renderPage, pdfRef }
+  const reset = useCallback(() => {
+    if(renderTaskRef.current){ try{ renderTaskRef.current.cancel() }catch(e){} }
+    pdfRef.current = null
+    pageNumRef.current = 1
+    setTotal(0)
+    setPageNum(1)
+    const canvas = canvasRef.current
+    if(canvas){
+      const ctx = canvas.getContext('2d')
+      if(ctx) ctx.clearRect(0, 0, canvas.width, canvas.height)
+    }
+  }, [canvasRef])
+
+  return { total, pageNum, pageNumRef, load, show, renderPage, reset, pdfRef }
 }
