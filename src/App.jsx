@@ -25,6 +25,7 @@ export default function App() {
   const [ivMin, setIvMin] = useState(0);
   const [ivSec, setIvSec] = useState(20);
   const [loopOn, setLoopOn] = useState(false);
+  const [preLoad, setPreLoad] = useState(true); // 카운트다운 동안 미리 재생(버퍼) 준비
   const [cueText, setCueText] = useState([]); // 문자열 배열 (길이 total-1)
   const [armed, setArmed] = useState(false); // 시작 눌러 재생/준비 중
   const [isPlaying, setIsPlaying] = useState(false);
@@ -53,6 +54,7 @@ export default function App() {
   const rateRef = useRef(rate);
   const soundModeRef = useRef(soundMode);
   const loopRef = useRef(loopOn);
+  const preLoadRef = useRef(preLoad);
   const ivRef = useRef({ m: 0, s: 20 });
   const armedRef = useRef(false);
   const tapCursorRef = useRef(0);
@@ -84,6 +86,9 @@ export default function App() {
   useEffect(() => {
     loopRef.current = loopOn;
   }, [loopOn]);
+  useEffect(() => {
+    preLoadRef.current = preLoad;
+  }, [preLoad]);
   useEffect(() => {
     ivRef.current = { m: ivMin, s: ivSec };
   }, [ivMin, ivSec]);
@@ -319,6 +324,7 @@ export default function App() {
       ivMin,
       ivSec,
       loopOn,
+      preLoad,
       cues: cueTextRef.current.slice(),
       pageCount: pdf.total,
     };
@@ -339,7 +345,11 @@ export default function App() {
         );
       } catch (e) {}
     }
-    setMsg({ text: '"' + trimmed + '" 설정을 저장했어요.', kind: "ok" });
+    setMsg(
+      extractId(url)
+        ? { text: '"' + trimmed + '" 설정을 저장했어요.', kind: "ok" }
+        : { text: '"' + trimmed + '" 저장됨 · 유튜브 링크가 비어 있어서 링크는 저장되지 않았어요.', kind: "err" },
+    );
   };
   const loadPreset = (p) => {
     stopPlayback();
@@ -357,6 +367,9 @@ export default function App() {
     ivRef.current = { m: p.ivMin ?? 0, s: p.ivSec ?? 20 };
     setLoopOn(!!p.loopOn);
     loopRef.current = !!p.loopOn;
+    const pl = p.preLoad ?? true;
+    setPreLoad(pl);
+    preLoadRef.current = pl;
     const cues = Array.isArray(p.cues) ? p.cues.slice() : [];
     setCueText(cues);
     recomputeCues(cues);
@@ -521,7 +534,8 @@ export default function App() {
     yt.ensure(ytInnerRef.current, id, {
       onReady: () => {
         applyVolume();
-        primePlayer(id);
+        if (preLoadRef.current) primePlayer(id); // 미리 재생(버퍼) 준비
+        else yt.cueById(id); // 준비만, 재생은 카운트 후에
         runCountdown(secs);
       },
       onState,
@@ -714,7 +728,7 @@ export default function App() {
                     <button
                       className="presetLoad"
                       onClick={() => loadPreset(p)}
-                      title="불러오기"
+                      title={p.url ? "불러오기 · " + p.url : "불러오기 · ⚠ 저장된 링크 없음"}
                     >
                       {p.name}
                     </button>
@@ -737,7 +751,21 @@ export default function App() {
 
         <div className="controls">
           <div className="group grow">
-            <label htmlFor="url">유튜브 반주 링크</label>
+            <div className="labelRow">
+              <label htmlFor="url">유튜브 반주 링크</label>
+              <label
+                className="miniToggle"
+                title="미리 재생 준비: 카운트다운 동안 반주를 음소거로 잠깐 돌려 버퍼링을 풀어두고 0:00으로 되감아둬요. 끄면 카운트 후 바로 재생(맨 앞이 살짝 끊길 수 있어요)."
+              >
+                <input
+                  type="checkbox"
+                  checked={preLoad}
+                  onChange={(e) => setPreLoad(e.target.checked)}
+                />
+                <span className="miniBox"></span>
+                <span className="miniTxt">미리 재생</span>
+              </label>
+            </div>
             <input
               id="url"
               type="text"
