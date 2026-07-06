@@ -677,6 +677,8 @@ export default function App() {
         h.jump(-1);
       } else if (e.code === "KeyM") {
         h.tap();
+      } else if (e.code === "Enter") {
+        if (totalRef.current > 0) setFocus((f) => !f);
       } else if (e.code === "Escape") {
         h.stopPlayback();
       }
@@ -1034,7 +1036,7 @@ export default function App() {
             {focus ? "↙ 설정 보기" : "⤢ 악보 크게"}
           </button>
           <span className="kbhint">
-            <b>Space</b> 시작/일시정지 · <b>←/→</b> 페이지 넘기기(설정한 시간에 자동 시작)
+            <b>Space</b> 시작/일시정지 · <b>←/→</b> 페이지 넘기기(설정한 시간에 자동 시작) · <b>Enter</b> 크게보기 · <b>Esc</b> 처음으로
           </span>
           <div className="spacer"></div>
           <div className="page-ind">
