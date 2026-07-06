@@ -1,0 +1,246 @@
+:root{
+  --night:#12102a;
+  --night-2:#1c1840;
+  --panel:#211c4d;
+  --ink:#f3f0ff;
+  --muted:#a49dd6;
+  --glow:#ffca5f;
+  --glow-soft:#ffdd94;
+  --line:#3a3470;
+  --accent:#8b7bff;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{min-height:100%;height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue","Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(139,123,255,.22), transparent 60%),
+    radial-gradient(900px 500px at 80% 110%, rgba(255,202,95,.08), transparent 55%),
+    var(--night);
+  color:var(--ink);
+  min-height:100vh;
+}
+/* 2단 레이아웃: 왼쪽 컨트롤 사이드바 + 오른쪽 악보 메인 */
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{
+  flex:0 0 320px;width:320px;height:100vh;overflow-y:auto;
+  padding:16px 16px 24px;border-right:1px solid var(--line);
+  background:linear-gradient(180deg,var(--night-2),rgba(33,28,77,.7));
+  display:flex;flex-direction:column;gap:14px;
+}
+.main{flex:1;min-width:0;height:100vh;display:flex;flex-direction:column;padding:14px 18px 12px}
+
+header{margin-bottom:2px}
+.eyebrow{font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+h1{font-size:20px;font-weight:800;letter-spacing:-.01em;line-height:1.2}
+h1 .accent{color:var(--glow)}
+.sub{color:var(--muted);font-size:12.5px;margin-top:6px;line-height:1.5}
+
+/* '시작 전 대기' 줄 오른쪽 빈 공간에 저장 버튼 */
+.savePresetBtn{margin-left:auto;box-shadow:none;white-space:nowrap}
+
+/* 저장한 곡 프리셋 */
+.presets{background:#161232;border:1px solid var(--line);border-radius:14px;padding:12px 12px 13px}
+.presetsHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.presetsHead span{font-size:12px;color:var(--muted);letter-spacing:.02em}
+.presetsEmpty{font-size:12px;color:#6b649c;line-height:1.5}
+.presetsHint{font-size:12px;color:var(--glow-soft);opacity:.85;margin-top:9px;line-height:1.5}
+.presetList{display:flex;flex-wrap:wrap;gap:8px}
+.presetChip{display:flex;align-items:stretch;background:#100e26;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.presetChip:hover{border-color:var(--accent)}
+.presetLoad{background:transparent;border:none;color:var(--ink);font-size:13px;padding:7px 10px;cursor:pointer;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.presetLoad:hover{color:var(--glow)}
+.presetDel{background:transparent;border:none;border-left:1px solid var(--line);color:var(--muted);font-size:15px;line-height:1;padding:0 9px;cursor:pointer}
+.presetDel:hover{color:#ff9db0}
+
+/* 사이드바 안에서는 컨트롤을 세로로 쌓는다 */
+.controls{display:flex;flex-direction:column;gap:14px}
+.group{display:flex;flex-direction:column;gap:8px}
+.group.grow{min-width:0}
+.group label{font-size:12px;color:var(--muted)}
+
+input[type=text]{
+  width:100%;background:#100e26;border:1px solid var(--line);border-radius:10px;
+  color:var(--ink);font-size:15px;padding:12px 14px;transition:border-color .15s, box-shadow .15s;
+}
+input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,123,255,.22)}
+input::placeholder{color:#6b649c}
+
+.time-inputs{display:flex;align-items:center;gap:6px}
+.time-inputs input{
+  width:64px;text-align:center;background:#100e26;border:1px solid var(--line);border-radius:10px;
+  color:var(--ink);font-size:15px;padding:11px 8px;
+}
+.time-inputs input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,123,255,.22)}
+.time-inputs .unit{color:var(--muted);font-size:13px}
+
+.upload{
+  display:inline-flex;align-items:center;gap:8px;background:#100e26;border:1px dashed var(--line);
+  border-radius:10px;color:var(--muted);font-size:14px;padding:12px 16px;cursor:pointer;
+  transition:border-color .15s,color .15s;white-space:nowrap;
+}
+.upload:hover{border-color:var(--accent);color:var(--ink)}
+.upload input{display:none}
+
+.seg{display:flex;gap:6px;background:#100e26;border:1px solid var(--line);border-radius:10px;padding:5px}
+.seg button{
+  border:none;background:transparent;color:var(--muted);font-size:13px;padding:8px 12px;
+  border-radius:7px;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;
+}
+.seg button.active{background:var(--accent);color:#fff;font-weight:600}
+.seg button:hover:not(.active){color:var(--ink)}
+
+.slider-row{display:flex;align-items:center;gap:12px;min-width:200px}
+.slider-row .vol-icon{font-size:17px;width:20px;text-align:center}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;flex:1;height:6px;border-radius:999px;
+  background:linear-gradient(90deg,var(--accent),var(--glow));outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;
+  background:#fff;border:2px solid var(--glow);box-shadow:0 2px 8px rgba(0,0,0,.4);cursor:pointer;
+}
+input[type=range]::-moz-range-thumb{
+  width:18px;height:18px;border-radius:50%;border:2px solid var(--glow);background:#fff;cursor:pointer;
+}
+.vol-val{width:42px;text-align:right;color:var(--ink);font-size:13px;font-variant-numeric:tabular-nums}
+
+.switch-mini{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
+.switch-mini input{position:absolute;opacity:0}
+.switch-mini .box{
+  width:44px;height:26px;border-radius:999px;background:#100e26;border:1px solid var(--line);
+  position:relative;transition:background .15s;
+}
+.switch-mini .box::after{
+  content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
+  background:#fff;transition:transform .18s;
+}
+.switch-mini input:checked + .box{background:var(--accent);border-color:var(--accent)}
+.switch-mini input:checked + .box::after{transform:translateX(18px)}
+.switch-mini span{font-size:13px;color:var(--ink)}
+
+/* cue panel (사이드바 안) */
+.cuePanel{
+  background:#161232;border:1px solid var(--line);border-radius:14px;padding:14px;
+}
+.cueHead{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.cueDesc{font-size:12.5px;color:var(--muted);line-height:1.55}
+.cueDesc b{color:var(--ink)}
+.cueDesc code{background:#100e26;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--glow-soft);font-size:12px}
+.cueDesc kbd{background:#100e26;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--ink);font-size:11px}
+.cueActions{display:flex;gap:8px;flex-shrink:0}
+.cueRows{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;max-height:150px;overflow:auto;padding-right:4px}
+.cueRow{
+  display:flex;align-items:center;gap:8px;background:#100e26;border:1px solid var(--line);
+  border-radius:10px;padding:8px 10px;transition:border-color .15s,box-shadow .15s;
+}
+.cueRow.hot{border-color:var(--glow);box-shadow:0 0 0 2px rgba(255,202,95,.25)}
+.cueLabel{font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.cueRow input{
+  width:64px;margin-left:auto;text-align:center;background:#1a1740;border:1px solid var(--line);
+  border-radius:8px;color:var(--ink);font-size:14px;padding:7px 6px;font-variant-numeric:tabular-nums;
+}
+.cueRow input:focus{outline:none;border-color:var(--accent)}
+
+.btn{
+  border:none;cursor:pointer;border-radius:12px;font-weight:700;font-size:15px;padding:12px 22px;
+  color:#1a1330;background:linear-gradient(180deg,var(--glow-soft),var(--glow));
+  box-shadow:0 10px 24px rgba(255,202,95,.25);transition:transform .08s,filter .15s;
+}
+.btn:hover:not(:disabled){filter:brightness(1.05)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.3);box-shadow:none}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);box-shadow:none;font-weight:600}
+.btn.ghost:hover:not(:disabled){color:var(--ink);border-color:var(--accent)}
+.btn.small{padding:9px 14px;font-size:13px}
+.btn.tiny{padding:6px 10px;font-size:12px;border-radius:8px}
+
+.navbar{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.navbar .spacer{flex:1}
+/* 상단 조작 버튼은 작게 — 악보 영역을 최대한 확보 */
+.navbar .btn{padding:7px 13px;font-size:13px;border-radius:9px;box-shadow:none}
+.page-ind{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.page-ind b{color:var(--ink)}
+.clock{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;margin-left:4px;min-width:64px;text-align:right}
+
+.progress{height:5px;border-radius:999px;background:#100e26;overflow:hidden;margin-bottom:8px;border:1px solid var(--line)}
+.progress .bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--glow));transition:width .08s linear}
+
+.stage{
+  background:#0c0a1e;border:1px solid var(--line);border-radius:16px;min-height:220px;flex:1;
+  display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden;position:relative;
+}
+.stage.empty{color:var(--muted);font-size:14px;text-align:center;flex-direction:column;gap:10px}
+.stage.empty .big{font-size:40px}
+canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+
+/* 집중 모드 — 사이드바를 숨기고 악보를 최대로. 하단 타이밍 바는 유지 */
+.app.focus .sidebar{display:none}
+.app.focus .main{padding:12px 16px 10px}
+.app.focus .msg{display:none}
+
+/* 하단 컴팩트 타이밍 바 */
+.cueBar{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px;
+  padding:9px 12px;background:#100e26;border:1px solid var(--line);border-radius:12px;
+}
+.cueBarLabel{font-size:12px;color:var(--muted);letter-spacing:.02em}
+.cueBarNote{font-size:13px;color:var(--muted)}
+.cueBarField{display:flex;align-items:center;gap:8px}
+.cueBarField input{
+  width:66px;text-align:center;background:#1a1740;border:1px solid var(--line);border-radius:8px;
+  color:var(--ink);font-size:14px;padding:7px 6px;font-variant-numeric:tabular-nums;
+}
+.cueBarField input:focus{outline:none;border-color:var(--accent)}
+
+.msg{margin-top:10px;font-size:13px;min-height:18px}
+.msg.err{color:#ff9db0}
+.msg.ok{color:var(--muted)}
+
+/* youtube player tucked into a corner */
+.ytHost{
+  position:fixed;right:16px;bottom:16px;width:216px;aspect-ratio:16/9;border-radius:12px;
+  overflow:hidden;background:#000;border:1px solid var(--line);box-shadow:0 12px 30px rgba(0,0,0,.5);
+  display:none;z-index:20;
+}
+.ytHost.show{display:block}
+.ytHost::before{
+  content:"반주";position:absolute;top:0;left:0;right:0;font-size:11px;color:var(--muted);
+  background:rgba(9,8,22,.7);padding:3px 8px;z-index:2;pointer-events:none;
+}
+.ytHost iframe{width:100%;height:100%;border:0}
+
+/* countdown overlay */
+.overlay{
+  position:fixed;inset:0;
+  background:radial-gradient(700px 500px at 50% 40%, rgba(139,123,255,.25), rgba(9,8,22,.94));
+  backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:50;
+}
+.overlay.show{display:flex}
+.overlay .get-ready{color:var(--muted);letter-spacing:.3em;text-transform:uppercase;font-size:13px;margin-bottom:20px}
+.count{font-size:min(42vw,220px);font-weight:800;line-height:1;color:var(--glow);text-shadow:0 0 60px rgba(255,202,95,.5)}
+.count.tick{animation:pop .9s ease-out}
+@keyframes pop{
+  0%{transform:scale(.4);opacity:0}
+  25%{transform:scale(1.08);opacity:1}
+  100%{transform:scale(1);opacity:1}
+}
+.overlay .go{color:var(--glow);font-size:min(22vw,120px);font-weight:800;letter-spacing:.05em}
+.cancel{
+  margin-top:34px;background:transparent;border:1px solid var(--line);color:var(--muted);
+  padding:10px 20px;border-radius:999px;font-size:13px;cursor:pointer;
+}
+.cancel:hover{color:var(--ink);border-color:var(--accent)}
+
+@media (prefers-reduced-motion:reduce){ .count.tick{animation:none} }
+
+/* 좁은 창: 사이드바를 위로 접어 세로 스택 */
+@media (max-width:760px){
+  .app{flex-direction:column;height:auto;min-height:100vh;overflow:visible}
+  .sidebar{flex:none;width:100%;height:auto;border-right:none;border-bottom:1px solid var(--line)}
+  .main{height:auto;min-height:70vh}
+  .stage{min-height:52vh}
+}
+@media (max-width:600px){
+  .ytHost{width:150px;right:10px;bottom:10px}
+}

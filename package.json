@@ -1,0 +1,21 @@
+{
+  "name": "count-in",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "악보 PDF + 유튜브 반주 연습 플레이어 (페이지별 넘김 타이밍 지정)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "pdfjs-dist": "3.11.174",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.11"
+  }
+}
