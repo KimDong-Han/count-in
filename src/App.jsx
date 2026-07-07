@@ -51,6 +51,7 @@ export default function App() {
   const [saveOpen, setSaveOpen] = useState(false); // 프리셋 저장 인라인 입력 열림
   const [saveName, setSaveName] = useState("");
   const [confirmReset, setConfirmReset] = useState(false); // 초기화 2단계 확인
+  const [savedFlash, setSavedFlash] = useState(null); // 저장 직후 피드백 {name, chipId}
   const [showKeys, setShowKeys] = useState(false); // 단축키 전체 팝오버
   const [adv, setAdv] = useState(() => {
     // 세부 설정 펼침 여부 (기억)
@@ -85,6 +86,7 @@ export default function App() {
   const toastTimerRef = useRef(null);
   const toastIdRef = useRef(0);
   const resetTimerRef = useRef(null);
+  const savedTimerRef = useRef(null);
 
   useEffect(() => {
     totalRef.current = pdf.total;
@@ -359,6 +361,8 @@ export default function App() {
     } catch {}
   };
   const openSave = () => {
+    clearTimeout(savedTimerRef.current);
+    setSavedFlash(null);
     setSaveName("곡 " + (presets.length + 1));
     setSaveOpen(true);
   };
@@ -399,17 +403,18 @@ export default function App() {
       } catch (e) {}
     }
     setSaveOpen(false);
-    setMsg(
-      extractId(url)
-        ? { text: '"' + trimmed + '" 설정을 저장했어요.', kind: "ok" }
-        : {
-            text:
-              '"' +
-              trimmed +
-              '" 저장됨 · 유튜브 링크가 비어 있어서 링크는 저장되지 않았어요.',
-            kind: "err",
-          },
-    );
+    // 저장 버튼 "✓ 저장됨" + 해당 칩 반짝임으로 피드백
+    clearTimeout(savedTimerRef.current);
+    setSavedFlash({ name: trimmed, chipId: preset.id });
+    savedTimerRef.current = setTimeout(() => setSavedFlash(null), 1600);
+    if (!extractId(url))
+      setMsg({
+        text:
+          '"' +
+          trimmed +
+          '" 저장됨 · 유튜브 링크가 비어 있어서 링크는 저장되지 않았어요.',
+        kind: "err",
+      });
   };
   const loadPreset = (p) => {
     stopPlayback();
@@ -873,7 +878,13 @@ export default function App() {
             <>
               <div className="presetList">
                 {presets.map((p) => (
-                  <div className="presetChip" key={p.id}>
+                  <div
+                    className={
+                      "presetChip" +
+                      (savedFlash && savedFlash.chipId === p.id ? " flash" : "")
+                    }
+                    key={p.id}
+                  >
                     <button
                       className="presetLoad"
                       onClick={() => loadPreset(p)}
@@ -1180,8 +1191,13 @@ export default function App() {
               </button>
             </div>
           ) : (
-            <button className="btn savePresetBtn" onClick={openSave}>
-              💾 현재 설정 저장
+            <button
+              className={"btn savePresetBtn" + (savedFlash ? " saved" : "")}
+              onClick={openSave}
+            >
+              {savedFlash
+                ? '✓ "' + savedFlash.name + '" 저장됨'
+                : "💾 현재 설정 저장"}
             </button>
           )}
           <button

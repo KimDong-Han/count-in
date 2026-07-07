@@ -55,6 +55,10 @@ h1 .accent{color:var(--glow)}
 .sideActions .btn{box-shadow:none;font-size:13px;padding:10px 12px}
 .sideActions .resetAllBtn{font-size:12px;padding:8px 12px}
 .sideActions .resetAllBtn.arm{color:#ff9db0;border-color:#ff9db0}
+.savePresetBtn.saved{
+  background:linear-gradient(180deg,#8fe6b4,#4caf7d);color:#0c2417;
+  transition:background .2s;cursor:default;
+}
 .saveRow{display:flex;gap:6px;align-items:center}
 .saveRow input{
   flex:1;min-width:0;background:#100e26;border:1px solid var(--accent);border-radius:10px;
@@ -72,6 +76,12 @@ h1 .accent{color:var(--glow)}
 .presetList{display:flex;flex-wrap:wrap;gap:8px}
 .presetChip{display:flex;align-items:stretch;background:#100e26;border:1px solid var(--line);border-radius:9px;overflow:hidden}
 .presetChip:hover{border-color:var(--accent)}
+.presetChip.flash{border-color:var(--glow);animation:chipFlash 1.6s ease-out}
+@keyframes chipFlash{
+  0%{box-shadow:0 0 0 0 rgba(255,202,95,.75)}
+  70%{box-shadow:0 0 0 9px rgba(255,202,95,0)}
+  100%{box-shadow:0 0 0 0 rgba(255,202,95,0)}
+}
 .presetLoad{background:transparent;border:none;color:var(--ink);font-size:13px;padding:7px 10px;cursor:pointer;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .presetLoad:hover{color:var(--glow)}
 .presetDel{background:transparent;border:none;border-left:1px solid var(--line);color:var(--muted);font-size:15px;line-height:1;padding:0 9px;cursor:pointer}
