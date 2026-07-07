@@ -1,8 +1,9 @@
 // 카운트다운 효과음 (Web Audio). delayed-play.html에서 그대로 가져옴.
 
 // "삑" 비프. accent=마지막 GO 톤(더 높고 길게)
-export function playBeep(ctx, vol, accent){
-  const t = ctx.currentTime
+// when: 예약 재생 시각(초, AudioContext 기준) — 메트로놈처럼 정밀 스케줄이 필요할 때 사용
+export function playBeep(ctx, vol, accent, when){
+  const t = when != null ? when : ctx.currentTime
   const osc = ctx.createOscillator()
   const gain = ctx.createGain()
   osc.type = 'sine'
@@ -17,8 +18,8 @@ export function playBeep(ctx, vol, accent){
 }
 
 // 드럼스틱 "딱" — 노이즈 크랙 + 짧은 톤
-export function playStick(ctx, vol, accent){
-  const t = ctx.currentTime
+export function playStick(ctx, vol, accent, when){
+  const t = when != null ? when : ctx.currentTime
   const level = (vol / 100) * 0.9
   const dur = 0.06
   const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate * dur), ctx.sampleRate)
