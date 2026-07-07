@@ -309,10 +309,13 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 .cueBarField input:focus{outline:none;border-color:var(--accent)}
 
 .msg{margin-top:10px;font-size:13px;min-height:18px}
-.siteFoot{margin-top:8px;font-size:12px;color:var(--muted);text-align:center}
+/* 안내 문구와 이메일을 한 줄에 (하단 공간 최소화) */
+.footRow{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.footRow .msg{flex:1 1 auto}
+.siteFoot{margin-top:10px;font-size:12px;color:var(--muted);white-space:nowrap}
 .siteFoot a{color:var(--muted);text-decoration:none}
 .siteFoot a:hover{color:var(--ink);text-decoration:underline}
-.app.focus .siteFoot{display:none}
+.app.focus .footRow,.app.focus .siteFoot{display:none}
 .msg.err{color:#ff9db0}
 .msg.ok{color:var(--muted)}
 

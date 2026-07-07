@@ -1420,13 +1420,14 @@ export default function App() {
           )}
         </div>
 
-        <div className={"msg " + msg.kind} role="status" aria-live="polite">
-          {msg.text}
+        <div className="footRow">
+          <div className={"msg " + msg.kind} role="status" aria-live="polite">
+            {msg.text}
+          </div>
+          <footer className="siteFoot">
+            <a href="mailto:devkim1030@gmail.com">devkim1030@gmail.com</a>
+          </footer>
         </div>
-
-        <footer className="siteFoot">
-          문의 · <a href="mailto:devkim1030@gmail.com">devkim1030@gmail.com</a>
-        </footer>
 
         {toast && (
           <div className="toast" role="status" key={toast.id}>

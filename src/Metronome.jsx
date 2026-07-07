@@ -319,7 +319,7 @@ export default function Metronome() {
       </div>
 
       <footer className="siteFoot">
-        문의 · <a href="mailto:devkim1030@gmail.com">devkim1030@gmail.com</a>
+        <a href="mailto:devkim1030@gmail.com">devkim1030@gmail.com</a>
       </footer>
     </div>
   );
