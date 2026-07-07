@@ -245,6 +245,21 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 }
 .flipHint.show{opacity:1}
 
+/* 큰 넘김 카운트다운 — 악보 오른쪽 여백 세로 중앙 (followLoop에서 직접 갱신, 여백 좁으면 미표시) */
+.flipCue{
+  position:absolute;top:0;bottom:0;right:0;z-index:5;pointer-events:none;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  opacity:0;transition:opacity .2s;
+}
+.flipCue.show{opacity:1}
+.flipCueNum{
+  font-weight:700;color:var(--glow-soft);line-height:1;
+  font-variant-numeric:tabular-nums;text-shadow:0 4px 24px rgba(0,0,0,.55);
+}
+.flipCueNum.pulse{animation:cuePulse .4s ease-out}
+@keyframes cuePulse{from{transform:scale(1.25)}to{transform:scale(1)}}
+.flipCueLabel{font-size:13px;color:var(--muted);white-space:nowrap}
+
 /* 악보 좌/우 탭으로 이전·다음 쪽 */
 .tapZone{
   position:absolute;top:0;bottom:0;width:32%;z-index:4;display:flex;align-items:center;

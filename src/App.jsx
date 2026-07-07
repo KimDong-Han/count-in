@@ -13,6 +13,7 @@ export default function App() {
   const barRef = useRef(null);
   const clockRef = useRef(null);
   const flipHintRef = useRef(null); // 넘김 예고 배지 (rAF 루프에서 직접 갱신)
+  const flipCueRef = useRef(null); // 큰 카운트다운 (악보 오른쪽 여백, rAF 루프에서 직접 갱신)
   const cueRowsRef = useRef(null);
   const kbWrapRef = useRef(null);
 
@@ -232,16 +233,43 @@ export default function App() {
     if (clockRef.current)
       clockRef.current.textContent = dur ? fmt(t) + " / " + fmt(dur) : fmt(t);
 
-    // 넘김 예고: 다음 넘김 3초 전부터 악보 위에 표시
+    // 넘김 예고: 다음 넘김 3초 전부터 표시.
+    // 악보 오른쪽 여백이 넉넉하면 큰 숫자 카운트다운, 좁으면(모바일·가로 악보) 우상단 작은 배지.
     const fh = flipHintRef.current;
-    if (fh) {
+    const fc = flipCueRef.current;
+    if (fh && fc) {
       const flipAt = cur < pt.length && isFinite(pt[cur]) ? pt[cur] : null;
       const remain = flipAt == null ? null : flipAt - t;
       if (remain != null && remain > 0 && remain <= 3) {
-        fh.textContent = Math.ceil(remain) + "초 뒤 다음 쪽 ›";
-        fh.classList.add("show");
+        const sec = Math.ceil(remain);
+        let gap = 0;
+        if (stageRef.current && canvasRef.current) {
+          gap =
+            stageRef.current.getBoundingClientRect().right -
+            canvasRef.current.getBoundingClientRect().right;
+        }
+        if (gap >= 110) {
+          fc.style.width = gap + "px";
+          const numEl = fc.firstElementChild;
+          // 여백 폭에 비례하되 36~52px로 제한 — 눈에 띄면서 악보를 압도하지 않게
+          numEl.style.fontSize =
+            Math.round(Math.min(52, Math.max(36, gap * 0.3))) + "px";
+          if (numEl.textContent !== String(sec)) {
+            numEl.textContent = sec;
+            numEl.classList.remove("pulse");
+            void numEl.offsetWidth; // 리플로우로 펄스 애니메이션 재시작
+            numEl.classList.add("pulse");
+          }
+          fc.classList.add("show");
+          fh.classList.remove("show");
+        } else {
+          fh.textContent = sec + "초 뒤 다음 쪽 ›";
+          fh.classList.add("show");
+          fc.classList.remove("show");
+        }
       } else {
         fh.classList.remove("show");
+        fc.classList.remove("show");
       }
     }
 
@@ -261,6 +289,7 @@ export default function App() {
       rafRef.current = null;
     }
     if (flipHintRef.current) flipHintRef.current.classList.remove("show");
+    if (flipCueRef.current) flipCueRef.current.classList.remove("show");
   }, []);
 
   // ---- cue(페이지별 타이밍) 저장/불러오기 ----
@@ -1339,6 +1368,10 @@ export default function App() {
             style={{ display: pdf.total ? "block" : "none" }}
           ></canvas>
           <div className="flipHint" ref={flipHintRef}></div>
+          <div className="flipCue" ref={flipCueRef} aria-hidden="true">
+            <div className="flipCueNum"></div>
+            <div className="flipCueLabel">다음 쪽 ›</div>
+          </div>
           {pdf.total > 0 && (
             <>
               <div
