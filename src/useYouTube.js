@@ -52,7 +52,14 @@ export function useYouTube(){
   useEffect(() => {
     let mounted = true
     loadYT().then(() => { if(mounted) setApiReady(true) })
-    return () => { mounted = false }
+    return () => {
+      // 페이지 전환(/metronome)으로 언마운트될 때 YT API 내부 참조까지 정리
+      mounted = false
+      if(playerRef.current){
+        try{ playerRef.current.destroy() }catch(e){}
+        playerRef.current = null
+      }
+    }
   }, [])
 
   // el: 플레이어를 심을 DOM 엘리먼트. 최초 1회만 생성.
