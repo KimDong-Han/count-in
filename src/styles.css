@@ -28,7 +28,7 @@ body{
   background:linear-gradient(180deg,var(--night-2),rgba(33,28,77,.7));
   display:flex;flex-direction:column;gap:14px;
 }
-.main{flex:1;min-width:0;height:100vh;display:flex;flex-direction:column;padding:14px 18px 12px}
+.main{flex:1;min-width:0;height:100vh;display:flex;flex-direction:column;padding:14px 18px 12px;position:relative}
 
 header{margin-bottom:2px}
 .eyebrow{font-size:12px;letter-spacing:.28em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
@@ -36,11 +36,32 @@ h1{font-size:20px;font-weight:800;letter-spacing:-.01em;line-height:1.2}
 h1 .accent{color:var(--glow)}
 .sub{color:var(--muted);font-size:12.5px;margin-top:6px;line-height:1.5}
 
-/* '시작 전 대기': 왼쪽 입력 + 오른쪽에 저장/초기화 세로 스택 */
-.delayGrid{display:flex;align-items:flex-start;gap:10px}
-.actionCol{margin-left:auto;display:flex;flex-direction:column;gap:6px;align-items:stretch}
-.actionCol .btn{white-space:nowrap;box-shadow:none;font-size:13px;padding:9px 12px}
-.actionCol .resetAllBtn{font-size:12px;padding:7px 12px}
+/* ③ 시작: 카운트 초 입력 + 큰 시작 버튼 */
+.startRow{display:flex;align-items:stretch;gap:10px}
+.startRow .time-inputs{flex:0 0 auto}
+.startRow .startBtn{flex:1;padding:11px 10px;font-size:15px;white-space:nowrap}
+
+/* 세부 설정 접이 */
+.advToggle{
+  display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px;
+  background:#161232;border:1px solid var(--line);border-radius:10px;color:var(--muted);
+  font-size:12.5px;padding:10px 12px;cursor:pointer;transition:color .15s,border-color .15s;text-align:left;
+}
+.advToggle:hover{color:var(--ink);border-color:var(--accent)}
+.advBody{display:flex;flex-direction:column;gap:14px}
+
+/* 사이드바 하단: 저장/초기화 */
+.sideActions{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:6px}
+.sideActions .btn{box-shadow:none;font-size:13px;padding:10px 12px}
+.sideActions .resetAllBtn{font-size:12px;padding:8px 12px}
+.sideActions .resetAllBtn.arm{color:#ff9db0;border-color:#ff9db0}
+.saveRow{display:flex;gap:6px;align-items:center}
+.saveRow input{
+  flex:1;min-width:0;background:#100e26;border:1px solid var(--accent);border-radius:10px;
+  color:var(--ink);font-size:14px;padding:10px 12px;
+}
+.saveRow input:focus{outline:none;box-shadow:0 0 0 3px rgba(139,123,255,.22)}
+.saveRow .btn{white-space:nowrap;box-shadow:none}
 
 /* 저장한 곡 프리셋 */
 .presets{background:#161232;border:1px solid var(--line);border-radius:14px;padding:12px 12px 13px}
@@ -61,16 +82,6 @@ h1 .accent{color:var(--glow)}
 .group{display:flex;flex-direction:column;gap:8px}
 .group.grow{min-width:0}
 .group label{font-size:12px;color:var(--muted)}
-
-/* 링크 라벨 옆 작은 '미리 재생' 토글 */
-.labelRow{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.miniToggle{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
-.miniToggle input{position:absolute;opacity:0;width:0;height:0}
-.miniToggle .miniBox{width:30px;height:17px;border-radius:999px;background:#100e26;border:1px solid var(--line);position:relative;transition:background .15s;flex:0 0 auto}
-.miniToggle .miniBox::after{content:"";position:absolute;top:2px;left:2px;width:11px;height:11px;border-radius:50%;background:#fff;transition:transform .18s}
-.miniToggle input:checked + .miniBox{background:var(--accent);border-color:var(--accent)}
-.miniToggle input:checked + .miniBox::after{transform:translateX(13px)}
-.miniToggle .miniTxt{font-size:11px;color:var(--muted)}
 
 input[type=text]{
   width:100%;background:#100e26;border:1px solid var(--line);border-radius:10px;
@@ -170,8 +181,28 @@ input[type=range]::-moz-range-thumb{
 
 .navbar{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
 .navbar .spacer{flex:1}
-.kbhint{font-size:11px;color:var(--muted);line-height:1.35;margin-left:4px}
+.kbhint{
+  font-size:11px;color:var(--muted);line-height:1.35;margin-left:4px;
+  position:relative;display:inline-flex;align-items:center;gap:6px;
+}
 .kbhint b{color:var(--ink);font-weight:600;font-size:11px}
+.kbMore{
+  width:18px;height:18px;border-radius:50%;border:1px solid var(--line);background:transparent;
+  color:var(--muted);font-size:11px;line-height:1;cursor:pointer;padding:0;flex:0 0 auto;
+}
+.kbMore:hover{color:var(--ink);border-color:var(--accent)}
+.kbPop{
+  position:absolute;top:calc(100% + 10px);left:0;z-index:40;min-width:236px;
+  background:var(--night-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;
+  box-shadow:0 16px 40px rgba(0,0,0,.5);
+}
+.kbPopTitle{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.kbRow{display:flex;align-items:center;gap:10px;padding:3px 0;font-size:12px}
+.kbRow kbd{
+  flex:0 0 58px;text-align:center;background:#100e26;border:1px solid var(--line);
+  border-radius:5px;padding:2px 6px;color:var(--glow-soft);font-size:11px;
+}
+.kbRow span{color:var(--muted)}
 /* 상단 조작 버튼은 작게 — 악보 영역을 최대한 확보 */
 .navbar .btn{padding:7px 13px;font-size:13px;border-radius:9px;box-shadow:none}
 .page-ind{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -188,6 +219,41 @@ input[type=range]::-moz-range-thumb{
 .stage.empty{color:var(--muted);font-size:14px;text-align:center;flex-direction:column;gap:10px}
 .stage.empty .big{font-size:40px}
 canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+
+/* 넘김 예고 배지 (followLoop에서 직접 갱신) */
+.flipHint{
+  position:absolute;top:10px;right:12px;z-index:5;pointer-events:none;
+  background:rgba(16,14,38,.85);border:1px solid var(--glow);border-radius:999px;
+  color:var(--glow-soft);font-size:12px;padding:6px 12px;opacity:0;transition:opacity .2s;
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.flipHint.show{opacity:1}
+
+/* 악보 좌/우 탭으로 이전·다음 쪽 */
+.tapZone{
+  position:absolute;top:0;bottom:0;width:32%;z-index:4;display:flex;align-items:center;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none;
+}
+.tapZone.left{left:0;justify-content:flex-start;padding-left:8px}
+.tapZone.right{right:0;justify-content:flex-end;padding-right:8px}
+.tapZone span{
+  font-size:36px;color:var(--ink);opacity:0;transition:opacity .15s;
+  text-shadow:0 2px 10px rgba(0,0,0,.7);line-height:1;
+}
+.tapZone:hover span{opacity:.5}
+.tapZone:active span{opacity:.85}
+
+/* 조작 피드백 토스트 */
+.toast{
+  position:absolute;left:50%;bottom:64px;transform:translateX(-50%);z-index:25;pointer-events:none;
+  background:rgba(16,14,38,.92);border:1px solid var(--line);border-radius:999px;
+  color:var(--ink);font-size:13px;padding:8px 16px;box-shadow:0 8px 24px rgba(0,0,0,.4);
+  animation:toastIn .16s ease-out;font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+@keyframes toastIn{
+  from{opacity:0;transform:translate(-50%,6px)}
+  to{opacity:1;transform:translate(-50%,0)}
+}
 
 /* 집중 모드 — 사이드바를 숨기고 악보를 최대로. 하단 타이밍 바는 유지 */
 .app.focus .sidebar{display:none}
@@ -249,13 +315,35 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 
 @media (prefers-reduced-motion:reduce){ .count.tick{animation:none} }
 
+/* 태블릿·좁은 창: 사이드바를 좁혀 악보 폭 확보 (특히 세로 태블릿) */
+@media (max-width:1080px){
+  .sidebar{flex-basis:272px;width:272px}
+}
+
+/* 모바일 하단 고정 재생 바 (좁은 화면에서만 표시) */
+.mobileBar{display:none}
+
 /* 좁은 창: 사이드바를 위로 접어 세로 스택 */
 @media (max-width:760px){
   .app{flex-direction:column;height:auto;min-height:100vh;overflow:visible}
   .sidebar{flex:none;width:100%;height:auto;border-right:none;border-bottom:1px solid var(--line)}
-  .main{height:auto;min-height:70vh}
+  .main{height:auto;min-height:70vh;padding-bottom:80px}
   .stage{min-height:52vh}
+  .kbhint{display:none}
+  .toast{position:fixed;bottom:88px}
+  .mobileBar{
+    display:flex;position:fixed;left:0;right:0;bottom:0;z-index:30;align-items:center;gap:8px;
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+    background:rgba(18,16,42,.94);border-top:1px solid var(--line);
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  }
+  .mobileBar .btn{box-shadow:none;padding:11px 14px;font-size:14px}
+  .mobileBar .btn:first-child{flex:1}
+  .mobileBar .page-ind{margin-left:2px;flex:0 0 auto}
+  .ytHost{bottom:86px}
+  /* iOS: 입력 포커스 시 화면 확대 방지 */
+  input[type=text],.time-inputs input,.cueRow input,.saveRow input{font-size:16px}
 }
 @media (max-width:600px){
-  .ytHost{width:150px;right:10px;bottom:10px}
+  .ytHost{width:150px;right:10px;bottom:86px}
 }

@@ -11,6 +11,9 @@ export default function App() {
   const ytInnerRef = useRef(null); // 유튜브 플레이어를 심는 imperative div
   const barRef = useRef(null);
   const clockRef = useRef(null);
+  const flipHintRef = useRef(null); // 넘김 예고 배지 (rAF 루프에서 직접 갱신)
+  const cueRowsRef = useRef(null);
+  const kbWrapRef = useRef(null);
 
   const pdf = usePdf(canvasRef, stageRef);
   const yt = useYouTube();
@@ -44,6 +47,19 @@ export default function App() {
       return [];
     }
   });
+  const [toast, setToast] = useState(null); // 짧은 조작 피드백 {text,id}
+  const [saveOpen, setSaveOpen] = useState(false); // 프리셋 저장 인라인 입력 열림
+  const [saveName, setSaveName] = useState("");
+  const [confirmReset, setConfirmReset] = useState(false); // 초기화 2단계 확인
+  const [showKeys, setShowKeys] = useState(false); // 단축키 전체 팝오버
+  const [adv, setAdv] = useState(() => {
+    // 세부 설정 펼침 여부 (기억)
+    try {
+      return localStorage.getItem("cin:ui:adv") === "1";
+    } catch {
+      return false;
+    }
+  });
 
   // ---- 최신값을 rAF/콜백에서 읽기 위한 ref 미러 ----
   const totalRef = useRef(0);
@@ -66,6 +82,9 @@ export default function App() {
   const countdownTimerRef = useRef(null);
   const primeTimerRef = useRef(null);
   const pendingIdRef = useRef(null);
+  const toastTimerRef = useRef(null);
+  const toastIdRef = useRef(0);
+  const resetTimerRef = useRef(null);
 
   useEffect(() => {
     totalRef.current = pdf.total;
@@ -136,6 +155,14 @@ export default function App() {
     [ensureAudio],
   );
 
+  // ---- 짧은 조작 피드백 토스트 (집중 모드에서도 보임) ----
+  const showToast = useCallback((text) => {
+    toastIdRef.current += 1;
+    setToast({ text, id: toastIdRef.current });
+    clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast(null), 1400);
+  }, []);
+
   // ---- 넘김 스케줄: pageTimes[k] = (k+1)번째 페이지를 띄울 곡 진행 시각(초) ----
   const intervalSec = () => {
     let m = parseInt(ivRef.current.m, 10);
@@ -202,6 +229,19 @@ export default function App() {
     if (clockRef.current)
       clockRef.current.textContent = dur ? fmt(t) + " / " + fmt(dur) : fmt(t);
 
+    // 넘김 예고: 다음 넘김 3초 전부터 악보 위에 표시
+    const fh = flipHintRef.current;
+    if (fh) {
+      const flipAt = cur < pt.length && isFinite(pt[cur]) ? pt[cur] : null;
+      const remain = flipAt == null ? null : flipAt - t;
+      if (remain != null && remain > 0 && remain <= 3) {
+        fh.textContent = Math.ceil(remain) + "초 뒤 다음 쪽 ›";
+        fh.classList.add("show");
+      } else {
+        fh.classList.remove("show");
+      }
+    }
+
     rafRef.current = requestAnimationFrame(followLoop);
   }, [yt, pdf]);
 
@@ -217,6 +257,7 @@ export default function App() {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
     }
+    if (flipHintRef.current) flipHintRef.current.classList.remove("show");
   }, []);
 
   // ---- cue(페이지별 타이밍) 저장/불러오기 ----
@@ -284,8 +325,10 @@ export default function App() {
   };
   const nowAt = (i) => {
     if (!armedRef.current) return;
-    setCueAt(i, fmt(yt.getTime() || 0));
+    const stamp = fmt(yt.getTime() || 0);
+    setCueAt(i, stamp);
     setTapCursor(i + 1);
+    showToast(i + 1 + "→" + (i + 2) + "쪽 넘김 " + stamp + " 저장");
   };
   const tap = () => {
     const idx = tapCursorRef.current;
@@ -300,6 +343,14 @@ export default function App() {
     setTapCursor(0);
   };
 
+  // 타이밍 찍는 중엔 다음 찍을 줄이 항상 보이게 스크롤
+  useEffect(() => {
+    if (!armedRef.current) return;
+    const box = cueRowsRef.current;
+    const el = box && box.children[tapCursor];
+    if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest" });
+  }, [tapCursor]);
+
   // ---- 곡 프리셋(설정 통째로) 저장/불러오기 ----
   const persistPresets = (list) => {
     setPresets(list);
@@ -307,11 +358,13 @@ export default function App() {
       localStorage.setItem("cin:presets", JSON.stringify(list));
     } catch {}
   };
-  const savePreset = () => {
+  const openSave = () => {
+    setSaveName("곡 " + (presets.length + 1));
+    setSaveOpen(true);
+  };
+  const confirmSave = () => {
     const def = "곡 " + (presets.length + 1);
-    const name = window.prompt("저장할 곡 이름을 입력하세요.", def);
-    if (name == null) return;
-    const trimmed = name.trim() || def;
+    const trimmed = saveName.trim() || def;
     const preset = {
       id: "p" + Date.now(),
       name: trimmed,
@@ -345,6 +398,7 @@ export default function App() {
         );
       } catch (e) {}
     }
+    setSaveOpen(false);
     setMsg(
       extractId(url)
         ? { text: '"' + trimmed + '" 설정을 저장했어요.', kind: "ok" }
@@ -397,9 +451,19 @@ export default function App() {
     persistPresets(presets.filter((p) => p.id !== id));
   };
 
-  // 저장한 곡(프리셋)만 남기고 나머지 전부 기본값으로 초기화
-  const resetAll = () => {
-    if (!window.confirm("저장한 곡은 그대로 두고, 링크·악보·타이밍·설정을 모두 초기화할까요?")) return;
+  // 저장한 곡(프리셋)만 남기고 나머지 전부 기본값으로 초기화 — 버튼 두 번 눌러 확정
+  const resetClick = () => {
+    if (!confirmReset) {
+      setConfirmReset(true);
+      clearTimeout(resetTimerRef.current);
+      resetTimerRef.current = setTimeout(() => setConfirmReset(false), 4000);
+      return;
+    }
+    clearTimeout(resetTimerRef.current);
+    setConfirmReset(false);
+    doResetAll();
+  };
+  const doResetAll = () => {
     stopPlayback();
     setUrl("");
     setDelay(4);
@@ -641,6 +705,7 @@ export default function App() {
   // ---- PDF 파일 선택 ----
   const onFile = async (e) => {
     const f = e.target.files && e.target.files[0];
+    e.target.value = ""; // 같은 파일을 다시 선택해도 change가 오도록 비움 (초기화 후 재선택 대응)
     if (!f) return;
     stopPlayback();
     setMsg({ text: "악보 불러오는 중…", kind: "ok" });
@@ -668,17 +733,16 @@ export default function App() {
     }
   };
 
-  // ↑↓ 볼륨 조절
+  // ↑↓ 볼륨 조절 (+토스트 피드백)
   const nudgeVolume = (delta) => {
-    setVolume((v) => {
-      const nv = Math.max(0, Math.min(100, v + delta));
-      volumeRef.current = nv;
-      if (armedRef.current) {
-        yt.unMute();
-        yt.setVolume(nv);
-      }
-      return nv;
-    });
+    const nv = Math.max(0, Math.min(100, volumeRef.current + delta));
+    volumeRef.current = nv;
+    setVolume(nv);
+    if (armedRef.current) {
+      yt.unMute();
+      yt.setVolume(nv);
+    }
+    showToast("볼륨 " + nv + "%");
   };
   // 숫자키: 해당 쪽으로 바로 이동 (재생 중엔 그 쪽에 설정된 시각이 있어야 반주도 따라가며 유지됨)
   const goToPage = (n) => {
@@ -690,6 +754,26 @@ export default function App() {
     }
     pdf.show(target);
   };
+
+  // 세부 설정 펼침 상태 저장
+  const toggleAdv = () =>
+    setAdv((a) => {
+      try {
+        localStorage.setItem("cin:ui:adv", a ? "0" : "1");
+      } catch {}
+      return !a;
+    });
+
+  // 단축키 팝오버: 바깥 클릭으로 닫기
+  useEffect(() => {
+    if (!showKeys) return;
+    const onDoc = (e) => {
+      if (kbWrapRef.current && !kbWrapRef.current.contains(e.target))
+        setShowKeys(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [showKeys]);
 
   // ---- 키보드 ----
   const kbRef = useRef({});
@@ -820,21 +904,7 @@ export default function App() {
 
         <div className="controls">
           <div className="group grow">
-            <div className="labelRow">
-              <label htmlFor="url">유튜브 반주 링크</label>
-              <label
-                className="miniToggle"
-                title="미리 재생 준비: 카운트다운 동안 반주를 음소거로 잠깐 돌려 버퍼링을 풀어두고 0:00으로 되감아둬요. 끄면 카운트 후 바로 재생(맨 앞이 살짝 끊길 수 있어요)."
-              >
-                <input
-                  type="checkbox"
-                  checked={preLoad}
-                  onChange={(e) => setPreLoad(e.target.checked)}
-                />
-                <span className="miniBox"></span>
-                <span className="miniTxt">미리 재생</span>
-              </label>
-            </div>
+            <label htmlFor="url">① 유튜브 반주 링크</label>
             <input
               id="url"
               type="text"
@@ -845,7 +915,7 @@ export default function App() {
           </div>
 
           <div className="group">
-            <label>악보 파일</label>
+            <label>② 악보 파일</label>
             <label className="upload">
               <input type="file" accept="application/pdf" onChange={onFile} />
               <span>
@@ -857,8 +927,8 @@ export default function App() {
           </div>
 
           <div className="group">
-            <label htmlFor="delay">시작 전 대기</label>
-            <div className="delayGrid">
+            <label htmlFor="delay">③ 시작</label>
+            <div className="startRow">
               <div className="time-inputs">
                 <input
                   id="delay"
@@ -869,19 +939,26 @@ export default function App() {
                   value={delay}
                   onChange={(e) => setDelay(e.target.value)}
                 />
-                <span className="unit">초</span>
+                <span className="unit">초 세고</span>
               </div>
-              <div className="actionCol">
-                <button className="btn savePresetBtn" onClick={savePreset}>
-                  💾 현재 설정 저장
-                </button>
-                <button className="btn ghost resetAllBtn" onClick={resetAll}>
-                  🧹 전체 초기화
-                </button>
-              </div>
+              <button
+                className="btn startBtn"
+                onClick={togglePlay}
+                disabled={playDisabled}
+                title={playDisabled ? "링크와 악보를 먼저 넣어 주세요" : ""}
+              >
+                {playLabel}
+              </button>
             </div>
           </div>
 
+          <button type="button" className="advToggle" onClick={toggleAdv}>
+            <span>⚙ 세부 설정 — 넘김·볼륨·배속·소리</span>
+            <span>{adv ? "▴" : "▾"}</span>
+          </button>
+
+          {adv && (
+          <div className="advBody">
           <div className="group">
             <label>넘김 방식</label>
             <div className="seg">
@@ -998,6 +1075,18 @@ export default function App() {
 
           <div className="group">
             <label>옵션</label>
+            <label
+              className="switch-mini"
+              title="카운트다운 동안 반주를 음소거로 잠깐 돌려 버퍼링을 풀어두고 0:00으로 되감아둬요. 끄면 카운트 후 바로 재생돼요(맨 앞이 살짝 끊길 수 있어요)."
+            >
+              <input
+                type="checkbox"
+                checked={preLoad}
+                onChange={(e) => setPreLoad(e.target.checked)}
+              />
+              <span className="box"></span>
+              <span>카운트 중 미리 재생 준비</span>
+            </label>
             <label className="switch-mini">
               <input
                 type="checkbox"
@@ -1008,6 +1097,8 @@ export default function App() {
               <span>끝나면 처음부터 반복</span>
             </label>
           </div>
+          </div>
+          )}
         </div>
 
         {flipMode === "cue" && pdf.total > 1 && (
@@ -1034,7 +1125,7 @@ export default function App() {
                 </button>
               </div>
             </div>
-            <div className="cueRows">
+            <div className="cueRows" ref={cueRowsRef}>
               {cueText.map((v, i) => (
                 <div
                   className={
@@ -1063,6 +1154,43 @@ export default function App() {
             </div>
           </div>
         )}
+
+        <div className="sideActions">
+          {saveOpen ? (
+            <div className="saveRow">
+              <input
+                autoFocus
+                type="text"
+                value={saveName}
+                onChange={(e) => setSaveName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") confirmSave();
+                  else if (e.key === "Escape") setSaveOpen(false);
+                }}
+                placeholder="곡 이름"
+              />
+              <button className="btn small" onClick={confirmSave}>
+                저장
+              </button>
+              <button
+                className="btn ghost small"
+                onClick={() => setSaveOpen(false)}
+              >
+                취소
+              </button>
+            </div>
+          ) : (
+            <button className="btn savePresetBtn" onClick={openSave}>
+              💾 현재 설정 저장
+            </button>
+          )}
+          <button
+            className={"btn ghost resetAllBtn" + (confirmReset ? " arm" : "")}
+            onClick={resetClick}
+          >
+            {confirmReset ? "한 번 더 누르면 초기화돼요" : "🧹 전체 초기화"}
+          </button>
+        </div>
       </aside>
 
       <main className="main">
@@ -1098,8 +1226,35 @@ export default function App() {
           >
             {focus ? "↙ 설정 보기" : "⤢ 악보 크게"}
           </button>
-          <span className="kbhint">
-            <b>Space</b> 재생 · <b>←→</b> 페이지 · <b>↑↓</b> 볼륨 · <b>1~9</b> 해당 쪽(시간 입력 시) · <b>Enter</b> 크게 · <b>0/Esc</b> 처음
+          <span className="kbhint" ref={kbWrapRef}>
+            <b>Space</b> 재생 · <b>←→</b> 페이지 · <b>M</b> 지금 넘김
+            <button
+              type="button"
+              className="kbMore"
+              title="단축키 전체 보기"
+              onClick={() => setShowKeys((s) => !s)}
+            >
+              ?
+            </button>
+            {showKeys && (
+              <div className="kbPop">
+                <div className="kbPopTitle">단축키</div>
+                {[
+                  ["Space", "시작 · 일시정지"],
+                  ["← →", "이전 · 다음 쪽"],
+                  ["↑ ↓", "볼륨"],
+                  ["M", "지금 넘김 (타이밍 찍기)"],
+                  ["1~9", "해당 쪽으로 이동"],
+                  ["Enter", "악보 크게 보기"],
+                  ["0 · Esc", "처음으로"],
+                ].map(([k, d]) => (
+                  <div className="kbRow" key={k}>
+                    <kbd>{k}</kbd>
+                    <span>{d}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </span>
           <div className="spacer"></div>
           <div className="page-ind">
@@ -1126,10 +1281,52 @@ export default function App() {
             ref={canvasRef}
             style={{ display: pdf.total ? "block" : "none" }}
           ></canvas>
+          <div className="flipHint" ref={flipHintRef}></div>
+          {pdf.total > 0 && (
+            <>
+              <div
+                className="tapZone left"
+                title="이전 쪽"
+                onClick={() => jump(-1)}
+              >
+                <span>‹</span>
+              </div>
+              <div
+                className="tapZone right"
+                title="다음 쪽"
+                onClick={() => jump(1)}
+              >
+                <span>›</span>
+              </div>
+            </>
+          )}
         </div>
 
         <div className={"msg " + msg.kind}>{msg.text}</div>
+
+        {toast && (
+          <div className="toast" key={toast.id}>
+            {toast.text}
+          </div>
+        )}
       </main>
+
+      {pdf.total > 0 && (
+        <div className="mobileBar">
+          <button className="btn" onClick={togglePlay} disabled={playDisabled}>
+            {playLabel}
+          </button>
+          <button className="btn ghost" onClick={() => jump(-1)}>
+            ‹ 이전
+          </button>
+          <button className="btn ghost" onClick={() => jump(1)}>
+            다음 ›
+          </button>
+          <span className="page-ind">
+            <b>{pdf.pageNum}</b> / {pdf.total}
+          </span>
+        </div>
+      )}
 
       <div className={"ytHost" + (armed ? " show" : "")} ref={ytHostRef}></div>
 
