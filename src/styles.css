@@ -113,6 +113,8 @@ input::placeholder{color:#6b649c}
 }
 .time-inputs input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(139,123,255,.22)}
 .time-inputs .unit{color:var(--muted);font-size:13px}
+.time-inputs input:disabled{opacity:.4}
+.noWaitToggle{margin-top:9px}
 
 .upload{
   display:inline-flex;align-items:center;gap:8px;background:#100e26;border:1px dashed var(--line);

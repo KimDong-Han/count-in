@@ -31,6 +31,7 @@ export default function App() {
   const [ivSec, setIvSec] = useState(20);
   const [loopOn, setLoopOn] = useState(false);
   const [preLoad, setPreLoad] = useState(true); // 카운트다운 동안 미리 재생(버퍼) 준비
+  const [noWait, setNoWait] = useState(false); // 카운트다운 없이 바로 시작
   const [cueText, setCueText] = useState([]); // 문자열 배열 (길이 total-1)
   const [armed, setArmed] = useState(false); // 시작 눌러 재생/준비 중
   const [isPlaying, setIsPlaying] = useState(false);
@@ -74,6 +75,7 @@ export default function App() {
   const soundModeRef = useRef(soundMode);
   const loopRef = useRef(loopOn);
   const preLoadRef = useRef(preLoad);
+  const noWaitRef = useRef(noWait);
   const ivRef = useRef({ m: 0, s: 20 });
   const armedRef = useRef(false);
   const tapCursorRef = useRef(0);
@@ -112,6 +114,9 @@ export default function App() {
   useEffect(() => {
     preLoadRef.current = preLoad;
   }, [preLoad]);
+  useEffect(() => {
+    noWaitRef.current = noWait;
+  }, [noWait]);
   useEffect(() => {
     ivRef.current = { m: ivMin, s: ivSec };
   }, [ivMin, ivSec]);
@@ -412,6 +417,7 @@ export default function App() {
       ivSec,
       loopOn,
       preLoad,
+      noWait,
       cues: cueTextRef.current.slice(),
       pageCount: pdf.total,
     };
@@ -465,6 +471,8 @@ export default function App() {
     const pl = p.preLoad ?? true;
     setPreLoad(pl);
     preLoadRef.current = pl;
+    setNoWait(!!p.noWait);
+    noWaitRef.current = !!p.noWait;
     const cues = Array.isArray(p.cues) ? p.cues.slice() : [];
     setCueText(cues);
     recomputeCues(cues);
@@ -516,6 +524,8 @@ export default function App() {
     loopRef.current = false;
     setPreLoad(true);
     preLoadRef.current = true;
+    setNoWait(false);
+    noWaitRef.current = false;
     setCueText([]);
     recomputeCues([]);
     setTapCursor(0);
@@ -660,13 +670,16 @@ export default function App() {
     let secs = parseInt(delayRef.current, 10);
     if (isNaN(secs) || secs < 0) secs = 0;
     if (secs > 60) secs = 60;
+    if (noWaitRef.current) secs = 0; // 바로 시작: 카운트다운 생략
     ensureAudio();
     setArmed(true);
     armedRef.current = true;
     yt.ensure(ytInnerRef.current, id, {
       onReady: () => {
         applyVolume();
-        if (preLoadRef.current)
+        if (noWaitRef.current)
+          yt.loadVideoById(id); // 바로 시작: 로드와 동시에 재생 (cue 직후 play는 로딩 중이라 무시됨)
+        else if (preLoadRef.current)
           primePlayer(id); // 미리 재생(버퍼) 준비
         else yt.cueById(id); // 준비만, 재생은 카운트 후에
         runCountdown(secs);
@@ -1014,6 +1027,7 @@ export default function App() {
                   max="60"
                   step="1"
                   value={delay}
+                  disabled={noWait}
                   onChange={(e) => setDelay(e.target.value)}
                 />
                 <span className="unit">초 세고</span>
@@ -1027,6 +1041,18 @@ export default function App() {
                 {playLabel}
               </button>
             </div>
+            <label
+              className="switch-mini noWaitToggle"
+              title="카운트다운 없이 바로 재생돼요."
+            >
+              <input
+                type="checkbox"
+                checked={noWait}
+                onChange={(e) => setNoWait(e.target.checked)}
+              />
+              <span className="box"></span>
+              <span>바로 시작</span>
+            </label>
           </div>
 
           <button type="button" className="advToggle" onClick={toggleAdv}>
