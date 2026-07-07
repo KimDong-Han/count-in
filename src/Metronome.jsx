@@ -184,7 +184,7 @@ export default function Metronome() {
         >
           ‹ 연습 플레이어
         </a>
-        <div className="eyebrow">Count-In · 메트로놈</div>
+        <h1 className="eyebrow">Count-In · 온라인 메트로놈</h1>
       </div>
 
       <div className="metroCard">

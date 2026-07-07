@@ -5,6 +5,21 @@ import Metronome from './Metronome.jsx'
 import { getPath } from './router.js'
 import './styles.css'
 
+// 경로별 문서 메타(SEO). 직접 접근은 정적 HTML(index/metronome.html)이 담당하고,
+// 여기서는 앱 내 경로 전환 시 title·description·canonical을 맞춰 준다.
+const META = {
+  '/': {
+    title: 'Count-In — 악보 PDF 자동 넘김 · 유튜브 카운트다운 재생',
+    desc: '유튜브 반주에 맞춰 악보 PDF가 자동으로 넘어가는 무료 연습 도구예요. 카운트다운 후 반주가 시작되고, 정해둔 시각에 악보가 넘어가요. 온라인 메트로놈도 함께 제공해요.',
+    canonical: 'https://count-in.vercel.app/',
+  },
+  '/metronome': {
+    title: '온라인 메트로놈 (Metronome Online) — Count-In',
+    desc: '설치 없이 브라우저에서 바로 쓰는 무료 온라인 메트로놈이에요. 30~240 BPM, 박자·첫박 강세·탭 템포를 지원하고, Web Audio 기반이라 박자가 밀리지 않아요. Free online metronome.',
+    canonical: 'https://count-in.vercel.app/metronome',
+  },
+}
+
 // 경로 기반 미니 라우팅: /metronome → 메트로놈, 그 외 → 연습 플레이어.
 // 정적 호스팅에서 경로 직접 접근이 되도록 vercel.json이 모든 경로를 index.html로 리라이트한다.
 function Root() {
@@ -19,6 +34,12 @@ function Root() {
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
+  useEffect(() => {
+    const m = META[route] || META['/']
+    document.title = m.title
+    document.querySelector('meta[name="description"]')?.setAttribute('content', m.desc)
+    document.querySelector('link[rel="canonical"]')?.setAttribute('href', m.canonical)
+  }, [route])
   return route === '/metronome' ? <Metronome /> : <App />
 }
 

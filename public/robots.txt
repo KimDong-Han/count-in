@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://count-in.vercel.app/sitemap.xml
