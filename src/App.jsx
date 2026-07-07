@@ -900,6 +900,7 @@ export default function App() {
                       className="presetDel"
                       onClick={() => deletePreset(p.id)}
                       title="삭제"
+                      aria-label={p.name + " 삭제"}
                     >
                       ×
                     </button>
@@ -982,6 +983,7 @@ export default function App() {
                   key={k}
                   type="button"
                   className={flipMode === k ? "active" : ""}
+                  aria-pressed={flipMode === k}
                   onClick={() => {
                     setFlipMode(k);
                     flipModeRef.current = k;
@@ -1048,6 +1050,7 @@ export default function App() {
                   key={r}
                   type="button"
                   className={rate === r ? "active" : ""}
+                  aria-pressed={rate === r}
                   onClick={() => {
                     setRate(r);
                     rateRef.current = r;
@@ -1072,6 +1075,7 @@ export default function App() {
                   key={k}
                   type="button"
                   className={soundMode === k ? "active" : ""}
+                  aria-pressed={soundMode === k}
                   onClick={() => {
                     setSoundMode(k);
                     soundModeRef.current = k;
@@ -1248,6 +1252,7 @@ export default function App() {
               type="button"
               className="kbMore"
               title="단축키 전체 보기"
+              aria-expanded={showKeys}
               onClick={() => setShowKeys((s) => !s)}
             >
               ?
@@ -1303,6 +1308,7 @@ export default function App() {
               <div
                 className="tapZone left"
                 title="이전 쪽"
+                aria-hidden="true"
                 onClick={() => jump(-1)}
               >
                 <span>‹</span>
@@ -1310,6 +1316,7 @@ export default function App() {
               <div
                 className="tapZone right"
                 title="다음 쪽"
+                aria-hidden="true"
                 onClick={() => jump(1)}
               >
                 <span>›</span>
@@ -1318,10 +1325,12 @@ export default function App() {
           )}
         </div>
 
-        <div className={"msg " + msg.kind}>{msg.text}</div>
+        <div className={"msg " + msg.kind} role="status" aria-live="polite">
+          {msg.text}
+        </div>
 
         {toast && (
-          <div className="toast" key={toast.id}>
+          <div className="toast" role="status" key={toast.id}>
             {toast.text}
           </div>
         )}
@@ -1347,7 +1356,12 @@ export default function App() {
       <div className={"ytHost" + (armed ? " show" : "")} ref={ytHostRef}></div>
 
       {countText != null && (
-        <div className="overlay show">
+        <div
+          className="overlay show"
+          role="alertdialog"
+          aria-label="시작 카운트다운"
+          aria-live="assertive"
+        >
           <div className="get-ready">Get ready</div>
           {countText === "▶" ? (
             <div className="go">▶</div>

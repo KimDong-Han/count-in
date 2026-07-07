@@ -40,6 +40,9 @@ export function usePdf(canvasRef, stageRef){
   const load = useCallback(async (file) => {
     const buf = await file.arrayBuffer()
     const pdf = await pdfjsLib.getDocument({ data: buf }).promise
+    // 이전 문서를 정리해 워커 메모리 누수 방지 (로드 성공 후에만 — 실패 시 기존 문서 유지)
+    if(renderTaskRef.current){ try{ renderTaskRef.current.cancel() }catch(e){} }
+    if(pdfRef.current){ try{ pdfRef.current.destroy() }catch(e){} }
     pdfRef.current = pdf
     setTotal(pdf.numPages)
     pageNumRef.current = 1
@@ -60,6 +63,7 @@ export function usePdf(canvasRef, stageRef){
 
   const reset = useCallback(() => {
     if(renderTaskRef.current){ try{ renderTaskRef.current.cancel() }catch(e){} }
+    if(pdfRef.current){ try{ pdfRef.current.destroy() }catch(e){} }
     pdfRef.current = null
     pageNumRef.current = 1
     setTotal(0)
