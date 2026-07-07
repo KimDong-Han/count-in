@@ -317,6 +317,10 @@ export default function Metronome() {
       <div className="kbhint metroHint">
         <b>Space</b> 시작·정지 · <b>↑↓</b> ±1 · <b>←→</b> ±5 · <b>T</b> 탭 템포
       </div>
+
+      <footer className="siteFoot">
+        문의 · <a href="mailto:devkim1030@gmail.com">devkim1030@gmail.com</a>
+      </footer>
     </div>
   );
 }

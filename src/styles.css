@@ -309,6 +309,10 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 .cueBarField input:focus{outline:none;border-color:var(--accent)}
 
 .msg{margin-top:10px;font-size:13px;min-height:18px}
+.siteFoot{margin-top:8px;font-size:12px;color:var(--muted);text-align:center}
+.siteFoot a{color:var(--muted);text-decoration:none}
+.siteFoot a:hover{color:var(--ink);text-decoration:underline}
+.app.focus .siteFoot{display:none}
 .msg.err{color:#ff9db0}
 .msg.ok{color:var(--muted)}
 

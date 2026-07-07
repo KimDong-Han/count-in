@@ -1424,6 +1424,10 @@ export default function App() {
           {msg.text}
         </div>
 
+        <footer className="siteFoot">
+          문의 · <a href="mailto:devkim1030@gmail.com">devkim1030@gmail.com</a>
+        </footer>
+
         {toast && (
           <div className="toast" role="status" key={toast.id}>
             {toast.text}
