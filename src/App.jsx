@@ -894,7 +894,7 @@ export default function App() {
             </a>
           </div>
           <h1>
-            타이밍 해두면 <span className="accent">타이밍 맞춰서</span> 넘어감.
+            타이밍 설정해두면 <span className="accent">맞춰서</span> 넘어감.
           </h1>
           <p className="sub">
             유튜브 반주와 악보 PDF를 넣고, 페이지 넘길 시각을 정해두면 그 시각에
