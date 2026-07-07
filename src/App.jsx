@@ -3,6 +3,7 @@ import { usePdf } from "./usePdf";
 import { useYouTube, extractId, ytErrMsg } from "./useYouTube";
 import { playBeep, playStick } from "./sound";
 import { parseTime, fmt } from "./time";
+import { navigate } from "./router.js";
 
 export default function App() {
   const canvasRef = useRef(null);
@@ -881,7 +882,14 @@ export default function App() {
         <header>
           <div className="eyebrowRow">
             <div className="eyebrow">Count-In</div>
-            <a className="pageLink" href="#/metronome">
+            <a
+              className="pageLink"
+              href="/metronome"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/metronome");
+              }}
+            >
               🥁 메트로놈 ›
             </a>
           </div>

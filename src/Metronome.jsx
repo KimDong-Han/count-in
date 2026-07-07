@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { playBeep, playStick } from "./sound";
+import { navigate } from "./router.js";
 
 // 별도 페이지(#/metronome)의 메트로놈.
 // 타이밍은 setInterval이 아니라 Web Audio 룩어헤드 스케줄러로:
@@ -173,7 +174,14 @@ export default function Metronome() {
   return (
     <div className="metro">
       <div className="metroTop">
-        <a className="pageLink" href="#/">
+        <a
+          className="pageLink"
+          href="/"
+          onClick={(e) => {
+            e.preventDefault();
+            navigate("/");
+          }}
+        >
           ‹ 연습 플레이어
         </a>
         <div className="eyebrow">Count-In · 메트로놈</div>
