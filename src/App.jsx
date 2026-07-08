@@ -89,6 +89,7 @@ export default function App() {
   const noWaitRef = useRef(noWait);
   const ivRef = useRef({ m: 0, s: 20 });
   const seqRef = useRef([]); // 연주 순서 미러
+  const syncCursorRef = useRef(null); // followLoop(rAF)에서 최신 syncCursor 호출용
   const schedSeqRef = useRef([]); // buildSchedule이 실제 쓴 순서 (cue 외 모드는 1..N)
   const stepRef = useRef(0); // 현재 연주 순서상 위치(스텝 인덱스)
   const armedRef = useRef(false);
@@ -262,6 +263,9 @@ export default function App() {
     if (barRef.current) barRef.current.style.width = pct + "%";
     if (clockRef.current)
       clockRef.current.textContent = dur ? fmt(t) + " / " + fmt(dur) : fmt(t);
+
+    // 다음에 찍을 전환(커서)이 재생 위치를 따라가게 — 되감으면 그 줄부터 다시 찍힘
+    syncCursorRef.current && syncCursorRef.current(t);
 
     // 타이밍 입력 모드: 하단 바의 시각·시크 바 갱신 (드래그 중엔 손대지 않음)
     if (tuneModeRef.current) {
@@ -447,7 +451,7 @@ export default function App() {
             seqRef.current[k + 1] +
             "쪽 넘김(" +
             fmtCue(p) +
-            ")보다 빨라요 · 그 줄의 🔁로 다시 찍어 주세요",
+            ")보다 빨라요 · 조금 더 지나서 찍어 주세요",
           2600,
         );
         return;
@@ -590,32 +594,21 @@ export default function App() {
     saveCues(next, sq);
     if (tapCursorRef.current > next.length) setTapCursor(next.length);
   };
-  // 타이밍 입력 모드: 해당 전환 지점 몇 초 전으로 되감아 그 줄만 다시 찍기
-  const redoAt = (i) => {
-    const c = cuesRef.current[i];
-    const prev = i > 0 ? cuesRef.current[i - 1] : 0;
-    const base =
-      c != null && isFinite(c)
-        ? c
-        : prev != null && isFinite(prev)
-          ? prev
-          : 0;
-    const to = Math.max(0, base - 4);
-    setPendingTap(null);
-    setTapCursor(i);
-    yt.seek(to);
-    yt.play();
-    startFollowing();
-    setIsPlaying(true);
-    showToast(
-      seqRef.current[i] +
-        "→" +
-        (seqRef.current[i + 1] != null ? seqRef.current[i + 1] : "다음") +
-        "쪽 · " +
-        fmt(to) +
-        "부터 다시 듣기",
-    );
+  // 커서(다음에 찍을 전환)를 재생 위치에 맞춘다 — 시크로 되감으면 그 지점의 줄이 자동으로 대상이 됨
+  const cursorForTime = (t) => {
+    const cs = cuesRef.current;
+    const n = Math.max(0, seqRef.current.length - 1);
+    for (let i = 0; i < n; i++) {
+      const c = cs[i];
+      if (c == null || !isFinite(c) || c > t + 0.05) return i;
+    }
+    return n;
   };
+  const syncCursor = (t) => {
+    const c = cursorForTime(t);
+    if (c !== tapCursorRef.current) setTapCursor(c);
+  };
+  syncCursorRef.current = syncCursor;
   // 찍어둔 시각을 ±0.5초 미세 조정 (이웃 타이밍의 순서는 넘지 않게)
   const nudgeCue = (i, delta) => {
     const c = cuesRef.current[i];
@@ -1174,9 +1167,12 @@ export default function App() {
     tap,
     stopPlayback,
     cancelCountdown,
+    cancelPending,
+    commitPending,
     nudgeVolume,
     goToPage,
     overlayOpen: countText != null,
+    pendingOpen: pendingTap != null,
   };
   useEffect(() => {
     const onKey = (e) => {
@@ -1186,6 +1182,8 @@ export default function App() {
         e.preventDefault();
         if (h.overlayOpen) {
           h.cancelCountdown();
+        } else if (h.pendingOpen) {
+          // 몇 쪽으로 갈지 고르는 중 — 재생 토글 무시
         } else {
           h.togglePlay();
         }
@@ -1202,14 +1200,17 @@ export default function App() {
       } else if (e.code === "KeyM") {
         h.tap();
       } else if (e.code === "Enter") {
-        if (totalRef.current > 0) setFocus((f) => !f);
+        if (totalRef.current > 0 && !h.pendingOpen) setFocus((f) => !f);
       } else if (e.code === "Escape") {
-        h.stopPlayback();
+        if (h.pendingOpen) h.cancelPending();
+        else h.stopPlayback();
       } else {
         const m = e.code.match(/^(?:Digit|Numpad)([0-9])$/);
         if (m) {
           const d = parseInt(m[1], 10);
-          if (d === 0)
+          if (h.pendingOpen) {
+            if (d >= 1 && d <= totalRef.current) h.commitPending(d); // 숫자키로 바로 선택
+          } else if (d === 0)
             h.stopPlayback(); // 0 = 처음으로
           else h.goToPage(d); // 1~9 = 해당 쪽
         }
@@ -1558,9 +1559,9 @@ export default function App() {
               <div className="cueDesc">
                 {tuneMode ? (
                   <>
-                    넘어갈 순간마다 <b>🎯 지금 넘김</b>을 눌러 주세요.{" "}
-                    <b>🔁</b>는 그 줄만 다시 듣고 찍기, <b>−·＋</b>는 0.5초
-                    미세 조정이에요.
+                    넘어갈 순간마다 <b>🎯 지금 넘김</b>을 눌러 주세요. 잘못
+                    찍었으면 <b>시크 바로 되감으면</b> 그 줄부터 다시 찍혀요.{" "}
+                    <b>−·＋</b>는 0.5초 미세 조정이에요.
                   </>
                 ) : (
                   <>
@@ -1663,13 +1664,6 @@ export default function App() {
                   />
                   {tuneMode ? (
                     <span className="cueRowTools">
-                      <button
-                        className="btn ghost tiny"
-                        title="이 줄만 다시 듣고 찍기"
-                        onClick={() => redoAt(i)}
-                      >
-                        🔁
-                      </button>
                       <button
                         className="btn ghost tiny"
                         title="0.5초 앞당기기"
@@ -1941,6 +1935,7 @@ export default function App() {
               const to = parseFloat(e.target.value);
               if (!isFinite(to)) return;
               yt.seek(to);
+              syncCursor(to); // 되감으면 그 지점의 줄부터 다시 찍히게
               if (tuneTimeRef.current) {
                 const dur = yt.getDuration() || 0;
                 tuneTimeRef.current.textContent = dur
@@ -1964,45 +1959,41 @@ export default function App() {
                   ? "✓ 마지막 쪽까지 왔어요 — 완료를 눌러 주세요"
                   : `🎯 지금 넘김 — ${curFrom}→${curDest}쪽`}
           </button>
-          {tuneRepeat &&
-            (pendingTap ? (
-              <div className="tunePick">
-                <span className="tunePickTime">{fmtCue(pendingTap.t)}</span>
-                <span className="tunePickLabel">몇 쪽으로?</span>
-                {!tapOverflow && (
-                  <button
-                    className="btn small"
-                    onClick={() => commitPending(null)}
-                  >
-                    다음 쪽 ({curDest})
-                  </button>
-                )}
-                <div className="tuneJump" aria-label="이 쪽으로 넘어가기">
-                  {Array.from({ length: pdf.total }, (_, k) => k + 1).map(
-                    (p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        className="tuneJumpBtn"
-                        disabled={p === curFrom}
-                        onClick={() => commitPending(p)}
-                        title={p + "쪽으로"}
-                      >
-                        {p}
-                      </button>
-                    ),
-                  )}
-                </div>
-                <button className="btn ghost small" onClick={cancelPending}>
-                  취소
+        </div>
+      )}
+
+      {pendingTap != null && (
+        <div
+          className="overlay show pickOverlay"
+          role="dialog"
+          aria-label="몇 쪽으로 넘어갈까요"
+        >
+          <div className="pickCard">
+            <div className="pickTime">⏸ {fmtCue(pendingTap.t)}에 찍음</div>
+            <div className="pickTitle">몇 쪽으로 넘어갈까요?</div>
+            {!tapOverflow && (
+              <button className="btn pickNext" onClick={() => commitPending(null)}>
+                다음 쪽 ({curDest}쪽)
+              </button>
+            )}
+            <div className="pickPages" aria-label="이 쪽으로 넘어가기">
+              {Array.from({ length: pdf.total }, (_, k) => k + 1).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  className="tuneJumpBtn"
+                  disabled={p === curFrom}
+                  onClick={() => commitPending(p)}
+                  title={p + "쪽으로"}
+                >
+                  {p}
                 </button>
-              </div>
-            ) : (
-              <div className="tunePick hint">
-                도돌이표 곡: 🎯를 누르면 음악이 잠깐 멈추고 몇 쪽으로 갈지
-                물어봐요
-              </div>
-            ))}
+              ))}
+            </div>
+            <button className="cancel" onClick={cancelPending}>
+              취소 (기록 안 함)
+            </button>
+          </div>
         </div>
       )}
 
