@@ -202,7 +202,9 @@ input[type=range]::-moz-range-thumb{
 }
 .vol-val{width:42px;text-align:right;color:var(--ink);font-size:13px;font-variant-numeric:tabular-nums}
 
-.switch-mini{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
+/* position:relative 필수 — 없으면 absolute인 숨김 체크박스가 사이드바 스크롤을 벗어나
+   문서 좌표에 놓여 브라우저 스크롤 영역을 늘린다 (세부 설정 펼침 시 발견) */
+.switch-mini{position:relative;display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
 .switch-mini input{position:absolute;opacity:0}
 .switch-mini .box{
   width:44px;height:26px;border-radius:999px;background:var(--track);border:1px solid var(--line-strong);
