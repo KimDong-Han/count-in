@@ -44,13 +44,14 @@ export default function App() {
   const [tapCursor, setTapCursor] = useState(0); // 탭으로 기록할 다음 전환 index
   const [tuneMode, setTuneMode] = useState(false); // 타이밍 입력 모드 (카운트다운 없이 재생하며 찍기)
   const [tuneRepeat, setTuneRepeat] = useState(() => {
-    // 도돌이표 있음: 타이밍 입력 모드에 쪽 번호 점프 버튼 표시 (기억)
+    // 도돌이표 있는 곡: 타이밍 입력 모드에서 찍을 때마다 몇 쪽으로 갈지 물어봄 (기억)
     try {
       return localStorage.getItem("cin:tune:repeat") === "1";
     } catch {
       return false;
     }
   });
+  const [pendingTap, setPendingTap] = useState(null); // 도돌이표 곡에서 찍은 순간 {i, t} — 목적지 선택 대기
   const [focus, setFocus] = useState(false); // 집중 모드(컨트롤 숨김)
   const [presets, setPresets] = useState(() => {
     // 저장한 곡 프리셋 목록
@@ -428,13 +429,13 @@ export default function App() {
       return next;
     });
   };
-  // 전환 i의 시각을 지금으로 기록. destPage를 주면 그 쪽으로 점프(도돌이표·다카포),
-  // 없으면 기존 순서의 다음 스텝(없으면 다음 쪽).
-  const recordAt = (i, destPage) => {
+  // 전환 i의 시각을 기록(tAt이 있으면 그 시각, 없으면 지금). destPage를 주면 그 쪽으로
+  // 점프(도돌이표·다카포), 없으면 기존 순서의 다음 스텝(없으면 다음 쪽).
+  const recordAt = (i, destPage, tAt) => {
     if (!armedRef.current) return;
     const from = seqRef.current[i];
     if (from == null) return;
-    const t = yt.getTime() || 0;
+    const t = tAt != null ? tAt : yt.getTime() || 0;
     // 앞쪽에 이미 찍힌 넘김보다 빠른 시각이면 순서가 꼬이므로 저장하지 않는다
     for (let k = i - 1; k >= 0; k--) {
       const p = cuesRef.current[k];
@@ -508,15 +509,42 @@ export default function App() {
     );
   };
   const nowAt = (i) => recordAt(i, null);
+  // 목적지 선택을 마치면(확정/취소) 멈춰둔 음악 재개
+  const resumeAfterPick = () => {
+    yt.play();
+    startFollowing();
+    setIsPlaying(true);
+  };
+  // 찍은 순간(pendingTap.t)으로 확정 기록 — destPage 없으면 다음 쪽
+  const commitPending = (destPage) => {
+    const p = pendingTap;
+    setPendingTap(null);
+    if (!p) return;
+    if (seqRef.current.length <= 400) recordAt(p.i, destPage, p.t); // 폭주 방지
+    resumeAfterPick();
+  };
+  const cancelPending = () => {
+    setPendingTap(null);
+    resumeAfterPick();
+  };
   const tap = () => {
     const idx = tapCursorRef.current;
     if (seqRef.current[idx] == null) return;
+    if (pendingTap) {
+      // 목적지 선택 대기 중 🎯/M 재탭 = "다음 쪽" 확정 (시각은 처음 찍은 순간)
+      commitPending(null);
+      return;
+    }
+    if (tuneModeRef.current && tuneRepeat) {
+      // 도돌이표 곡: 시각을 기록해 두고 음악을 멈춘 뒤 몇 쪽으로 갈지 물어봄
+      if (!armedRef.current) return;
+      setPendingTap({ i: idx, t: yt.getTime() || 0 });
+      yt.pause();
+      stopFollowing();
+      setIsPlaying(false);
+      return;
+    }
     recordAt(idx, null);
-  };
-  // 도돌이표·다카포: 지금 이 순간 p쪽으로 점프하는 스텝을 기록
-  const jumpTap = (p) => {
-    if (seqRef.current.length > 400) return; // 폭주 방지
-    recordAt(tapCursorRef.current, p);
   };
   const toggleTuneRepeat = () =>
     setTuneRepeat((r) => {
@@ -573,6 +601,7 @@ export default function App() {
           ? prev
           : 0;
     const to = Math.max(0, base - 4);
+    setPendingTap(null);
     setTapCursor(i);
     yt.seek(to);
     yt.play();
@@ -1024,6 +1053,7 @@ export default function App() {
     armedRef.current = false;
     setIsPlaying(false);
     setTapCursor(0);
+    setPendingTap(null);
     setTuneMode(false);
     tuneModeRef.current = false;
     yt.stop();
@@ -1530,9 +1560,7 @@ export default function App() {
                   <>
                     넘어갈 순간마다 <b>🎯 지금 넘김</b>을 눌러 주세요.{" "}
                     <b>🔁</b>는 그 줄만 다시 듣고 찍기, <b>−·＋</b>는 0.5초
-                    미세 조정. 도돌이표가 있으면 하단의{" "}
-                    <b>도돌이표 있음</b>을 켜고 돌아갈 쪽 번호를 그 순간 탭해
-                    주세요.
+                    미세 조정이에요.
                   </>
                 ) : (
                   <>
@@ -1543,6 +1571,18 @@ export default function App() {
                   </>
                 )}
               </div>
+              <label
+                className="switch-mini cueRepeatToggle"
+                title="켜 두면 타이밍 입력 모드에서 찍을 때마다 음악을 잠깐 멈추고 몇 쪽으로 갈지 물어봐요."
+              >
+                <input
+                  type="checkbox"
+                  checked={tuneRepeat}
+                  onChange={toggleTuneRepeat}
+                />
+                <span className="box"></span>
+                <span>도돌이표 있는 곡 (찍을 때 몇 쪽으로 갈지 물어봐요)</span>
+              </label>
               {!tuneMode && (
                 <button
                   className="btn small tuneEnter"
@@ -1909,43 +1949,60 @@ export default function App() {
               }
             }}
           />
-          <button className="btn tuneTap" onClick={tap} disabled={tapOverflow}>
-            {tapOverflow
-              ? "✓ 마지막 쪽까지 왔어요 — 완료를 눌러 주세요"
-              : `🎯 지금 넘김 — ${curFrom}→${curDest}쪽`}
+          <button
+            className="btn tuneTap"
+            onClick={tap}
+            disabled={pendingTap ? tapOverflow : tuneRepeat ? false : tapOverflow}
+          >
+            {pendingTap
+              ? tapOverflow
+                ? "⏸ 아래에서 돌아갈 쪽을 골라 주세요"
+                : `⏸ 다시 누르면 다음 쪽(${curDest}쪽)으로`
+              : tuneRepeat
+                ? "🎯 지금 넘김"
+                : tapOverflow
+                  ? "✓ 마지막 쪽까지 왔어요 — 완료를 눌러 주세요"
+                  : `🎯 지금 넘김 — ${curFrom}→${curDest}쪽`}
           </button>
-          <div className="tuneRow2">
-            <label
-              className="switch-mini"
-              title="도돌이표·다카포가 있는 곡이면 켜 주세요. 돌아갈 쪽 번호를 그 순간 탭하면 기록돼요."
-            >
-              <input
-                type="checkbox"
-                checked={tuneRepeat}
-                onChange={toggleTuneRepeat}
-              />
-              <span className="box"></span>
-              <span>도돌이표 있음</span>
-            </label>
-            {tuneRepeat && (
-              <div className="tuneJump" aria-label="이 쪽으로 돌아가기">
-                {Array.from({ length: pdf.total }, (_, k) => k + 1).map(
-                  (p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      className="tuneJumpBtn"
-                      disabled={p === curFrom}
-                      onClick={() => jumpTap(p)}
-                      title={p + "쪽으로 지금 넘어감"}
-                    >
-                      {p}
-                    </button>
-                  ),
+          {tuneRepeat &&
+            (pendingTap ? (
+              <div className="tunePick">
+                <span className="tunePickTime">{fmtCue(pendingTap.t)}</span>
+                <span className="tunePickLabel">몇 쪽으로?</span>
+                {!tapOverflow && (
+                  <button
+                    className="btn small"
+                    onClick={() => commitPending(null)}
+                  >
+                    다음 쪽 ({curDest})
+                  </button>
                 )}
+                <div className="tuneJump" aria-label="이 쪽으로 넘어가기">
+                  {Array.from({ length: pdf.total }, (_, k) => k + 1).map(
+                    (p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        className="tuneJumpBtn"
+                        disabled={p === curFrom}
+                        onClick={() => commitPending(p)}
+                        title={p + "쪽으로"}
+                      >
+                        {p}
+                      </button>
+                    ),
+                  )}
+                </div>
+                <button className="btn ghost small" onClick={cancelPending}>
+                  취소
+                </button>
               </div>
-            )}
-          </div>
+            ) : (
+              <div className="tunePick hint">
+                도돌이표 곡: 🎯를 누르면 음악이 잠깐 멈추고 몇 쪽으로 갈지
+                물어봐요
+              </div>
+            ))}
         </div>
       )}
 
