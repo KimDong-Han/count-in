@@ -22,6 +22,7 @@ import {
   Target,
   Timer,
   Volume2,
+  X,
 } from "lucide-react";
 
 export default function App() {
@@ -947,8 +948,12 @@ export default function App() {
       const instant = !tune && (noWaitRef.current || (opts && opts.instant)); // 카운트다운 없이 즉시 재생
       setMsg({ text: "", kind: "ok" });
       if (totalRef.current === 0) {
-        setMsg({ text: "먼저 악보 PDF를 불러와 주세요.", kind: "err" });
-        return false;
+        if (tune) return false; // 타이밍 입력은 악보가 있어야 의미 있음 (버튼도 숨겨져 있음)
+        // 악보 없이 반주만: 무대에 영상을 크게 띄운다
+        setMsg({
+          text: "악보 없이 반주만 재생해요. 악보 PDF는 언제든 불러올 수 있어요.",
+          kind: "ok",
+        });
       }
       const id = extractId(url);
       if (!id) {
@@ -1093,6 +1098,13 @@ export default function App() {
       kind: "ok",
     });
   }, [stopPlayback]);
+
+  // 악보 내리기: 재생은 유지한 채 악보만 제거 → 영상 크게 모드로 전환 (타이밍 입력 중엔 모드 종료)
+  const clearPdf = () => {
+    if (tuneModeRef.current) stopPlayback();
+    pdf.reset();
+    showToast("악보를 내렸어요 · 다시 불러오면 타이밍도 복원돼요");
+  };
 
   // ---- PDF 파일 선택 ----
   const onFile = async (e) => {
@@ -1267,7 +1279,7 @@ export default function App() {
     [],
   );
 
-  const playDisabled = !(pdf.total > 0 && yt.apiReady);
+  const playDisabled = !yt.apiReady; // 악보 없이도 시작 가능 (영상만 크게 재생)
   const navDisabled = pdf.total === 0;
   const playLabel = armed && isPlaying ? "일시정지" : "시작";
   // 다음 탭이 기록할 전환: 어느 페이지에서 어느 페이지로 가는지 (순서 끝의 마지막 쪽이면 overflow)
@@ -1282,7 +1294,12 @@ export default function App() {
 
   return (
     <div
-      className={"app" + (focus ? " focus" : "") + (tuneMode ? " tune" : "")}
+      className={
+        "app" +
+        (focus ? " focus" : "") +
+        (tuneMode ? " tune" : "") +
+        (armed && pdf.total === 0 ? " video" : "") // 악보 없음: 무대에 영상 크게
+      }
     >
       <aside className="sidebar">
         <header>
@@ -1332,18 +1349,31 @@ export default function App() {
           </div>
 
           <div className="group">
-            <label>② 악보 파일</label>
-            <label className="upload">
-              {/* accept 미지정 — 삼성 인터넷은 PDF accept가 있으면 카메라·갤러리만 띄운다
-                  (태블릿은 데스크톱 모드 UA라 기기 감지도 불가). PDF 검증은 로드 단계에서 함. */}
-              <input type="file" onChange={onFile} />
-              <span>
-                <FileText size={15} />
-                {pdf.total > 0
-                  ? pdf.total + "페이지 불러옴"
-                  : "PDF 불러오기"}
-              </span>
-            </label>
+            <label>② 악보 파일 (없으면 영상만 크게 나와요)</label>
+            <div className="uploadRow">
+              <label className="upload">
+                {/* accept 미지정 — 삼성 인터넷은 PDF accept가 있으면 카메라·갤러리만 띄운다
+                    (태블릿은 데스크톱 모드 UA라 기기 감지도 불가). PDF 검증은 로드 단계에서 함. */}
+                <input type="file" onChange={onFile} />
+                <span>
+                  <FileText size={15} />
+                  {pdf.total > 0
+                    ? pdf.total + "페이지 불러옴"
+                    : "PDF 불러오기"}
+                </span>
+              </label>
+              {pdf.total > 0 && (
+                <button
+                  type="button"
+                  className="pdfClear"
+                  onClick={clearPdf}
+                  title="악보 내리기 (재생 중이면 영상만 크게 나와요)"
+                  aria-label="악보 내리기"
+                >
+                  <X size={15} />
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="group">
@@ -1380,7 +1410,7 @@ export default function App() {
                 className="btn startBtn"
                 onClick={togglePlay}
                 disabled={playDisabled}
-                title={playDisabled ? "링크와 악보를 먼저 넣어 주세요" : ""}
+                title={playDisabled ? "유튜브 링크를 먼저 넣어 주세요" : ""}
               >
                 {playLabel}
               </button>
@@ -1831,7 +1861,7 @@ export default function App() {
           <button
             className="btn ghost"
             onClick={stopPlayback}
-            disabled={navDisabled}
+            disabled={navDisabled && !armed}
           >
             처음으로
           </button>
@@ -1902,7 +1932,7 @@ export default function App() {
               <div className="big">
                 <Music size={44} />
               </div>
-              <div>악보 PDF를 불러오면 여기에 표시돼요.</div>
+              <div className="emptyHint">악보 PDF를 불러오면 여기에 표시돼요.</div>
             </>
           )}
           <canvas
@@ -1934,6 +1964,11 @@ export default function App() {
               </div>
             </>
           )}
+          {/* 유튜브 플레이어: 평소엔 우하단 미니, 악보 없이 재생하면(.app.video) 무대를 꽉 채움 */}
+          <div
+            className={"ytHost" + (armed ? " show" : "")}
+            ref={ytHostRef}
+          ></div>
         </div>
 
         <div className="footRow">
@@ -1952,20 +1987,24 @@ export default function App() {
         )}
       </main>
 
-      {pdf.total > 0 && !tuneMode && (
+      {(pdf.total > 0 || armed) && !tuneMode && (
         <div className="mobileBar">
           <button className="btn" onClick={togglePlay} disabled={playDisabled}>
             {playLabel}
           </button>
-          <button className="btn ghost" onClick={() => jump(-1)}>
-            ‹ 이전
-          </button>
-          <button className="btn ghost" onClick={() => jump(1)}>
-            다음 ›
-          </button>
-          <span className="page-ind">
-            <b>{pdf.pageNum}</b> / {pdf.total}
-          </span>
+          {pdf.total > 0 && (
+            <>
+              <button className="btn ghost" onClick={() => jump(-1)}>
+                ‹ 이전
+              </button>
+              <button className="btn ghost" onClick={() => jump(1)}>
+                다음 ›
+              </button>
+              <span className="page-ind">
+                <b>{pdf.pageNum}</b> / {pdf.total}
+              </span>
+            </>
+          )}
         </div>
       )}
 
@@ -2098,7 +2137,6 @@ export default function App() {
         </div>
       )}
 
-      <div className={"ytHost" + (armed ? " show" : "")} ref={ytHostRef}></div>
 
       {countText != null && (
         <div
