@@ -127,7 +127,7 @@ input::placeholder{color:#6b649c}
 
 .seg{display:flex;gap:6px;background:#100e26;border:1px solid var(--line);border-radius:10px;padding:5px}
 .seg button{
-  border:none;background:transparent;color:var(--muted);font-size:13px;padding:8px 12px;
+  flex:1;border:none;background:transparent;color:var(--muted);font-size:13px;padding:8px 12px;
   border-radius:7px;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;
 }
 .seg button.active{background:var(--accent);color:#fff;font-weight:600}

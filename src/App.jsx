@@ -448,7 +448,10 @@ export default function App() {
           ? seqRef.current[i + 1]
           : from + 1;
     if (dest > totalRef.current) {
-      showToast("마지막 페이지예요 · 돌아가려면 페이지 번호 버튼을 눌러 주세요", 2600);
+      showToast(
+        "마지막 페이지예요 · 돌아가려면 페이지 번호 버튼을 눌러 주세요",
+        2600,
+      );
       return;
     }
     const stamp = fmtCue(t); // 0.1초 단위로 기록 (초 단위 절사보다 정확)
@@ -614,7 +617,11 @@ export default function App() {
     }
     setCueAt(i, fmtCue(nv));
     showToast(
-      seqRef.current[i] + "→" + seqRef.current[i + 1] + "페이지 넘김 " + fmtCue(nv),
+      seqRef.current[i] +
+        "→" +
+        seqRef.current[i + 1] +
+        "페이지 넘김 " +
+        fmtCue(nv),
     );
   };
   const clearCues = () => {
@@ -910,65 +917,68 @@ export default function App() {
     yt.stop();
   }, [yt]);
 
-  const startFlow = useCallback((opts) => {
-    const tune = !!(opts && opts.tune); // 타이밍 입력 모드: 항상 3초 카운트 (바로 시작 무시)
-    const instant = !tune && (noWaitRef.current || (opts && opts.instant)); // 카운트다운 없이 즉시 재생
-    setMsg({ text: "", kind: "ok" });
-    if (totalRef.current === 0) {
-      setMsg({ text: "먼저 악보 PDF를 불러와 주세요.", kind: "err" });
-      return false;
-    }
-    const id = extractId(url);
-    if (!id) {
-      setMsg({
-        text: "유튜브 반주 링크를 확인해 주세요. 주소를 그대로 붙여넣으면 돼요.",
-        kind: "err",
+  const startFlow = useCallback(
+    (opts) => {
+      const tune = !!(opts && opts.tune); // 타이밍 입력 모드: 항상 3초 카운트 (바로 시작 무시)
+      const instant = !tune && (noWaitRef.current || (opts && opts.instant)); // 카운트다운 없이 즉시 재생
+      setMsg({ text: "", kind: "ok" });
+      if (totalRef.current === 0) {
+        setMsg({ text: "먼저 악보 PDF를 불러와 주세요.", kind: "err" });
+        return false;
+      }
+      const id = extractId(url);
+      if (!id) {
+        setMsg({
+          text: "유튜브 반주 링크를 확인해 주세요. 주소를 그대로 붙여넣으면 돼요.",
+          kind: "err",
+        });
+        return false;
+      }
+      if (!yt.apiReady) {
+        setMsg({
+          text: "플레이어를 준비 중이에요. 잠시 후 다시 눌러 주세요.",
+          kind: "err",
+        });
+        return false;
+      }
+      pendingIdRef.current = id;
+      let secs = parseInt(delayRef.current, 10);
+      if (isNaN(secs) || secs < 0) secs = 0;
+      if (secs > 60) secs = 60;
+      if (instant) secs = 0;
+      if (tune) secs = 3; // 찍을 준비 시간 — 미리재생(버퍼→0초 되감기)도 이 사이에 그대로 적용됨
+      ensureAudio();
+      setArmed(true);
+      armedRef.current = true;
+      yt.ensure(ytInnerRef.current, id, {
+        onReady: () => {
+          applyVolume();
+          if (instant)
+            yt.loadVideoById(id); // 로드와 동시에 재생 (cue 직후 play는 로딩 중이라 무시됨)
+          else if (preLoadRef.current)
+            primePlayer(id); // 미리 재생(버퍼) 준비
+          else yt.cueById(id); // 준비만, 재생은 카운트 후에
+          runCountdown(secs);
+        },
+        onState,
+        onError: (code) => {
+          cancelCountdown();
+          setMsg({ text: ytErrMsg(code), kind: "err" });
+        },
       });
-      return false;
-    }
-    if (!yt.apiReady) {
-      setMsg({
-        text: "플레이어를 준비 중이에요. 잠시 후 다시 눌러 주세요.",
-        kind: "err",
-      });
-      return false;
-    }
-    pendingIdRef.current = id;
-    let secs = parseInt(delayRef.current, 10);
-    if (isNaN(secs) || secs < 0) secs = 0;
-    if (secs > 60) secs = 60;
-    if (instant) secs = 0;
-    if (tune) secs = 3; // 찍을 준비 시간 — 미리재생(버퍼→0초 되감기)도 이 사이에 그대로 적용됨
-    ensureAudio();
-    setArmed(true);
-    armedRef.current = true;
-    yt.ensure(ytInnerRef.current, id, {
-      onReady: () => {
-        applyVolume();
-        if (instant)
-          yt.loadVideoById(id); // 로드와 동시에 재생 (cue 직후 play는 로딩 중이라 무시됨)
-        else if (preLoadRef.current)
-          primePlayer(id); // 미리 재생(버퍼) 준비
-        else yt.cueById(id); // 준비만, 재생은 카운트 후에
-        runCountdown(secs);
-      },
+      return true;
+    },
+    [
+      url,
+      yt,
+      ensureAudio,
+      applyVolume,
+      primePlayer,
+      runCountdown,
       onState,
-      onError: (code) => {
-        cancelCountdown();
-        setMsg({ text: ytErrMsg(code), kind: "err" });
-      },
-    });
-    return true;
-  }, [
-    url,
-    yt,
-    ensureAudio,
-    applyVolume,
-    primePlayer,
-    runCountdown,
-    onState,
-    cancelCountdown,
-  ]);
+      cancelCountdown,
+    ],
+  );
 
   const togglePlay = useCallback(() => {
     if (!armedRef.current) {
@@ -995,10 +1005,7 @@ export default function App() {
       const pt = pageTimesRef.current;
       const sq = schedSeqRef.current;
       if (armedRef.current && sq.length) {
-        const s = Math.max(
-          0,
-          Math.min(sq.length - 1, stepRef.current + delta),
-        );
+        const s = Math.max(0, Math.min(sq.length - 1, stepRef.current + delta));
         if (isFinite(pt[s])) {
           yt.seek(pt[s] || 0);
           stepRef.current = s;
@@ -1250,7 +1257,9 @@ export default function App() {
   const tapOverflow = curFrom == null || curDest == null || curDest > pdf.total;
 
   return (
-    <div className={"app" + (focus ? " focus" : "") + (tuneMode ? " tune" : "")}>
+    <div
+      className={"app" + (focus ? " focus" : "") + (tuneMode ? " tune" : "")}
+    >
       <aside className="sidebar">
         <header>
           <div className="eyebrowRow">
@@ -1399,7 +1408,7 @@ export default function App() {
                 <label>넘김 방식</label>
                 <div className="seg">
                   {[
-                    ["cue", "페이지마다 시각"],
+                    ["cue", "페이지마다 설정"],
                     ["interval", "일정 간격"],
                   ].map(([k, t]) => (
                     <button
@@ -1591,7 +1600,9 @@ export default function App() {
                     disabled={!armed || tapOverflow}
                   >
                     🎯 지금 넘김
-                    {armed && !tapOverflow ? ` (${curFrom}→${curDest}페이지)` : ""}
+                    {armed && !tapOverflow
+                      ? ` (${curFrom}→${curDest}페이지)`
+                      : ""}
                   </button>
                 )}
                 <button className="btn ghost small" onClick={clearCues}>
@@ -1627,7 +1638,9 @@ export default function App() {
                     </span>
                     <select
                       className="cueSel"
-                      value={seq[i + 1] ?? Math.min((seq[i] || 1) + 1, pdf.total)}
+                      value={
+                        seq[i + 1] ?? Math.min((seq[i] || 1) + 1, pdf.total)
+                      }
                       onChange={(e) => setSeqAt(i + 1, +e.target.value)}
                       aria-label="도착 페이지"
                     >
@@ -1677,7 +1690,9 @@ export default function App() {
                     className="cueDelBtn"
                     onClick={() => removeCueRow(i)}
                     title="이 넘김 삭제"
-                    aria-label={seq[i] + "페이지에서 " + seq[i + 1] + "페이지 넘김 삭제"}
+                    aria-label={
+                      seq[i] + "페이지에서 " + seq[i + 1] + "페이지 넘김 삭제"
+                    }
                   >
                     ×
                   </button>
@@ -1933,7 +1948,9 @@ export default function App() {
           <button
             className="btn tuneTap"
             onClick={tap}
-            disabled={pendingTap ? tapOverflow : tuneRepeat ? false : tapOverflow}
+            disabled={
+              pendingTap ? tapOverflow : tuneRepeat ? false : tapOverflow
+            }
           >
             {pendingTap
               ? tapOverflow
@@ -1958,7 +1975,10 @@ export default function App() {
             <div className="pickTime">⏸ {fmtCue(pendingTap.t)}에 찍음</div>
             <div className="pickTitle">몇 페이지로 넘어갈까요?</div>
             {!tapOverflow && (
-              <button className="btn pickNext" onClick={() => commitPending(null)}>
+              <button
+                className="btn pickNext"
+                onClick={() => commitPending(null)}
+              >
                 다음 페이지 ({curDest}페이지)
               </button>
             )}
