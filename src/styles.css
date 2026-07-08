@@ -16,6 +16,42 @@
   --indigo:#5558C8;
   --indigo-soft:#EDEEFB;
   --night:#12102a; /* 유튜브 미니 플레이어 등 어두운 요소용 */
+  --side:#FAFAF6;        /* 사이드바 */
+  --track:#EDEEE8;       /* 세그·토글 트랙 */
+  --chip:#F6F6F1;        /* 프리셋 칩 */
+  --rowBg:#F8F8F4;       /* cue 줄 */
+  --kbd:#F1F1EB;         /* kbd·code 칩 */
+  --stageBg:#E9EAE3;     /* 악보 무대 */
+  --barBg:rgba(255,255,255,.95); /* 고정 바(튠·모바일)·배지 */
+  --brassTint:#FBF4E3;   /* 브라스 옅은 배경 */
+  --stageGlow:rgba(255,255,255,.9); /* 무대 위 글자 후광 */
+  color-scheme:light;
+}
+/* 다크: 늦은 연습·어두운 무대 대기실용 — 같은 잉크·브라스 정체성의 밤 버전 */
+:root[data-theme="dark"]{
+  --paper:#131420;
+  --panel:#1C1E2C;
+  --ink:#EDEEF6;
+  --muted:#9CA1B5;
+  --line:#2B2D3D;
+  --line-strong:#3B3E52;
+  --field:#181A27;
+  --brass:#D9A63C;
+  --brass-deep:#E8BE63;
+  --btn-hi:#F2C14E;
+  --btn-lo:#D99A2B;
+  --indigo:#7B7EDD;
+  --indigo-soft:#262848;
+  --side:#171927;
+  --track:#262838;
+  --chip:#232537;
+  --rowBg:#20222F;
+  --kbd:#262838;
+  --stageBg:#0F1019;
+  --barBg:rgba(23,25,39,.95);
+  --brassTint:#2E2817;
+  --stageGlow:rgba(0,0,0,.6);
+  color-scheme:dark;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body,#root{min-height:100%;height:100%}
@@ -26,7 +62,6 @@ body{
     radial-gradient(900px 500px at 90% 110%, rgba(192,138,37,.06), transparent 55%),
     var(--paper);
   color:var(--ink);
-  color-scheme:light;
   min-height:100vh;
 }
 /* 2단 레이아웃: 왼쪽 컨트롤 사이드바 + 오른쪽 악보 메인 */
@@ -34,7 +69,7 @@ body{
 .sidebar{
   flex:0 0 320px;width:320px;height:100vh;overflow-y:auto;
   padding:16px 16px 24px;border-right:1px solid var(--line);
-  background:#FAFAF6;
+  background:var(--side);
   display:flex;flex-direction:column;gap:14px;
 }
 .main{flex:1;min-width:0;height:100vh;display:flex;flex-direction:column;padding:14px 18px 12px;position:relative}
@@ -46,10 +81,12 @@ h1.eyebrow{font-weight:800} /* 메트로놈 h1(SEO용)도 같은 모양 유지 *
 .eyebrowRow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .pageLink{
   font-size:12px;color:var(--muted);text-decoration:none;border:1px solid var(--line-strong);
-  border-radius:999px;padding:4px 10px;white-space:nowrap;background:#fff;
+  border-radius:999px;padding:4px 10px;white-space:nowrap;background:var(--panel);
   transition:color .15s,border-color .15s;
 }
 .pageLink:hover{color:var(--ink);border-color:var(--indigo)}
+.headLinks{display:flex;align-items:center;gap:6px}
+.themeBtn{font:inherit;font-size:12px;cursor:pointer;line-height:1.3;padding:4px 9px}
 h1{font-size:12.5px;font-weight:700;letter-spacing:-.01em;line-height:1.5} /* 부제(.sub)와 같은 크기 */
 h1 .accent{color:var(--brass-deep)}
 .sub{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.5}
@@ -62,7 +99,7 @@ h1 .accent{color:var(--brass-deep)}
 /* 세부 설정 접이 */
 .advToggle{
   display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px;
-  background:#fff;border:1px solid var(--line);border-radius:10px;color:var(--muted);
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--muted);
   font-size:12.5px;padding:10px 12px;cursor:pointer;transition:color .15s,border-color .15s;text-align:left;
 }
 .advToggle:hover{color:var(--ink);border-color:var(--indigo)}
@@ -79,7 +116,7 @@ h1 .accent{color:var(--brass-deep)}
 }
 .saveRow{display:flex;gap:6px;align-items:center}
 .saveRow input{
-  flex:1;min-width:0;background:#fff;border:1px solid var(--indigo);border-radius:10px;
+  flex:1;min-width:0;background:var(--panel);border:1px solid var(--indigo);border-radius:10px;
   color:var(--ink);font-size:14px;padding:10px 12px;
 }
 .saveRow input:focus{outline:none;box-shadow:0 0 0 3px rgba(85,88,200,.18)}
@@ -92,7 +129,7 @@ h1 .accent{color:var(--brass-deep)}
 .presetsEmpty{font-size:12px;color:#A2A6B0;line-height:1.5}
 .presetsHint{font-size:12px;color:var(--brass-deep);opacity:.9;margin-top:9px;line-height:1.5}
 .presetList{display:flex;flex-wrap:wrap;gap:8px}
-.presetChip{display:flex;align-items:stretch;background:#F6F6F1;border:1px solid var(--line-strong);border-radius:9px;overflow:hidden}
+.presetChip{display:flex;align-items:stretch;background:var(--chip);border:1px solid var(--line-strong);border-radius:9px;overflow:hidden}
 .presetChip:hover{border-color:var(--indigo)}
 .presetChip.flash{border-color:var(--brass);animation:chipFlash 1.6s ease-out}
 @keyframes chipFlash{
@@ -136,7 +173,7 @@ input::placeholder{color:#A2A6B0}
 .upload:hover{border-color:var(--indigo);color:var(--ink)}
 .upload input{display:none}
 
-.seg{display:flex;gap:6px;background:#EDEEE8;border:1px solid var(--line);border-radius:10px;padding:5px}
+.seg{display:flex;gap:6px;background:var(--track);border:1px solid var(--line);border-radius:10px;padding:5px}
 .seg button{
   flex:1;border:none;background:transparent;color:var(--muted);font-size:13px;padding:8px 12px;
   border-radius:7px;cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;
@@ -162,7 +199,7 @@ input[type=range]::-moz-range-thumb{
 .switch-mini{display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
 .switch-mini input{position:absolute;opacity:0}
 .switch-mini .box{
-  width:44px;height:26px;border-radius:999px;background:#DDDED5;border:1px solid var(--line-strong);
+  width:44px;height:26px;border-radius:999px;background:var(--track);border:1px solid var(--line-strong);
   position:relative;transition:background .15s,border-color .15s;flex:0 0 auto;
 }
 .switch-mini .box::after{
@@ -180,18 +217,18 @@ input[type=range]::-moz-range-thumb{
 .cueHead{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
 .cueDesc{font-size:12.5px;color:var(--muted);line-height:1.55}
 .cueDesc b{color:var(--ink)}
-.cueDesc code{background:#F1F1EB;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--brass-deep);font-size:12px;font-variant-numeric:tabular-nums}
-.cueDesc kbd{background:#F1F1EB;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--ink);font-size:11px}
+.cueDesc code{background:var(--kbd);border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--brass-deep);font-size:12px;font-variant-numeric:tabular-nums}
+.cueDesc kbd{background:var(--kbd);border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--ink);font-size:11px}
 .cueActions{display:flex;gap:8px;flex-shrink:0}
 .cueRows{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;max-height:200px;overflow:auto;padding-right:4px}
 .cueRow{
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#F8F8F4;border:1px solid var(--line);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--rowBg);border:1px solid var(--line);
   border-radius:10px;padding:8px 10px;transition:border-color .15s,box-shadow .15s;
 }
 .cueRow.hot{border-color:var(--brass);box-shadow:0 0 0 2px rgba(192,138,37,.2)}
 .cueLabel{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 .cueSel{
-  background:#fff;border:1px solid var(--line-strong);border-radius:7px;color:var(--ink);
+  background:var(--panel);border:1px solid var(--line-strong);border-radius:7px;color:var(--ink);
   font-size:13px;padding:5px 4px;font-variant-numeric:tabular-nums;cursor:pointer;
 }
 .cueSel:focus{outline:none;border-color:var(--indigo)}
@@ -226,7 +263,7 @@ input[type=range]::-moz-range-thumb{
 .pickCard .cancel{margin-top:2px}
 .tuneJumpBtn{
   flex:0 0 auto;min-width:46px;padding:11px 0;border-radius:10px;cursor:pointer;
-  background:#fff;border:1px solid var(--line-strong);color:var(--ink);font-size:16px;
+  background:var(--panel);border:1px solid var(--line-strong);color:var(--ink);font-size:16px;
   font-variant-numeric:tabular-nums;
 }
 .tuneJumpBtn:hover:not(:disabled){border-color:var(--brass);color:var(--brass-deep)}
@@ -239,7 +276,7 @@ input[type=range]::-moz-range-thumb{
   position:fixed;left:0;right:0;bottom:0;z-index:35;
   display:flex;flex-direction:column;gap:8px;
   padding:10px 14px calc(12px + env(safe-area-inset-bottom));
-  background:rgba(255,255,255,.95);border-top:2px solid var(--brass);
+  background:var(--barBg);border-top:2px solid var(--brass);
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
   box-shadow:0 -10px 28px rgba(20,24,40,.14);
 }
@@ -247,7 +284,7 @@ input[type=range]::-moz-range-thumb{
 .tuneRow1 .spacer{flex:1}
 .tuneBadge{
   font-size:12px;color:var(--brass-deep);border:1px solid var(--brass);
-  border-radius:999px;padding:4px 10px;white-space:nowrap;background:#FBF4E3;
+  border-radius:999px;padding:4px 10px;white-space:nowrap;background:var(--brassTint);
 }
 .tuneTime{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 .tuneSeek{width:100%}
@@ -261,7 +298,7 @@ input[type=range]::-moz-range-thumb{
 .btn:hover:not(:disabled){filter:brightness(1.04)}
 .btn:active:not(:disabled){transform:translateY(1px)}
 .btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.3);box-shadow:none}
-.btn.ghost{background:#fff;border:1px solid var(--line-strong);color:var(--ink);box-shadow:none;font-weight:600}
+.btn.ghost{background:var(--panel);border:1px solid var(--line-strong);color:var(--ink);box-shadow:none;font-weight:600}
 .btn.ghost:hover:not(:disabled){color:var(--ink);border-color:var(--indigo)}
 .btn.small{padding:9px 14px;font-size:13px}
 .btn.tiny{padding:6px 10px;font-size:12px;border-radius:8px}
@@ -277,7 +314,7 @@ input[type=range]::-moz-range-thumb{
 }
 .kbhint b{color:var(--ink);font-weight:600;font-size:11px}
 .kbMore{
-  width:18px;height:18px;border-radius:50%;border:1px solid var(--line-strong);background:#fff;
+  width:18px;height:18px;border-radius:50%;border:1px solid var(--line-strong);background:var(--panel);
   color:var(--muted);font-size:11px;line-height:1;cursor:pointer;padding:0;flex:0 0 auto;
 }
 .kbMore:hover{color:var(--ink);border-color:var(--indigo)}
@@ -289,7 +326,7 @@ input[type=range]::-moz-range-thumb{
 .kbPopTitle{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
 .kbRow{display:flex;align-items:center;gap:10px;padding:3px 0;font-size:12px}
 .kbRow kbd{
-  flex:0 0 58px;text-align:center;background:#F1F1EB;border:1px solid var(--line);
+  flex:0 0 58px;text-align:center;background:var(--kbd);border:1px solid var(--line);
   border-radius:5px;padding:2px 6px;color:var(--brass-deep);font-size:11px;
 }
 .kbRow span{color:var(--muted)}
@@ -317,7 +354,7 @@ input[type=range]::-moz-range-thumb{
 }
 
 .stage{
-  background:#E9EAE3;border:1px solid var(--line);border-radius:16px;min-height:220px;flex:1;
+  background:var(--stageBg);border:1px solid var(--line);border-radius:16px;min-height:220px;flex:1;
   display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden;position:relative;
 }
 .stage.empty{color:var(--muted);font-size:14px;text-align:center;flex-direction:column;gap:10px}
@@ -327,7 +364,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 /* 넘김 예고 배지 (followLoop에서 직접 갱신) */
 .flipHint{
   position:absolute;top:10px;right:12px;z-index:5;pointer-events:none;
-  background:rgba(255,255,255,.94);border:1px solid var(--brass);border-radius:999px;
+  background:var(--barBg);border:1px solid var(--brass);border-radius:999px;
   color:var(--brass-deep);font-size:12px;padding:6px 12px;opacity:0;transition:opacity .2s;
   font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 4px 12px rgba(35,40,59,.12);
 }
@@ -342,7 +379,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 .flipCue.show{opacity:1}
 .flipCueNum{
   font-weight:800;color:var(--brass);line-height:1;
-  font-variant-numeric:tabular-nums;text-shadow:0 2px 14px rgba(255,255,255,.9);
+  font-variant-numeric:tabular-nums;text-shadow:0 2px 14px var(--stageGlow);
 }
 .flipCueNum.pulse{animation:cuePulse .4s ease-out}
 @keyframes cuePulse{from{transform:scale(1.25)}to{transform:scale(1)}}
@@ -357,7 +394,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 .tapZone.right{right:0;justify-content:flex-end;padding-right:8px}
 .tapZone span{
   font-size:36px;color:var(--ink);opacity:0;transition:opacity .15s;
-  text-shadow:0 1px 6px rgba(255,255,255,.9);line-height:1;
+  text-shadow:0 1px 6px var(--stageGlow);line-height:1;
 }
 .tapZone:hover span{opacity:.5}
 .tapZone:active span{opacity:.85}
@@ -374,6 +411,8 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
   from{opacity:0;transform:translate(-50%,6px)}
   to{opacity:1;transform:translate(-50%,0)}
 }
+/* 다크에선 토스트를 반전(밝은 칩)해 또렷하게 */
+:root[data-theme="dark"] .toast{background:#EDEEF6;border-color:#EDEEF6;color:#23283B}
 
 /* 집중 모드 — 사이드바를 숨기고 악보를 최대로. 하단 타이밍 바는 유지 */
 .app.focus .sidebar{display:none}
@@ -453,7 +492,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 .bpmUnit{font-size:16px;color:var(--muted);letter-spacing:.14em}
 .beatDots{display:flex;justify-content:center;gap:14px;min-height:22px}
 .beatDots .dot{
-  width:16px;height:16px;border-radius:50%;background:#EDEEE8;border:1px solid var(--line-strong);
+  width:16px;height:16px;border-radius:50%;background:var(--track);border:1px solid var(--line-strong);
   transition:transform .06s,background .06s,box-shadow .06s;
 }
 .beatDots .dot.accent{border-color:var(--brass)}
@@ -479,7 +518,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 }
 .tapBtn{white-space:nowrap;padding:14px 18px}
 .tapBtn kbd{
-  background:#F1F1EB;border:1px solid var(--line);border-radius:5px;
+  background:var(--kbd);border:1px solid var(--line);border-radius:5px;
   padding:1px 6px;font-size:11px;color:var(--muted);margin-left:2px;
 }
 .metroHint{margin-left:0}
@@ -503,7 +542,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
   .mobileBar{
     display:flex;position:fixed;left:0;right:0;bottom:0;z-index:30;align-items:center;gap:8px;
     padding:10px 12px calc(10px + env(safe-area-inset-bottom));
-    background:rgba(255,255,255,.95);border-top:1px solid var(--line-strong);
+    background:var(--barBg);border-top:1px solid var(--line-strong);
     -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
     box-shadow:0 -8px 22px rgba(20,24,40,.12);
   }

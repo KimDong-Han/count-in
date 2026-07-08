@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { playBeep, playStick } from "./sound";
 import { navigate } from "./router.js";
+import { currentDark, setDark } from "./theme.js";
 
 // 별도 페이지(#/metronome)의 메트로놈.
 // 타이밍은 setInterval이 아니라 Web Audio 룩어헤드 스케줄러로:
@@ -28,6 +29,11 @@ export default function Metronome() {
   const [accentOn, setAccentOn] = useState(saved.accentOn ?? true); // 첫박 강세
   const [running, setRunning] = useState(false);
   const [beatVis, setBeatVis] = useState(-1); // 현재 반짝일 박 (0-based)
+  const [darkMode, setDarkMode] = useState(currentDark); // 🌙/☀️ 토글 표시용
+  const flipTheme = () => {
+    setDark(!darkMode);
+    setDarkMode(!darkMode);
+  };
 
   // 스케줄러 루프에서 최신값을 읽기 위한 ref 미러 (App.jsx와 같은 패턴)
   const bpmRef = useRef(bpm);
@@ -184,7 +190,18 @@ export default function Metronome() {
         >
           ‹ 연습 플레이어
         </a>
-        <h1 className="eyebrow">Count-In · 온라인 메트로놈</h1>
+        <span className="headLinks">
+          <h1 className="eyebrow">Count-In · 온라인 메트로놈</h1>
+          <button
+            type="button"
+            className="pageLink themeBtn"
+            onClick={flipTheme}
+            title={darkMode ? "밝은 화면으로" : "어두운 화면으로"}
+            aria-label={darkMode ? "밝은 화면으로" : "어두운 화면으로"}
+          >
+            {darkMode ? "☀️" : "🌙"}
+          </button>
+        </span>
       </div>
 
       <div className="metroCard">

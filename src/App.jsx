@@ -4,6 +4,7 @@ import { useYouTube, extractId, ytErrMsg } from "./useYouTube";
 import { playBeep, playStick } from "./sound";
 import { parseTime, fmt, fmtCue } from "./time";
 import { navigate } from "./router.js";
+import { currentDark, setDark } from "./theme.js";
 
 export default function App() {
   const canvasRef = useRef(null);
@@ -45,6 +46,11 @@ export default function App() {
   const [tuneMode, setTuneMode] = useState(false); // 타이밍 입력 모드 (카운트다운 없이 재생하며 찍기)
   // 도돌이표 있는 곡: 타이밍 입력 모드에서 찍을 때마다 몇 페이지로 갈지 물어봄 (기본 꺼짐)
   const [tuneRepeat, setTuneRepeat] = useState(false);
+  const [darkMode, setDarkMode] = useState(currentDark); // 🌙/☀️ 토글 표시용
+  const flipTheme = () => {
+    setDark(!darkMode);
+    setDarkMode(!darkMode);
+  };
   const [pendingTap, setPendingTap] = useState(null); // 도돌이표 곡에서 찍은 순간 {i, t} — 목적지 선택 대기
   const [focus, setFocus] = useState(false); // 집중 모드(컨트롤 숨김)
   const [presets, setPresets] = useState(() => {
@@ -1264,16 +1270,27 @@ export default function App() {
         <header>
           <div className="eyebrowRow">
             <div className="eyebrow">Count-In</div>
-            <a
-              className="pageLink"
-              href="/metronome"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/metronome");
-              }}
-            >
-              🥁 메트로놈 ›
-            </a>
+            <span className="headLinks">
+              <button
+                type="button"
+                className="pageLink themeBtn"
+                onClick={flipTheme}
+                title={darkMode ? "밝은 화면으로" : "어두운 화면으로"}
+                aria-label={darkMode ? "밝은 화면으로" : "어두운 화면으로"}
+              >
+                {darkMode ? "☀️" : "🌙"}
+              </button>
+              <a
+                className="pageLink"
+                href="/metronome"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate("/metronome");
+                }}
+              >
+                🥁 메트로놈 ›
+              </a>
+            </span>
           </div>
           <h1>
             타이밍 설정해두면 <span className="accent">맞춰서</span> 넘어감.

@@ -3,7 +3,10 @@ import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
 import Metronome from './Metronome.jsx'
 import { getPath } from './router.js'
+import { applyTheme } from './theme.js'
 import './styles.css'
+
+applyTheme() // 렌더 전에 테마 적용 (라이트/다크 깜빡임 방지)
 
 // 경로별 문서 메타(SEO). 직접 접근은 정적 HTML(index/metronome.html)이 담당하고,
 // 여기서는 앱 내 경로 전환 시 title·description·canonical을 맞춰 준다.
