@@ -26,7 +26,7 @@ export default function App() {
   const [volume, setVolume] = useState(80);
   const [rate, setRate] = useState(1); // 재생 속도 0.5 | 0.75 | 1
   const [soundMode, setSoundMode] = useState("stick"); // 'stick' | 'beep' | 'off'
-  const [flipMode, setFlipMode] = useState("cue"); // 'cue' | 'interval' | 'even'
+  const [flipMode, setFlipMode] = useState("cue"); // 'cue' | 'interval'
   const [ivMin, setIvMin] = useState(0);
   const [ivSec, setIvSec] = useState(20);
   const [loopOn, setLoopOn] = useState(false);
@@ -208,17 +208,6 @@ export default function App() {
         for (let i = 0; i < sq.length - 1; i++) {
           const c = cuesRef.current[i];
           pt.push(c == null || isNaN(c) ? Infinity : c); // 미입력 = 자동으로 넘기지 않음(수동 대기)
-        }
-      } else if (flipModeRef.current === "even") {
-        const dur = yt.getDuration();
-        if (dur > 1) {
-          const span = dur * 0.98;
-          pt = [];
-          for (let i = 0; i < total; i++) pt.push((span * i) / total);
-        } else {
-          const iv = intervalSec();
-          pt = [];
-          for (let i = 0; i < total; i++) pt.push(iv * i);
         }
       } else {
         const iv = intervalSec();
@@ -721,8 +710,10 @@ export default function App() {
     rateRef.current = p.rate ?? 1;
     setSoundMode(p.soundMode ?? "stick");
     soundModeRef.current = p.soundMode ?? "stick";
-    setFlipMode(p.flipMode ?? "cue");
-    flipModeRef.current = p.flipMode ?? "cue";
+    // 'even'(곡 길이 균등)은 없어진 모드 — 예전 프리셋은 일정 간격으로 대체
+    const fm = p.flipMode === "even" ? "interval" : (p.flipMode ?? "cue");
+    setFlipMode(fm);
+    flipModeRef.current = fm;
     setIvMin(p.ivMin ?? 0);
     setIvSec(p.ivSec ?? 20);
     ivRef.current = { m: p.ivMin ?? 0, s: p.ivSec ?? 20 };
@@ -1410,7 +1401,6 @@ export default function App() {
                   {[
                     ["cue", "페이지마다 시각"],
                     ["interval", "일정 간격"],
-                    ["even", "곡 길이 균등"],
                   ].map(([k, t]) => (
                     <button
                       key={k}
