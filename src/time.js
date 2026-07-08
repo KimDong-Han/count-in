@@ -19,3 +19,14 @@ export function fmt(sec){
   const s = Math.floor(sec % 60)
   return m + ':' + String(s).padStart(2, '0')
 }
+
+// 초 → "m:ss" 또는 "m:ss.d" (0.1초 단위, 정수면 소수 생략) — 넘김 타이밍용
+export function fmtCue(sec){
+  if(!isFinite(sec) || sec < 0) sec = 0
+  sec = Math.round(sec * 10) / 10
+  const m = Math.floor(sec / 60)
+  const rest = Math.round((sec - m * 60) * 10)
+  const s = Math.floor(rest / 10)
+  const d = rest % 10
+  return m + ':' + String(s).padStart(2, '0') + (d ? '.' + d : '')
+}

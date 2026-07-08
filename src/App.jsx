@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePdf } from "./usePdf";
 import { useYouTube, extractId, ytErrMsg } from "./useYouTube";
 import { playBeep, playStick } from "./sound";
-import { parseTime, fmt } from "./time";
+import { parseTime, fmt, fmtCue } from "./time";
 import { navigate } from "./router.js";
 
 export default function App() {
@@ -41,6 +41,7 @@ export default function App() {
     kind: "ok",
   });
   const [tapCursor, setTapCursor] = useState(0); // 탭으로 기록할 다음 전환 index
+  const [tuneMode, setTuneMode] = useState(false); // 타이밍 입력 모드 (카운트다운 없이 재생하며 찍기)
   const [focus, setFocus] = useState(false); // 집중 모드(컨트롤 숨김)
   const [presets, setPresets] = useState(() => {
     // 저장한 곡 프리셋 목록
@@ -79,6 +80,10 @@ export default function App() {
   const ivRef = useRef({ m: 0, s: 20 });
   const armedRef = useRef(false);
   const tapCursorRef = useRef(0);
+  const tuneModeRef = useRef(false);
+  const tuneTimeRef = useRef(null); // 타이밍 입력 바의 시각 표시 (rAF에서 직접 갱신)
+  const tuneSeekRef = useRef(null); // 타이밍 입력 바의 시크 바 (rAF에서 직접 갱신)
+  const seekDragRef = useRef(false); // 시크 바 드래그 중엔 rAF 갱신 중지
   const delayRef = useRef(delay);
   const pageTimesRef = useRef([0]);
   const followRef = useRef(false);
@@ -238,6 +243,19 @@ export default function App() {
     if (clockRef.current)
       clockRef.current.textContent = dur ? fmt(t) + " / " + fmt(dur) : fmt(t);
 
+    // 타이밍 입력 모드: 하단 바의 시각·시크 바 갱신 (드래그 중엔 손대지 않음)
+    if (tuneModeRef.current) {
+      if (tuneTimeRef.current)
+        tuneTimeRef.current.textContent = dur
+          ? fmt(t) + " / " + fmt(dur)
+          : fmt(t);
+      const sk = tuneSeekRef.current;
+      if (sk && dur && !seekDragRef.current) {
+        sk.max = dur;
+        sk.value = t;
+      }
+    }
+
     // 넘김 예고: 다음 넘김 3초 전부터 표시.
     // 악보 오른쪽 여백이 넉넉하면 큰 숫자 카운트다운, 좁으면(모바일·가로 악보) 우상단 작은 배지.
     const fh = flipHintRef.current;
@@ -362,7 +380,7 @@ export default function App() {
   };
   const nowAt = (i) => {
     if (!armedRef.current) return;
-    const stamp = fmt(yt.getTime() || 0);
+    const stamp = fmtCue(yt.getTime() || 0); // 0.1초 단위로 기록 (초 단위 절사보다 정확)
     setCueAt(i, stamp);
     setTapCursor(i + 1);
     showToast(i + 1 + "→" + (i + 2) + "쪽 넘김 " + stamp + " 저장");
@@ -371,6 +389,35 @@ export default function App() {
     const idx = tapCursorRef.current;
     if (idx >= totalRef.current - 1) return;
     nowAt(idx);
+  };
+  // 타이밍 입력 모드: 해당 전환 지점 몇 초 전으로 되감아 그 줄만 다시 찍기
+  const redoAt = (i) => {
+    const c = cuesRef.current[i];
+    const prev = i > 0 ? cuesRef.current[i - 1] : 0;
+    const base =
+      c != null && isFinite(c)
+        ? c
+        : prev != null && isFinite(prev)
+          ? prev
+          : 0;
+    const to = Math.max(0, base - 4);
+    setTapCursor(i);
+    yt.seek(to);
+    yt.play();
+    startFollowing();
+    setIsPlaying(true);
+    showToast(i + 1 + "→" + (i + 2) + "쪽 · " + fmt(to) + "부터 다시 듣기");
+  };
+  // 찍어둔 시각을 ±0.5초 미세 조정
+  const nudgeCue = (i, delta) => {
+    const c = cuesRef.current[i];
+    if (c == null || isNaN(c)) {
+      showToast("먼저 시각을 찍거나 입력해 주세요");
+      return;
+    }
+    const nv = Math.max(0, c + delta);
+    setCueAt(i, fmtCue(nv));
+    showToast(i + 1 + "→" + (i + 2) + "쪽 넘김 " + fmtCue(nv));
   };
   const clearCues = () => {
     const arr = new Array(Math.max(0, totalRef.current - 1)).fill("");
@@ -645,11 +692,12 @@ export default function App() {
     yt.stop();
   }, [yt]);
 
-  const startFlow = useCallback(() => {
+  const startFlow = useCallback((opts) => {
+    const instant = noWaitRef.current || (opts && opts.instant); // 카운트다운 없이 즉시 재생
     setMsg({ text: "", kind: "ok" });
     if (totalRef.current === 0) {
       setMsg({ text: "먼저 악보 PDF를 불러와 주세요.", kind: "err" });
-      return;
+      return false;
     }
     const id = extractId(url);
     if (!id) {
@@ -657,28 +705,28 @@ export default function App() {
         text: "유튜브 반주 링크를 확인해 주세요. 주소를 그대로 붙여넣으면 돼요.",
         kind: "err",
       });
-      return;
+      return false;
     }
     if (!yt.apiReady) {
       setMsg({
         text: "플레이어를 준비 중이에요. 잠시 후 다시 눌러 주세요.",
         kind: "err",
       });
-      return;
+      return false;
     }
     pendingIdRef.current = id;
     let secs = parseInt(delayRef.current, 10);
     if (isNaN(secs) || secs < 0) secs = 0;
     if (secs > 60) secs = 60;
-    if (noWaitRef.current) secs = 0; // 바로 시작: 카운트다운 생략
+    if (instant) secs = 0;
     ensureAudio();
     setArmed(true);
     armedRef.current = true;
     yt.ensure(ytInnerRef.current, id, {
       onReady: () => {
         applyVolume();
-        if (noWaitRef.current)
-          yt.loadVideoById(id); // 바로 시작: 로드와 동시에 재생 (cue 직후 play는 로딩 중이라 무시됨)
+        if (instant)
+          yt.loadVideoById(id); // 로드와 동시에 재생 (cue 직후 play는 로딩 중이라 무시됨)
         else if (preLoadRef.current)
           primePlayer(id); // 미리 재생(버퍼) 준비
         else yt.cueById(id); // 준비만, 재생은 카운트 후에
@@ -690,6 +738,7 @@ export default function App() {
         setMsg({ text: ytErrMsg(code), kind: "err" });
       },
     });
+    return true;
   }, [
     url,
     yt,
@@ -753,11 +802,37 @@ export default function App() {
     armedRef.current = false;
     setIsPlaying(false);
     setTapCursor(0);
+    setTuneMode(false);
+    tuneModeRef.current = false;
     yt.stop();
     pdf.show(1);
     if (barRef.current) barRef.current.style.width = "0%";
     if (clockRef.current) clockRef.current.textContent = "";
   }, [stopFollowing, yt, pdf]);
+
+  // ---- 타이밍 입력 모드: 카운트다운 없이 바로 재생하며 넘김 시각을 찍는다 ----
+  const enterTune = useCallback(() => {
+    setTapCursor(0);
+    if (!startFlow({ instant: true })) return;
+    setTuneMode(true);
+    tuneModeRef.current = true;
+    setMsg({
+      text: "반주를 들으며 페이지가 넘어갈 순간마다 🎯 지금 넘김을 눌러 주세요.",
+      kind: "ok",
+    });
+  }, [startFlow]);
+
+  const exitTune = useCallback(() => {
+    const n = cueTextRef.current.filter((v) => v && String(v).trim()).length;
+    stopPlayback(); // 타이밍 입력 모드 해제 포함
+    setMsg({
+      text:
+        "넘김 타이밍 " +
+        n +
+        "개 저장됨 · 시작을 누르면 이 타이밍으로 연습할 수 있어요.",
+      kind: "ok",
+    });
+  }, [stopPlayback]);
 
   // ---- PDF 파일 선택 ----
   const onFile = async (e) => {
@@ -919,7 +994,7 @@ export default function App() {
   const playLabel = armed && isPlaying ? "일시정지" : "시작";
 
   return (
-    <div className={"app" + (focus ? " focus" : "")}>
+    <div className={"app" + (focus ? " focus" : "") + (tuneMode ? " tune" : "")}>
       <aside className="sidebar">
         <header>
           <div className="eyebrowRow">
@@ -1211,21 +1286,47 @@ export default function App() {
           <div className="cuePanel">
             <div className="cueHead">
               <div className="cueDesc">
-                <b>페이지 넘김 시각</b> — <code>0:45</code>처럼 입력하거나,
-                반주를 들으며 <b>지금 넘김</b>(<kbd>M</kbd>)으로 찍어 두세요.
-                저장돼요.
+                {tuneMode ? (
+                  <>
+                    넘어갈 순간마다 <b>🎯 지금 넘김</b>을 눌러 주세요.{" "}
+                    <b>🔁</b>는 그 줄만 다시 듣고 찍기, <b>−·＋</b>는 0.5초
+                    미세 조정이에요.
+                  </>
+                ) : (
+                  <>
+                    <b>페이지 넘김 시각</b> — <code>0:45</code>처럼 입력하거나,
+                    반주를 들으며 <b>지금 넘김</b>(<kbd>M</kbd>)으로 찍어
+                    두세요. 저장돼요.
+                  </>
+                )}
               </div>
-              <div className="cueActions">
+              {!tuneMode && (
                 <button
-                  className="btn small"
-                  onClick={tap}
-                  disabled={!armed || tapCursor >= pdf.total - 1}
+                  className="btn small tuneEnter"
+                  onClick={enterTune}
+                  disabled={playDisabled}
+                  title={
+                    playDisabled
+                      ? "링크와 악보를 먼저 넣어 주세요"
+                      : "카운트다운 없이 바로 재생하면서 넘김 시각을 찍는 모드예요"
+                  }
                 >
-                  🎯 지금 넘김
-                  {armed && tapCursor < pdf.total - 1
-                    ? ` (${tapCursor + 1}→${tapCursor + 2}쪽)`
-                    : ""}
+                  ⏱ 타이밍 입력 모드 — 들으면서 찍기
                 </button>
+              )}
+              <div className="cueActions">
+                {!tuneMode && (
+                  <button
+                    className="btn small"
+                    onClick={tap}
+                    disabled={!armed || tapCursor >= pdf.total - 1}
+                  >
+                    🎯 지금 넘김
+                    {armed && tapCursor < pdf.total - 1
+                      ? ` (${tapCursor + 1}→${tapCursor + 2}쪽)`
+                      : ""}
+                  </button>
+                )}
                 <button className="btn ghost small" onClick={clearCues}>
                   초기화
                 </button>
@@ -1248,13 +1349,39 @@ export default function App() {
                     placeholder="0:00"
                     onChange={(e) => setCueAt(i, e.target.value)}
                   />
-                  <button
-                    className="btn ghost tiny"
-                    onClick={() => nowAt(i)}
-                    disabled={!armed}
-                  >
-                    지금
-                  </button>
+                  {tuneMode ? (
+                    <span className="cueRowTools">
+                      <button
+                        className="btn ghost tiny"
+                        title="이 줄만 다시 듣고 찍기"
+                        onClick={() => redoAt(i)}
+                      >
+                        🔁
+                      </button>
+                      <button
+                        className="btn ghost tiny"
+                        title="0.5초 앞당기기"
+                        onClick={() => nudgeCue(i, -0.5)}
+                      >
+                        −
+                      </button>
+                      <button
+                        className="btn ghost tiny"
+                        title="0.5초 늦추기"
+                        onClick={() => nudgeCue(i, 0.5)}
+                      >
+                        ＋
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      className="btn ghost tiny"
+                      onClick={() => nowAt(i)}
+                      disabled={!armed}
+                    >
+                      지금
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -1436,7 +1563,7 @@ export default function App() {
         )}
       </main>
 
-      {pdf.total > 0 && (
+      {pdf.total > 0 && !tuneMode && (
         <div className="mobileBar">
           <button className="btn" onClick={togglePlay} disabled={playDisabled}>
             {playLabel}
@@ -1450,6 +1577,60 @@ export default function App() {
           <span className="page-ind">
             <b>{pdf.pageNum}</b> / {pdf.total}
           </span>
+        </div>
+      )}
+
+      {tuneMode && (
+        <div className="tuneBar">
+          <div className="tuneRow1">
+            <span className="tuneBadge">⏱ 타이밍 입력</span>
+            <span className="tuneTime" ref={tuneTimeRef}>
+              0:00
+            </span>
+            <div className="spacer"></div>
+            <button className="btn ghost small" onClick={togglePlay}>
+              {isPlaying ? "⏸ 일시정지" : "▶ 재생"}
+            </button>
+            <button className="btn small" onClick={exitTune}>
+              ✓ 완료
+            </button>
+          </div>
+          <input
+            className="tuneSeek"
+            type="range"
+            min="0"
+            max="1"
+            step="0.1"
+            defaultValue="0"
+            aria-label="재생 위치"
+            ref={tuneSeekRef}
+            onPointerDown={() => {
+              seekDragRef.current = true;
+            }}
+            onPointerUp={() => {
+              seekDragRef.current = false;
+            }}
+            onChange={(e) => {
+              const to = parseFloat(e.target.value);
+              if (!isFinite(to)) return;
+              yt.seek(to);
+              if (tuneTimeRef.current) {
+                const dur = yt.getDuration() || 0;
+                tuneTimeRef.current.textContent = dur
+                  ? fmt(to) + " / " + fmt(dur)
+                  : fmt(to);
+              }
+            }}
+          />
+          <button
+            className="btn tuneTap"
+            onClick={tap}
+            disabled={tapCursor >= pdf.total - 1}
+          >
+            {tapCursor < pdf.total - 1
+              ? `🎯 지금 넘김 — ${tapCursor + 1}→${tapCursor + 2}쪽`
+              : "✓ 모든 쪽을 찍었어요 — 완료를 눌러 주세요"}
+          </button>
         </div>
       )}
 
