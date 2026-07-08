@@ -80,6 +80,7 @@ header{margin-bottom:2px}
 h1.eyebrow{font-weight:800} /* 메트로놈 h1(SEO용)도 같은 모양 유지 */
 .eyebrowRow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .pageLink{
+  display:inline-flex;align-items:center;gap:5px;
   font-size:12px;color:var(--muted);text-decoration:none;border:1px solid var(--line-strong);
   border-radius:999px;padding:4px 10px;white-space:nowrap;background:var(--panel);
   transition:color .15s,border-color .15s;
@@ -103,6 +104,7 @@ h1 .accent{color:var(--brass-deep)}
   font-size:12.5px;padding:10px 12px;cursor:pointer;transition:color .15s,border-color .15s;text-align:left;
 }
 .advToggle:hover{color:var(--ink);border-color:var(--indigo)}
+.advToggle span{display:inline-flex;align-items:center;gap:6px}
 .advBody{display:flex;flex-direction:column;gap:14px}
 
 /* 사이드바 하단: 저장/초기화 */
@@ -172,6 +174,7 @@ input::placeholder{color:#A2A6B0}
 }
 .upload:hover{border-color:var(--indigo);color:var(--ink)}
 .upload input{display:none}
+.upload span{display:inline-flex;align-items:center;gap:7px}
 
 .seg{display:flex;gap:6px;background:var(--track);border:1px solid var(--line);border-radius:10px;padding:5px}
 .seg button{
@@ -256,7 +259,7 @@ input[type=range]::-moz-range-thumb{
   padding:26px 24px;display:flex;flex-direction:column;gap:14px;align-items:center;
   box-shadow:0 24px 60px rgba(20,24,40,.35);max-width:min(92vw,420px);
 }
-.pickTime{font-size:13px;color:var(--brass-deep);font-variant-numeric:tabular-nums}
+.pickTime{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--brass-deep);font-variant-numeric:tabular-nums}
 .pickTitle{font-size:19px;font-weight:800}
 .pickNext{width:100%;padding:13px 18px;font-size:16px}
 .pickPages{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-height:170px;overflow:auto}
@@ -283,6 +286,7 @@ input[type=range]::-moz-range-thumb{
 .tuneRow1{display:flex;align-items:center;gap:10px}
 .tuneRow1 .spacer{flex:1}
 .tuneBadge{
+  display:inline-flex;align-items:center;gap:5px;
   font-size:12px;color:var(--brass-deep);border:1px solid var(--brass);
   border-radius:999px;padding:4px 10px;white-space:nowrap;background:var(--brassTint);
 }
@@ -291,10 +295,12 @@ input[type=range]::-moz-range-thumb{
 .tuneTap{width:100%;padding:14px 16px;font-size:16px}
 
 .btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
   border:none;cursor:pointer;border-radius:12px;font-weight:700;font-size:15px;padding:12px 22px;
   color:#2B1D04;background:linear-gradient(180deg,var(--btn-hi),var(--btn-lo));
   box-shadow:0 6px 16px rgba(192,138,37,.3);transition:transform .08s,filter .15s;
 }
+.btn svg{flex:0 0 auto}
 .btn:hover:not(:disabled){filter:brightness(1.04)}
 .btn:active:not(:disabled){transform:translateY(1px)}
 .btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.3);box-shadow:none}
@@ -358,7 +364,7 @@ input[type=range]::-moz-range-thumb{
   display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden;position:relative;
 }
 .stage.empty{color:var(--muted);font-size:14px;text-align:center;flex-direction:column;gap:10px}
-.stage.empty .big{font-size:40px}
+.stage.empty .big{font-size:40px;color:var(--muted);opacity:.8}
 canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0 14px 36px rgba(35,40,59,.22)}
 
 /* 넘김 예고 배지 (followLoop에서 직접 갱신) */

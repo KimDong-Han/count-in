@@ -5,6 +5,24 @@ import { playBeep, playStick } from "./sound";
 import { parseTime, fmt, fmtCue } from "./time";
 import { navigate } from "./router.js";
 import { currentDark, setDark } from "./theme.js";
+import {
+  Check,
+  Drum,
+  Eraser,
+  FileText,
+  Maximize2,
+  Minimize2,
+  Moon,
+  Music,
+  Pause,
+  Play,
+  Save,
+  Settings2,
+  Sun,
+  Target,
+  Timer,
+  Volume2,
+} from "lucide-react";
 
 export default function App() {
   const canvasRef = useRef(null);
@@ -1059,7 +1077,7 @@ export default function App() {
     setTuneMode(true);
     tuneModeRef.current = true;
     setMsg({
-      text: "반주를 들으며 페이지가 넘어갈 순간마다 🎯 지금 넘김(또는 Shift)을 눌러 주세요.",
+      text: "반주를 들으며 페이지가 넘어갈 순간마다 '지금 넘김'(또는 Shift)을 눌러 주세요.",
       kind: "ok",
     });
   }, [startFlow]);
@@ -1278,7 +1296,7 @@ export default function App() {
                 title={darkMode ? "밝은 화면으로" : "어두운 화면으로"}
                 aria-label={darkMode ? "밝은 화면으로" : "어두운 화면으로"}
               >
-                {darkMode ? "☀️" : "🌙"}
+                {darkMode ? <Sun size={13} /> : <Moon size={13} />}
               </button>
               <a
                 className="pageLink"
@@ -1288,7 +1306,7 @@ export default function App() {
                   navigate("/metronome");
                 }}
               >
-                🥁 메트로놈 ›
+                <Drum size={13} /> 메트로놈 ›
               </a>
             </span>
           </div>
@@ -1320,9 +1338,10 @@ export default function App() {
                   (태블릿은 데스크톱 모드 UA라 기기 감지도 불가). PDF 검증은 로드 단계에서 함. */}
               <input type="file" onChange={onFile} />
               <span>
+                <FileText size={15} />
                 {pdf.total > 0
-                  ? "📄 " + pdf.total + "페이지 불러옴"
-                  : "📄 PDF 불러오기"}
+                  ? pdf.total + "페이지 불러옴"
+                  : "PDF 불러오기"}
               </span>
             </label>
           </div>
@@ -1367,7 +1386,9 @@ export default function App() {
           </div>
 
           <button type="button" className="advToggle" onClick={toggleAdv}>
-            <span>⚙ 세부 설정 — 넘김·볼륨·배속·소리</span>
+            <span>
+              <Settings2 size={13} /> 세부 설정 — 넘김·볼륨·배속·소리
+            </span>
             <span>{adv ? "▴" : "▾"}</span>
           </button>
 
@@ -1426,7 +1447,9 @@ export default function App() {
               <div className="group">
                 <label htmlFor="vol">반주 볼륨</label>
                 <div className="slider-row">
-                  <span className="vol-icon">🔊</span>
+                  <span className="vol-icon">
+                    <Volume2 size={17} />
+                  </span>
                   <input
                     id="vol"
                     type="range"
@@ -1523,7 +1546,7 @@ export default function App() {
               <div className="cueDesc">
                 {tuneMode ? (
                   <>
-                    넘어갈 순간마다 <b>🎯 지금 넘김</b>을 눌러 주세요. 잘못
+                    넘어갈 순간마다 <b>지금 넘김</b>을 눌러 주세요. 잘못
                     찍었으면 <b>시크 바로 되감으면</b> 그 줄부터 다시 찍혀요.{" "}
                     <b>−·＋</b>는 0.5초 미세 조정이에요.
                   </>
@@ -1558,7 +1581,7 @@ export default function App() {
                       : "카운트다운 없이 바로 재생하면서 넘김 시각을 찍는 모드예요"
                   }
                 >
-                  ⏱ 들으면서 시간 설정
+                  <Timer size={14} /> 들으면서 시간 설정
                 </button>
               )}
               <div className="cueActions">
@@ -1568,7 +1591,7 @@ export default function App() {
                     onClick={tap}
                     disabled={!armed || tapOverflow}
                   >
-                    🎯 지금 넘김
+                    <Target size={13} /> 지금 넘김
                     {armed && !tapOverflow
                       ? ` (${curFrom}→${curDest}페이지)`
                       : ""}
@@ -1755,16 +1778,28 @@ export default function App() {
               className={"btn savePresetBtn" + (savedFlash ? " saved" : "")}
               onClick={openSave}
             >
-              {savedFlash
-                ? '✓ "' + savedFlash.name + '" 저장됨'
-                : "💾 현재 설정 저장"}
+              {savedFlash ? (
+                <>
+                  <Check size={14} /> "{savedFlash.name}" 저장됨
+                </>
+              ) : (
+                <>
+                  <Save size={14} /> 현재 설정 저장
+                </>
+              )}
             </button>
           )}
           <button
             className={"btn ghost resetAllBtn" + (confirmReset ? " arm" : "")}
             onClick={resetClick}
           >
-            {confirmReset ? "한 번 더 누르면 초기화돼요" : "🧹 전체 초기화"}
+            {confirmReset ? (
+              "한 번 더 누르면 초기화돼요"
+            ) : (
+              <>
+                <Eraser size={13} /> 전체 초기화
+              </>
+            )}
           </button>
         </div>
       </aside>
@@ -1800,7 +1835,15 @@ export default function App() {
             onClick={() => setFocus((f) => !f)}
             disabled={navDisabled}
           >
-            {focus ? "↙ 설정 보기" : "⤢ 악보 크게"}
+            {focus ? (
+              <>
+                <Minimize2 size={13} /> 설정 보기
+              </>
+            ) : (
+              <>
+                <Maximize2 size={13} /> 악보 크게
+              </>
+            )}
           </button>
           <span className="kbhint" ref={kbWrapRef}>
             <b>Space</b> 재생 · <b>←→</b> 페이지 · <b>M</b> 지금 넘김
@@ -1851,7 +1894,9 @@ export default function App() {
         >
           {pdf.total === 0 && (
             <>
-              <div className="big">🎼</div>
+              <div className="big">
+                <Music size={44} />
+              </div>
               <div>악보 PDF를 불러오면 여기에 표시돼요.</div>
             </>
           )}
@@ -1922,16 +1967,26 @@ export default function App() {
       {tuneMode && (
         <div className="tuneBar">
           <div className="tuneRow1">
-            <span className="tuneBadge">⏱ 타이밍 입력</span>
+            <span className="tuneBadge">
+              <Timer size={12} /> 타이밍 입력
+            </span>
             <span className="tuneTime" ref={tuneTimeRef}>
               0:00
             </span>
             <div className="spacer"></div>
             <button className="btn ghost small" onClick={togglePlay}>
-              {isPlaying ? "⏸ 일시정지" : "▶ 재생"}
+              {isPlaying ? (
+                <>
+                  <Pause size={13} /> 일시정지
+                </>
+              ) : (
+                <>
+                  <Play size={13} /> 재생
+                </>
+              )}
             </button>
             <button className="btn small" onClick={exitTune}>
-              ✓ 완료
+              <Check size={13} /> 완료
             </button>
           </div>
           <input
@@ -1969,15 +2024,31 @@ export default function App() {
               pendingTap ? tapOverflow : tuneRepeat ? false : tapOverflow
             }
           >
-            {pendingTap
-              ? tapOverflow
-                ? "⏸ 아래에서 돌아갈 페이지를 골라 주세요"
-                : `⏸ 다시 누르면 다음 페이지(${curDest}페이지)으로`
-              : tuneRepeat
-                ? "🎯 지금 넘김"
-                : tapOverflow
-                  ? "✓ 마지막 페이지까지 왔어요 — 완료를 눌러 주세요"
-                  : `🎯 지금 넘김 — ${curFrom}→${curDest}페이지`}
+            {pendingTap ? (
+              tapOverflow ? (
+                <>
+                  <Pause size={16} /> 아래에서 돌아갈 페이지를 골라 주세요
+                </>
+              ) : (
+                <>
+                  <Pause size={16} /> 다시 누르면 다음 페이지({curDest}
+                  페이지)로
+                </>
+              )
+            ) : tuneRepeat ? (
+              <>
+                <Target size={16} /> 지금 넘김
+              </>
+            ) : tapOverflow ? (
+              <>
+                <Check size={16} /> 마지막 페이지까지 왔어요 — 완료를 눌러
+                주세요
+              </>
+            ) : (
+              <>
+                <Target size={16} /> 지금 넘김 — {curFrom}→{curDest}페이지
+              </>
+            )}
           </button>
         </div>
       )}
@@ -1989,7 +2060,9 @@ export default function App() {
           aria-label="몇 페이지로 넘어갈까요"
         >
           <div className="pickCard">
-            <div className="pickTime">⏸ {fmtCue(pendingTap.t)}에 찍음</div>
+            <div className="pickTime">
+              <Pause size={12} /> {fmtCue(pendingTap.t)}에 찍음
+            </div>
             <div className="pickTitle">몇 페이지로 넘어갈까요?</div>
             {!tapOverflow && (
               <button

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { playBeep, playStick } from "./sound";
 import { navigate } from "./router.js";
 import { currentDark, setDark } from "./theme.js";
+import { Hand, Moon, Sun } from "lucide-react";
 
 // 별도 페이지(#/metronome)의 메트로놈.
 // 타이밍은 setInterval이 아니라 Web Audio 룩어헤드 스케줄러로:
@@ -199,7 +200,7 @@ export default function Metronome() {
             title={darkMode ? "밝은 화면으로" : "어두운 화면으로"}
             aria-label={darkMode ? "밝은 화면으로" : "어두운 화면으로"}
           >
-            {darkMode ? "☀️" : "🌙"}
+            {darkMode ? <Sun size={13} /> : <Moon size={13} />}
           </button>
         </span>
       </div>
@@ -254,7 +255,7 @@ export default function Metronome() {
             {running ? "정지" : "시작"}
           </button>
           <button className="btn ghost tapBtn" onClick={tap}>
-            👆 탭 템포 <kbd>T</kbd>
+            <Hand size={15} /> 탭 템포 <kbd>T</kbd>
           </button>
         </div>
 
