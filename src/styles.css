@@ -39,7 +39,7 @@ h1.eyebrow{font-weight:400} /* 메트로놈 h1(SEO용)도 기존 eyebrow와 같�
   border-radius:999px;padding:4px 10px;white-space:nowrap;transition:color .15s,border-color .15s;
 }
 .pageLink:hover{color:var(--ink);border-color:var(--accent)}
-h1{font-size:20px;font-weight:800;letter-spacing:-.01em;line-height:1.2}
+h1{font-size:12.5px;font-weight:700;letter-spacing:-.01em;line-height:1.5} /* 부제(.sub)와 같은 크기로 */
 h1 .accent{color:var(--glow)}
 .sub{color:var(--muted);font-size:12.5px;margin-top:6px;line-height:1.5}
 
@@ -218,7 +218,11 @@ input[type=range]::-moz-range-thumb{
 .tuneTime{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 .tuneSeek{width:100%}
 .tuneTap{width:100%;padding:14px 16px;font-size:16px}
-.cueRepeatToggle span:last-child{font-size:12.5px;color:var(--muted)}
+/* 도돌이표 체크: 일반 토글보다 작게 */
+.cueRepeatToggle .box{width:32px;height:19px;flex:0 0 auto}
+.cueRepeatToggle .box::after{width:13px;height:13px;top:2px;left:2px}
+.cueRepeatToggle input:checked + .box::after{transform:translateX(13px)}
+.cueRepeatToggle span:last-child{font-size:12px;color:var(--muted)}
 /* "몇 쪽으로?" 팝업 (도돌이표 곡에서 찍은 직후, 음악 일시정지 상태) */
 .pickOverlay{z-index:60}
 .pickCard{

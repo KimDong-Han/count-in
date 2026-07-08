@@ -43,7 +43,7 @@ export default function App() {
   });
   const [tapCursor, setTapCursor] = useState(0); // 탭으로 기록할 다음 전환 index
   const [tuneMode, setTuneMode] = useState(false); // 타이밍 입력 모드 (카운트다운 없이 재생하며 찍기)
-  // 도돌이표 있는 곡: 타이밍 입력 모드에서 찍을 때마다 몇 쪽으로 갈지 물어봄 (기본 꺼짐)
+  // 도돌이표 있는 곡: 타이밍 입력 모드에서 찍을 때마다 몇 페이지로 갈지 물어봄 (기본 꺼짐)
   const [tuneRepeat, setTuneRepeat] = useState(false);
   const [pendingTap, setPendingTap] = useState(null); // 도돌이표 곡에서 찍은 순간 {i, t} — 목적지 선택 대기
   const [focus, setFocus] = useState(false); // 집중 모드(컨트롤 숨김)
@@ -284,12 +284,12 @@ export default function App() {
       const remain = flipAt == null ? null : flipAt - t;
       if (remain != null && remain > 0 && remain <= 3) {
         const sec = Math.ceil(remain);
-        // 도돌이표 등으로 다음 스텝이 '다음 쪽'이 아니면 목적지 쪽 번호로 안내
+        // 도돌이표 등으로 다음 스텝이 '다음 페이지'이 아니면 목적지 쪽 번호로 안내
         const nextPg = schedSeqRef.current[cur + 1];
         const jumpTxt =
           nextPg != null && nextPg !== targetPage + 1
-            ? nextPg + "쪽으로"
-            : "다음 쪽";
+            ? nextPg + "페이지로"
+            : "다음 페이지";
         let gap = 0;
         if (stageRef.current && canvasRef.current) {
           gap =
@@ -427,8 +427,8 @@ export default function App() {
       return next;
     });
   };
-  // 전환 i의 시각을 기록(tAt이 있으면 그 시각, 없으면 지금). destPage를 주면 그 쪽으로
-  // 점프(도돌이표·다카포), 없으면 기존 순서의 다음 스텝(없으면 다음 쪽).
+  // 전환 i의 시각을 기록(tAt이 있으면 그 시각, 없으면 지금). destPage를 주면 그 페이지로
+  // 점프(도돌이표·다카포), 없으면 기존 순서의 다음 스텝(없으면 다음 페이지).
   const recordAt = (i, destPage, tAt) => {
     if (!armedRef.current) return;
     const from = seqRef.current[i];
@@ -443,7 +443,7 @@ export default function App() {
           seqRef.current[k] +
             "→" +
             seqRef.current[k + 1] +
-            "쪽 넘김(" +
+            "페이지 넘김(" +
             fmtCue(p) +
             ")보다 빨라요 · 조금 더 지나서 찍어 주세요",
           2600,
@@ -459,7 +459,7 @@ export default function App() {
           ? seqRef.current[i + 1]
           : from + 1;
     if (dest > totalRef.current) {
-      showToast("마지막 쪽이에요 · 돌아가려면 쪽 번호 버튼을 눌러 주세요", 2600);
+      showToast("마지막 페이지예요 · 돌아가려면 페이지 번호 버튼을 눌러 주세요", 2600);
       return;
     }
     const stamp = fmtCue(t); // 0.1초 단위로 기록 (초 단위 절사보다 정확)
@@ -495,7 +495,7 @@ export default function App() {
       from +
         "→" +
         dest +
-        "쪽 넘김 " +
+        "페이지 넘김 " +
         stamp +
         " 저장" +
         (cleared
@@ -513,7 +513,7 @@ export default function App() {
     startFollowing();
     setIsPlaying(true);
   };
-  // 찍은 순간(pendingTap.t)으로 확정 기록 — destPage 없으면 다음 쪽
+  // 찍은 순간(pendingTap.t)으로 확정 기록 — destPage 없으면 다음 페이지
   const commitPending = (destPage) => {
     const p = pendingTap;
     setPendingTap(null);
@@ -529,12 +529,12 @@ export default function App() {
     const idx = tapCursorRef.current;
     if (seqRef.current[idx] == null) return;
     if (pendingTap) {
-      // 목적지 선택 대기 중 🎯/M 재탭 = "다음 쪽" 확정 (시각은 처음 찍은 순간)
+      // 목적지 선택 대기 중 🎯/M 재탭 = "다음 페이지" 확정 (시각은 처음 찍은 순간)
       commitPending(null);
       return;
     }
     if (tuneModeRef.current && tuneRepeat) {
-      // 도돌이표 곡: 시각을 기록해 두고 음악을 멈춘 뒤 몇 쪽으로 갈지 물어봄
+      // 도돌이표 곡: 시각을 기록해 두고 음악을 멈춘 뒤 몇 페이지로 갈지 물어봄
       if (!armedRef.current) return;
       setPendingTap({ i: idx, t: yt.getTime() || 0 });
       yt.pause();
@@ -546,7 +546,7 @@ export default function App() {
   };
   const toggleTuneRepeat = () => setTuneRepeat((r) => !r);
 
-  // ---- 넘김 목록 수동 편집: 출발/도착 쪽 변경, 줄 추가·삭제 ----
+  // ---- 넘김 목록 수동 편집: 출발/도착 페이지 변경, 줄 추가·삭제 ----
   const setSeqAt = (idx, p) => {
     const sq = seqRef.current.slice();
     if (idx < 0 || idx >= sq.length) return;
@@ -625,7 +625,7 @@ export default function App() {
     }
     setCueAt(i, fmtCue(nv));
     showToast(
-      seqRef.current[i] + "→" + seqRef.current[i + 1] + "쪽 넘김 " + fmtCue(nv),
+      seqRef.current[i] + "→" + seqRef.current[i + 1] + "페이지 넘김 " + fmtCue(nv),
     );
   };
   const clearCues = () => {
@@ -1114,7 +1114,7 @@ export default function App() {
     }
     showToast("볼륨 " + nv + "%");
   };
-  // 숫자키: 해당 쪽으로 바로 이동 (재생 중엔 연주 순서에서 그 쪽이 처음 나오는 지점으로 반주도 이동)
+  // 숫자키: 해당 페이지로 바로 이동 (재생 중엔 연주 순서에서 그 쪽이 처음 나오는 지점으로 반주도 이동)
   const goToPage = (n) => {
     if (totalRef.current === 0) return;
     const target = Math.max(1, Math.min(totalRef.current, n));
@@ -1177,7 +1177,7 @@ export default function App() {
         if (h.overlayOpen) {
           h.cancelCountdown();
         } else if (h.pendingOpen) {
-          // 몇 쪽으로 갈지 고르는 중 — 재생 토글 무시
+          // 몇 페이지로 갈지 고르는 중 — 재생 토글 무시
         } else {
           h.togglePlay();
         }
@@ -1248,7 +1248,7 @@ export default function App() {
   const playDisabled = !(pdf.total > 0 && yt.apiReady);
   const navDisabled = pdf.total === 0;
   const playLabel = armed && isPlaying ? "일시정지" : "시작";
-  // 다음 탭이 기록할 전환: 어느 쪽에서 어느 쪽으로 가는지 (순서 끝의 마지막 쪽이면 overflow)
+  // 다음 탭이 기록할 전환: 어느 페이지에서 어느 페이지로 가는지 (순서 끝의 마지막 쪽이면 overflow)
   const curFrom = seq[tapCursor];
   const curDest =
     seq[tapCursor + 1] != null
@@ -1352,7 +1352,7 @@ export default function App() {
               <input type="file" onChange={onFile} />
               <span>
                 {pdf.total > 0
-                  ? "📄 " + pdf.total + "쪽 불러옴"
+                  ? "📄 " + pdf.total + "페이지 불러옴"
                   : "📄 PDF 불러오기"}
               </span>
             </label>
@@ -1408,7 +1408,7 @@ export default function App() {
                 <label>넘김 방식</label>
                 <div className="seg">
                   {[
-                    ["cue", "쪽마다 시각"],
+                    ["cue", "페이지마다 시각"],
                     ["interval", "일정 간격"],
                     ["even", "곡 길이 균등"],
                   ].map(([k, t]) => (
@@ -1561,16 +1561,15 @@ export default function App() {
                   </>
                 ) : (
                   <>
-                    <b>페이지 넘김 시각</b> — <code>0:45</code>처럼 입력하거나,
-                    반주를 들으며 <b>지금 넘김</b>(<kbd>M</kbd>)으로 찍어
-                    두세요. 쪽 번호·시각은 언제든 고칠 수 있고, 도돌이표는{" "}
-                    <b>＋ 넘김 추가</b>로 만들 수 있어요.
+                    <b>페이지 넘김 시각</b> — <code>0:45</code>처럼 입력하거나{" "}
+                    <b>지금 넘김</b>(<kbd>M</kbd>)으로 찍어요. 언제든 고칠 수
+                    있어요.
                   </>
                 )}
               </div>
               <label
                 className="switch-mini cueRepeatToggle"
-                title="켜 두면 타이밍 입력 모드에서 찍을 때마다 음악을 잠깐 멈추고 몇 쪽으로 갈지 물어봐요."
+                title="켜 두면 타이밍 입력 모드에서 찍을 때마다 음악을 잠깐 멈추고 몇 페이지로 갈지 물어봐요."
               >
                 <input
                   type="checkbox"
@@ -1578,7 +1577,7 @@ export default function App() {
                   onChange={toggleTuneRepeat}
                 />
                 <span className="box"></span>
-                <span>도돌이표 있는 곡 (찍을 때 몇 쪽으로 갈지 물어봐요)</span>
+                <span>도돌이표 있는 곡(악보)은 체크</span>
               </label>
               {!tuneMode && (
                 <button
@@ -1591,7 +1590,7 @@ export default function App() {
                       : "카운트다운 없이 바로 재생하면서 넘김 시각을 찍는 모드예요"
                   }
                 >
-                  ⏱ 타이밍 입력 모드 — 들으면서 찍기
+                  ⏱ 들으면서 시간 설정
                 </button>
               )}
               <div className="cueActions">
@@ -1602,7 +1601,7 @@ export default function App() {
                     disabled={!armed || tapOverflow}
                   >
                     🎯 지금 넘김
-                    {armed && !tapOverflow ? ` (${curFrom}→${curDest}쪽)` : ""}
+                    {armed && !tapOverflow ? ` (${curFrom}→${curDest}페이지)` : ""}
                   </button>
                 )}
                 <button className="btn ghost small" onClick={clearCues}>
@@ -1623,7 +1622,7 @@ export default function App() {
                       className="cueSel"
                       value={seq[i] ?? 1}
                       onChange={(e) => setSeqAt(i, +e.target.value)}
-                      aria-label="출발 쪽"
+                      aria-label="출발 페이지"
                     >
                       {Array.from({ length: pdf.total }, (_, k) => k + 1).map(
                         (p) => (
@@ -1640,7 +1639,7 @@ export default function App() {
                       className="cueSel"
                       value={seq[i + 1] ?? Math.min((seq[i] || 1) + 1, pdf.total)}
                       onChange={(e) => setSeqAt(i + 1, +e.target.value)}
-                      aria-label="도착 쪽"
+                      aria-label="도착 페이지"
                     >
                       {Array.from({ length: pdf.total }, (_, k) => k + 1).map(
                         (p) => (
@@ -1650,7 +1649,7 @@ export default function App() {
                         ),
                       )}
                     </select>
-                    쪽
+                    페이지
                   </span>
                   <input
                     type="text"
@@ -1688,7 +1687,7 @@ export default function App() {
                     className="cueDelBtn"
                     onClick={() => removeCueRow(i)}
                     title="이 넘김 삭제"
-                    aria-label={seq[i] + "쪽에서 " + seq[i + 1] + "쪽 넘김 삭제"}
+                    aria-label={seq[i] + "페이지에서 " + seq[i + 1] + "페이지 넘김 삭제"}
                   >
                     ×
                   </button>
@@ -1797,11 +1796,11 @@ export default function App() {
                 <div className="kbPopTitle">단축키</div>
                 {[
                   ["Space", "시작 · 일시정지"],
-                  ["← →", "이전 · 다음 쪽"],
+                  ["← →", "이전 · 다음 페이지"],
                   ["↑ ↓", "볼륨"],
                   ["M", "지금 넘김 (타이밍 찍기)"],
                   ["Shift", "지금 넘김 (타이밍 입력 모드)"],
-                  ["1~9", "해당 쪽으로 이동"],
+                  ["1~9", "해당 페이지로 이동"],
                   ["Enter", "악보 크게 보기"],
                   ["0 · Esc", "처음으로"],
                 ].map(([k, d]) => (
@@ -1841,13 +1840,13 @@ export default function App() {
           <div className="flipHint" ref={flipHintRef}></div>
           <div className="flipCue" ref={flipCueRef} aria-hidden="true">
             <div className="flipCueNum"></div>
-            <div className="flipCueLabel">다음 쪽 ›</div>
+            <div className="flipCueLabel">다음 페이지 ›</div>
           </div>
           {pdf.total > 0 && (
             <>
               <div
                 className="tapZone left"
-                title="이전 쪽"
+                title="이전 페이지"
                 aria-hidden="true"
                 onClick={() => jump(-1)}
               >
@@ -1855,7 +1854,7 @@ export default function App() {
               </div>
               <div
                 className="tapZone right"
-                title="다음 쪽"
+                title="다음 페이지"
                 aria-hidden="true"
                 onClick={() => jump(1)}
               >
@@ -1948,13 +1947,13 @@ export default function App() {
           >
             {pendingTap
               ? tapOverflow
-                ? "⏸ 아래에서 돌아갈 쪽을 골라 주세요"
-                : `⏸ 다시 누르면 다음 쪽(${curDest}쪽)으로`
+                ? "⏸ 아래에서 돌아갈 페이지를 골라 주세요"
+                : `⏸ 다시 누르면 다음 페이지(${curDest}페이지)으로`
               : tuneRepeat
                 ? "🎯 지금 넘김"
                 : tapOverflow
-                  ? "✓ 마지막 쪽까지 왔어요 — 완료를 눌러 주세요"
-                  : `🎯 지금 넘김 — ${curFrom}→${curDest}쪽`}
+                  ? "✓ 마지막 페이지까지 왔어요 — 완료를 눌러 주세요"
+                  : `🎯 지금 넘김 — ${curFrom}→${curDest}페이지`}
           </button>
         </div>
       )}
@@ -1963,17 +1962,17 @@ export default function App() {
         <div
           className="overlay show pickOverlay"
           role="dialog"
-          aria-label="몇 쪽으로 넘어갈까요"
+          aria-label="몇 페이지로 넘어갈까요"
         >
           <div className="pickCard">
             <div className="pickTime">⏸ {fmtCue(pendingTap.t)}에 찍음</div>
-            <div className="pickTitle">몇 쪽으로 넘어갈까요?</div>
+            <div className="pickTitle">몇 페이지로 넘어갈까요?</div>
             {!tapOverflow && (
               <button className="btn pickNext" onClick={() => commitPending(null)}>
-                다음 쪽 ({curDest}쪽)
+                다음 페이지 ({curDest}페이지)
               </button>
             )}
-            <div className="pickPages" aria-label="이 쪽으로 넘어가기">
+            <div className="pickPages" aria-label="이 페이지로 넘어가기">
               {Array.from({ length: pdf.total }, (_, k) => k + 1).map((p) => (
                 <button
                   key={p}
@@ -1981,7 +1980,7 @@ export default function App() {
                   className="tuneJumpBtn"
                   disabled={p === curFrom}
                   onClick={() => commitPending(p)}
-                  title={p + "쪽으로"}
+                  title={p + "페이지로"}
                 >
                   {p}
                 </button>
