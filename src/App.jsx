@@ -1385,6 +1385,21 @@ export default function App() {
                 {playLabel}
               </button>
             </div>
+            <div className="slider-row">
+              <span className="vol-icon">
+                <Volume2 size={17} />
+              </span>
+              <input
+                id="vol"
+                type="range"
+                min="0"
+                max="100"
+                value={volume}
+                onChange={(e) => setVolume(parseInt(e.target.value, 10))}
+                aria-label="반주 볼륨"
+              />
+              <span className="vol-val">{volume}%</span>
+            </div>
           </div>
 
         </div>
@@ -1552,7 +1567,7 @@ export default function App() {
 
           <button type="button" className="advToggle" onClick={toggleAdv}>
             <span>
-              <Settings2 size={13} /> 세부 설정 — 넘김·볼륨·배속·소리
+              <Settings2 size={13} /> 세부 설정 — 넘김·배속·소리
             </span>
             <span>{adv ? "▴" : "▾"}</span>
           </button>
@@ -1608,24 +1623,6 @@ export default function App() {
                   </div>
                 </div>
               )}
-
-              <div className="group">
-                <label htmlFor="vol">반주 볼륨</label>
-                <div className="slider-row">
-                  <span className="vol-icon">
-                    <Volume2 size={17} />
-                  </span>
-                  <input
-                    id="vol"
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={volume}
-                    onChange={(e) => setVolume(parseInt(e.target.value, 10))}
-                  />
-                  <span className="vol-val">{volume}%</span>
-                </div>
-              </div>
 
               <div className="group">
                 <label>재생 속도</label>
