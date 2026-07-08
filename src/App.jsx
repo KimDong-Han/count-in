@@ -32,7 +32,8 @@ export default function App() {
   const [loopOn, setLoopOn] = useState(false);
   const [preLoad, setPreLoad] = useState(true); // 카운트다운 동안 미리 재생(버퍼) 준비
   const [noWait, setNoWait] = useState(false); // 카운트다운 없이 바로 시작
-  const [cueText, setCueText] = useState([]); // 문자열 배열 (길이 total-1)
+  const [cueText, setCueText] = useState([]); // 넘김 시각 문자열 배열 (길이 seq.length-1)
+  const [seq, setSeq] = useState([]); // 연주 순서(쪽 번호 나열) — 도돌이표·다카포로 같은 쪽이 여러 번 나올 수 있음
   const [armed, setArmed] = useState(false); // 시작 눌러 재생/준비 중
   const [isPlaying, setIsPlaying] = useState(false);
   const [countText, setCountText] = useState(null); // null=숨김, 숫자 or '▶'
@@ -42,6 +43,14 @@ export default function App() {
   });
   const [tapCursor, setTapCursor] = useState(0); // 탭으로 기록할 다음 전환 index
   const [tuneMode, setTuneMode] = useState(false); // 타이밍 입력 모드 (카운트다운 없이 재생하며 찍기)
+  const [tuneRepeat, setTuneRepeat] = useState(() => {
+    // 도돌이표 있음: 타이밍 입력 모드에 쪽 번호 점프 버튼 표시 (기억)
+    try {
+      return localStorage.getItem("cin:tune:repeat") === "1";
+    } catch {
+      return false;
+    }
+  });
   const [focus, setFocus] = useState(false); // 집중 모드(컨트롤 숨김)
   const [presets, setPresets] = useState(() => {
     // 저장한 곡 프리셋 목록
@@ -78,6 +87,9 @@ export default function App() {
   const preLoadRef = useRef(preLoad);
   const noWaitRef = useRef(noWait);
   const ivRef = useRef({ m: 0, s: 20 });
+  const seqRef = useRef([]); // 연주 순서 미러
+  const schedSeqRef = useRef([]); // buildSchedule이 실제 쓴 순서 (cue 외 모드는 1..N)
+  const stepRef = useRef(0); // 현재 연주 순서상 위치(스텝 인덱스)
   const armedRef = useRef(false);
   const tapCursorRef = useRef(0);
   const tuneModeRef = useRef(false);
@@ -177,7 +189,7 @@ export default function App() {
     toastTimerRef.current = setTimeout(() => setToast(null), ms || 1400);
   }, []);
 
-  // ---- 넘김 스케줄: pageTimes[k] = (k+1)번째 페이지를 띄울 곡 진행 시각(초) ----
+  // ---- 넘김 스케줄: pageTimes[k] = 연주 순서 k번째 스텝(schedSeq[k]쪽)을 띄울 곡 진행 시각(초) ----
   const intervalSec = () => {
     let m = parseInt(ivRef.current.m, 10);
     if (isNaN(m) || m < 0) m = 0;
@@ -191,9 +203,13 @@ export default function App() {
   const buildSchedule = useCallback(() => {
     const total = totalRef.current;
     let pt = [0];
+    let sq = [];
+    for (let i = 1; i <= total; i++) sq.push(i); // 기본: 1..N 순서 (cue 외 모드)
     if (total > 1) {
       if (flipModeRef.current === "cue") {
-        for (let i = 0; i < total - 1; i++) {
+        if (seqRef.current.length) sq = seqRef.current.slice();
+        pt = [0];
+        for (let i = 0; i < sq.length - 1; i++) {
           const c = cuesRef.current[i];
           pt.push(c == null || isNaN(c) ? Infinity : c); // 미입력 = 자동으로 넘기지 않음(수동 대기)
         }
@@ -215,6 +231,7 @@ export default function App() {
       }
     }
     pageTimesRef.current = pt;
+    schedSeqRef.current = sq;
   }, [yt]);
 
   // 곡 진행 위치를 따라가며 페이지 + 진행바 갱신
@@ -224,18 +241,20 @@ export default function App() {
     const dur = yt.getDuration() || 0;
     const pt = pageTimesRef.current;
 
-    // 현재 시각에 해당하는 페이지
-    let target = 1;
+    // 현재 시각에 해당하는 연주 순서 스텝 → 그 스텝의 쪽 (도돌이표로 앞쪽일 수도 있음)
+    let step = 0;
     for (let i = 0; i < pt.length; i++) {
-      if (t + 0.12 >= pt[i]) target = i + 1;
+      if (t + 0.12 >= pt[i]) step = i;
       else break;
     }
-    if (target !== pdf.pageNumRef.current) pdf.show(target);
+    stepRef.current = step;
+    const targetPage = schedSeqRef.current[step] || 1;
+    if (targetPage !== pdf.pageNumRef.current) pdf.show(targetPage);
 
     // 다음 넘김까지 진행바
-    const cur = pdf.pageNumRef.current;
-    const curStart = isFinite(pt[cur - 1]) ? pt[cur - 1] : 0;
-    let nextAt = cur < pt.length ? pt[cur] : dur || curStart + 1;
+    const cur = step;
+    const curStart = isFinite(pt[cur]) ? pt[cur] : 0;
+    let nextAt = cur + 1 < pt.length ? pt[cur + 1] : dur || curStart + 1;
     if (!isFinite(nextAt)) nextAt = dur || curStart + 1;
     const denom = Math.max(0.001, nextAt - curStart);
     const pct = Math.max(0, Math.min(100, ((t - curStart) / denom) * 100));
@@ -261,10 +280,17 @@ export default function App() {
     const fh = flipHintRef.current;
     const fc = flipCueRef.current;
     if (fh && fc) {
-      const flipAt = cur < pt.length && isFinite(pt[cur]) ? pt[cur] : null;
+      const flipAt =
+        cur + 1 < pt.length && isFinite(pt[cur + 1]) ? pt[cur + 1] : null;
       const remain = flipAt == null ? null : flipAt - t;
       if (remain != null && remain > 0 && remain <= 3) {
         const sec = Math.ceil(remain);
+        // 도돌이표 등으로 다음 스텝이 '다음 쪽'이 아니면 목적지 쪽 번호로 안내
+        const nextPg = schedSeqRef.current[cur + 1];
+        const jumpTxt =
+          nextPg != null && nextPg !== targetPage + 1
+            ? nextPg + "쪽으로"
+            : "다음 쪽";
         let gap = 0;
         if (stageRef.current && canvasRef.current) {
           gap =
@@ -283,10 +309,12 @@ export default function App() {
             void numEl.offsetWidth; // 리플로우로 펄스 애니메이션 재시작
             numEl.classList.add("pulse");
           }
+          const lbl = fc.lastElementChild;
+          if (lbl) lbl.textContent = jumpTxt + " ›";
           fc.classList.add("show");
           fh.classList.remove("show");
         } else {
-          fh.textContent = sec + "초 뒤 다음 쪽 ›";
+          fh.textContent = sec + "초 뒤 " + jumpTxt + " ›";
           fh.classList.add("show");
           fc.classList.remove("show");
         }
@@ -315,16 +343,22 @@ export default function App() {
     if (flipCueRef.current) flipCueRef.current.classList.remove("show");
   }, []);
 
-  // ---- cue(페이지별 타이밍) 저장/불러오기 ----
+  // ---- cue(연주 순서+타이밍) 저장/불러오기 ----
+  // 저장 형식: {seq:[쪽 번호…], times:[…]} — 예전 형식(times 배열만)도 읽을 수 있음
   const cueKey = (id, total) => "cues:" + id + ":" + total;
+  const linearSeq = (total) => {
+    const sq = [];
+    for (let i = 1; i <= total; i++) sq.push(i);
+    return sq;
+  };
   const saveCues = useCallback(
-    (arr) => {
+    (arr, sq) => {
       const id = pendingIdRef.current || extractId(url);
       if (id && totalRef.current > 0) {
         try {
           localStorage.setItem(
             cueKey(id, totalRef.current),
-            JSON.stringify(arr),
+            JSON.stringify({ seq: sq || seqRef.current, times: arr }),
           );
         } catch (e) {}
       }
@@ -341,21 +375,37 @@ export default function App() {
     [buildSchedule],
   );
 
-  // PDF 로드/URL 변경 시 cue 슬롯 크기 맞추고 저장된 타이밍 불러오기
+  // PDF 로드/URL 변경 시 cue 슬롯 크기 맞추고 저장된 순서·타이밍 불러오기
   const syncCueSlots = useCallback(() => {
-    const n = Math.max(0, totalRef.current - 1);
-    let arr = new Array(n).fill("");
+    const total = totalRef.current;
+    let sq = linearSeq(total);
+    let arr = new Array(Math.max(0, sq.length - 1)).fill("");
     const id = extractId(url);
-    if (id && totalRef.current > 0) {
+    if (id && total > 0) {
       try {
-        const raw = localStorage.getItem(cueKey(id, totalRef.current));
+        const raw = localStorage.getItem(cueKey(id, total));
         if (raw) {
           const s = JSON.parse(raw);
-          if (Array.isArray(s))
+          if (Array.isArray(s)) {
+            // 예전 형식: 타이밍 배열만 (순서는 1..N)
             arr = arr.map((_, i) => (s[i] != null ? s[i] : ""));
+          } else if (
+            s &&
+            Array.isArray(s.seq) &&
+            Array.isArray(s.times) &&
+            s.seq.length >= 1 &&
+            s.seq.every((p) => Number.isInteger(p) && p >= 1 && p <= total)
+          ) {
+            sq = s.seq.slice();
+            arr = new Array(sq.length - 1)
+              .fill("")
+              .map((_, i) => (s.times[i] != null ? s.times[i] : ""));
+          }
         }
       } catch (e) {}
     }
+    setSeq(sq);
+    seqRef.current = sq;
     setCueText(arr);
     recomputeCues(arr);
     setTapCursor(0);
@@ -378,8 +428,12 @@ export default function App() {
       return next;
     });
   };
-  const nowAt = (i) => {
+  // 전환 i의 시각을 지금으로 기록. destPage를 주면 그 쪽으로 점프(도돌이표·다카포),
+  // 없으면 기존 순서의 다음 스텝(없으면 다음 쪽).
+  const recordAt = (i, destPage) => {
     if (!armedRef.current) return;
+    const from = seqRef.current[i];
+    if (from == null) return;
     const t = yt.getTime() || 0;
     // 앞쪽에 이미 찍힌 넘김보다 빠른 시각이면 순서가 꼬이므로 저장하지 않는다
     for (let k = i - 1; k >= 0; k--) {
@@ -387,10 +441,9 @@ export default function App() {
       if (p == null || !isFinite(p)) continue;
       if (t <= p) {
         showToast(
-          k +
-            1 +
+          seqRef.current[k] +
             "→" +
-            (k + 2) +
+            seqRef.current[k + 1] +
             "쪽 넘김(" +
             fmtCue(p) +
             ")보다 빨라요 · 그 줄의 🔁로 다시 찍어 주세요",
@@ -400,38 +453,114 @@ export default function App() {
       }
       break;
     }
+    const dest =
+      destPage != null
+        ? destPage
+        : seqRef.current[i + 1] != null
+          ? seqRef.current[i + 1]
+          : from + 1;
+    if (dest > totalRef.current) {
+      showToast("마지막 쪽이에요 · 돌아가려면 쪽 번호 버튼을 눌러 주세요", 2600);
+      return;
+    }
     const stamp = fmtCue(t); // 0.1초 단위로 기록 (초 단위 절사보다 정확)
-    // 새 시각보다 앞서게 된 뒤쪽 타이밍은 무효 — 지워서 이어서 다시 찍게 한다
-    const next = [...cueTextRef.current];
-    next[i] = stamp;
-    let cleared = 0;
-    for (let k = i + 1; k < next.length; k++) {
-      const v = parseTime(next[k]);
-      if (v != null && isFinite(v) && v <= t) {
-        next[k] = "";
-        cleared++;
+    let sq = seqRef.current;
+    let next;
+    let dropped = 0; // 목적지가 바뀌어 잘려나간 이후 스텝 수
+    let cleared = 0; // 시각 순서가 꼬여 지운 뒤 타이밍 수
+    if (sq[i + 1] !== dest) {
+      dropped = Math.max(0, sq.length - (i + 2));
+      sq = sq.slice(0, i + 1).concat([dest]);
+      next = cueTextRef.current.slice(0, i);
+      next[i] = stamp;
+    } else {
+      sq = sq.slice();
+      next = [...cueTextRef.current];
+      next[i] = stamp;
+      // 새 시각보다 앞서게 된 뒤쪽 타이밍은 무효 — 지워서 이어서 다시 찍게 한다
+      for (let k = i + 1; k < next.length; k++) {
+        const v = parseTime(next[k]);
+        if (v != null && isFinite(v) && v <= t) {
+          next[k] = "";
+          cleared++;
+        }
       }
     }
+    setSeq(sq);
+    seqRef.current = sq;
     setCueText(next);
     recomputeCues(next);
-    saveCues(next);
+    saveCues(next, sq);
     setTapCursor(i + 1);
     showToast(
-      i +
-        1 +
+      from +
         "→" +
-        (i + 2) +
+        dest +
         "쪽 넘김 " +
         stamp +
         " 저장" +
-        (cleared ? " · 순서가 꼬인 뒤 타이밍 " + cleared + "개는 지웠어요" : ""),
-      cleared ? 2600 : 1400,
+        (cleared
+          ? " · 순서가 꼬인 뒤 타이밍 " + cleared + "개는 지웠어요"
+          : dropped
+            ? " · 이후 순서는 이어서 찍어 주세요"
+            : ""),
+      cleared || dropped ? 2600 : 1400,
     );
   };
+  const nowAt = (i) => recordAt(i, null);
   const tap = () => {
     const idx = tapCursorRef.current;
-    if (idx >= totalRef.current - 1) return;
-    nowAt(idx);
+    if (seqRef.current[idx] == null) return;
+    recordAt(idx, null);
+  };
+  // 도돌이표·다카포: 지금 이 순간 p쪽으로 점프하는 스텝을 기록
+  const jumpTap = (p) => {
+    if (seqRef.current.length > 400) return; // 폭주 방지
+    recordAt(tapCursorRef.current, p);
+  };
+  const toggleTuneRepeat = () =>
+    setTuneRepeat((r) => {
+      try {
+        localStorage.setItem("cin:tune:repeat", r ? "0" : "1");
+      } catch {}
+      return !r;
+    });
+
+  // ---- 넘김 목록 수동 편집: 출발/도착 쪽 변경, 줄 추가·삭제 ----
+  const setSeqAt = (idx, p) => {
+    const sq = seqRef.current.slice();
+    if (idx < 0 || idx >= sq.length) return;
+    sq[idx] = p;
+    setSeq(sq);
+    seqRef.current = sq;
+    recomputeCues(cueTextRef.current);
+    saveCues(cueTextRef.current, sq);
+  };
+  const addCueRow = () => {
+    const total = totalRef.current;
+    if (!total) return;
+    const sq = seqRef.current.length ? seqRef.current.slice() : [1];
+    const last = sq[sq.length - 1];
+    sq.push(last < total ? last + 1 : 1); // 마지막 쪽이면 처음으로(도돌이 가정)
+    const next = [...cueTextRef.current, ""];
+    setSeq(sq);
+    seqRef.current = sq;
+    setCueText(next);
+    recomputeCues(next);
+    saveCues(next, sq);
+  };
+  const removeCueRow = (i) => {
+    const sq = seqRef.current.slice();
+    if (i < 0 || i + 1 >= sq.length) return;
+    sq.splice(i + 1, 1);
+    const next = [...cueTextRef.current];
+    next.splice(i, 1);
+    setSeq(sq);
+    seqRef.current = sq;
+    setCueText(next);
+    recomputeCues(next);
+    saveCues(next, sq);
+    if (tapCursorRef.current > next.length) setTapCursor(next.length);
   };
   // 타이밍 입력 모드: 해당 전환 지점 몇 초 전으로 되감아 그 줄만 다시 찍기
   const redoAt = (i) => {
@@ -449,7 +578,14 @@ export default function App() {
     yt.play();
     startFollowing();
     setIsPlaying(true);
-    showToast(i + 1 + "→" + (i + 2) + "쪽 · " + fmt(to) + "부터 다시 듣기");
+    showToast(
+      seqRef.current[i] +
+        "→" +
+        (seqRef.current[i + 1] != null ? seqRef.current[i + 1] : "다음") +
+        "쪽 · " +
+        fmt(to) +
+        "부터 다시 듣기",
+    );
   };
   // 찍어둔 시각을 ±0.5초 미세 조정 (이웃 타이밍의 순서는 넘지 않게)
   const nudgeCue = (i, delta) => {
@@ -478,13 +614,18 @@ export default function App() {
       break;
     }
     setCueAt(i, fmtCue(nv));
-    showToast(i + 1 + "→" + (i + 2) + "쪽 넘김 " + fmtCue(nv));
+    showToast(
+      seqRef.current[i] + "→" + seqRef.current[i + 1] + "쪽 넘김 " + fmtCue(nv),
+    );
   };
   const clearCues = () => {
-    const arr = new Array(Math.max(0, totalRef.current - 1)).fill("");
+    const sq = linearSeq(totalRef.current); // 순서도 1..N 기본으로
+    setSeq(sq);
+    seqRef.current = sq;
+    const arr = new Array(Math.max(0, sq.length - 1)).fill("");
     setCueText(arr);
     recomputeCues(arr);
-    saveCues(arr);
+    saveCues(arr, sq);
     setTapCursor(0);
   };
 
@@ -527,6 +668,7 @@ export default function App() {
       preLoad,
       noWait,
       cues: cueTextRef.current.slice(),
+      seq: seqRef.current.slice(), // 연주 순서 (도돌이표 포함)
       pageCount: pdf.total,
     };
     // 같은 이름이면 덮어쓰기
@@ -542,7 +684,7 @@ export default function App() {
       try {
         localStorage.setItem(
           cueKey(id, pdf.total),
-          JSON.stringify(preset.cues),
+          JSON.stringify({ seq: preset.seq, times: preset.cues }),
         );
       } catch (e) {}
     }
@@ -582,6 +724,12 @@ export default function App() {
     setNoWait(!!p.noWait);
     noWaitRef.current = !!p.noWait;
     const cues = Array.isArray(p.cues) ? p.cues.slice() : [];
+    const sq =
+      Array.isArray(p.seq) && p.seq.length
+        ? p.seq.slice()
+        : linearSeq(p.pageCount || 0); // 예전 프리셋: 순서 없음 → 1..N
+    setSeq(sq);
+    seqRef.current = sq;
     setCueText(cues);
     recomputeCues(cues);
     setTapCursor(0);
@@ -589,7 +737,10 @@ export default function App() {
     const id = extractId(p.url);
     if (id && p.pageCount > 0) {
       try {
-        localStorage.setItem(cueKey(id, p.pageCount), JSON.stringify(cues));
+        localStorage.setItem(
+          cueKey(id, p.pageCount),
+          JSON.stringify({ seq: sq, times: cues }),
+        );
       } catch (e) {}
     }
     setMsg({
@@ -634,6 +785,8 @@ export default function App() {
     preLoadRef.current = true;
     setNoWait(false);
     noWaitRef.current = false;
+    setSeq([]);
+    seqRef.current = [];
     setCueText([]);
     recomputeCues([]);
     setTapCursor(0);
@@ -829,21 +982,29 @@ export default function App() {
     }
   }, [startFlow, yt, stopFollowing, startFollowing]);
 
-  // 이전/다음: 재생 중이면 반주도 해당 페이지 시작 지점으로 함께 이동
+  // 이전/다음: 재생 중이면 연주 순서의 앞/뒤 스텝으로 (반주도 그 시점으로 이동)
   const jump = useCallback(
     (delta) => {
       if (totalRef.current === 0) return;
-      let target = Math.max(
+      const pt = pageTimesRef.current;
+      const sq = schedSeqRef.current;
+      if (armedRef.current && sq.length) {
+        const s = Math.max(
+          0,
+          Math.min(sq.length - 1, stepRef.current + delta),
+        );
+        if (isFinite(pt[s])) {
+          yt.seek(pt[s] || 0);
+          stepRef.current = s;
+          pdf.show(sq[s]);
+          return;
+        }
+      }
+      const target = Math.max(
         1,
         Math.min(totalRef.current, pdf.pageNumRef.current + delta),
       );
-      const pt = pageTimesRef.current;
-      if (armedRef.current && isFinite(pt[target - 1])) {
-        yt.seek(pt[target - 1] || 0);
-        pdf.show(target);
-      } else {
-        pdf.show(target);
-      }
+      pdf.show(target);
     },
     [pdf, yt],
   );
@@ -937,13 +1098,20 @@ export default function App() {
     }
     showToast("볼륨 " + nv + "%");
   };
-  // 숫자키: 해당 쪽으로 바로 이동 (재생 중엔 그 쪽에 설정된 시각이 있어야 반주도 따라가며 유지됨)
+  // 숫자키: 해당 쪽으로 바로 이동 (재생 중엔 연주 순서에서 그 쪽이 처음 나오는 지점으로 반주도 이동)
   const goToPage = (n) => {
     if (totalRef.current === 0) return;
     const target = Math.max(1, Math.min(totalRef.current, n));
-    const pt = pageTimesRef.current;
-    if (armedRef.current && isFinite(pt[target - 1])) {
-      yt.seek(pt[target - 1] || 0);
+    if (armedRef.current) {
+      const pt = pageTimesRef.current;
+      const sq = schedSeqRef.current;
+      for (let k = 0; k < sq.length; k++) {
+        if (sq[k] === target && isFinite(pt[k])) {
+          yt.seek(pt[k] || 0);
+          stepRef.current = k;
+          break;
+        }
+      }
     }
     pdf.show(target);
   };
@@ -1053,6 +1221,15 @@ export default function App() {
   const playDisabled = !(pdf.total > 0 && yt.apiReady);
   const navDisabled = pdf.total === 0;
   const playLabel = armed && isPlaying ? "일시정지" : "시작";
+  // 다음 탭이 기록할 전환: 어느 쪽에서 어느 쪽으로 가는지 (순서 끝의 마지막 쪽이면 overflow)
+  const curFrom = seq[tapCursor];
+  const curDest =
+    seq[tapCursor + 1] != null
+      ? seq[tapCursor + 1]
+      : curFrom != null
+        ? curFrom + 1
+        : null;
+  const tapOverflow = curFrom == null || curDest == null || curDest > pdf.total;
 
   return (
     <div className={"app" + (focus ? " focus" : "") + (tuneMode ? " tune" : "")}>
@@ -1353,13 +1530,16 @@ export default function App() {
                   <>
                     넘어갈 순간마다 <b>🎯 지금 넘김</b>을 눌러 주세요.{" "}
                     <b>🔁</b>는 그 줄만 다시 듣고 찍기, <b>−·＋</b>는 0.5초
-                    미세 조정이에요.
+                    미세 조정. 도돌이표가 있으면 하단의{" "}
+                    <b>도돌이표 있음</b>을 켜고 돌아갈 쪽 번호를 그 순간 탭해
+                    주세요.
                   </>
                 ) : (
                   <>
                     <b>페이지 넘김 시각</b> — <code>0:45</code>처럼 입력하거나,
                     반주를 들으며 <b>지금 넘김</b>(<kbd>M</kbd>)으로 찍어
-                    두세요. 저장돼요.
+                    두세요. 쪽 번호·시각은 언제든 고칠 수 있고, 도돌이표는{" "}
+                    <b>＋ 넘김 추가</b>로 만들 수 있어요.
                   </>
                 )}
               </div>
@@ -1382,12 +1562,10 @@ export default function App() {
                   <button
                     className="btn small"
                     onClick={tap}
-                    disabled={!armed || tapCursor >= pdf.total - 1}
+                    disabled={!armed || tapOverflow}
                   >
                     🎯 지금 넘김
-                    {armed && tapCursor < pdf.total - 1
-                      ? ` (${tapCursor + 1}→${tapCursor + 2}쪽)`
-                      : ""}
+                    {armed && !tapOverflow ? ` (${curFrom}→${curDest}쪽)` : ""}
                   </button>
                 )}
                 <button className="btn ghost small" onClick={clearCues}>
@@ -1404,7 +1582,38 @@ export default function App() {
                   key={i}
                 >
                   <span className="cueLabel">
-                    {i + 1} → {i + 2}쪽
+                    <select
+                      className="cueSel"
+                      value={seq[i] ?? 1}
+                      onChange={(e) => setSeqAt(i, +e.target.value)}
+                      aria-label="출발 쪽"
+                    >
+                      {Array.from({ length: pdf.total }, (_, k) => k + 1).map(
+                        (p) => (
+                          <option key={p} value={p}>
+                            {p}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                    <span className="cueArrow">
+                      {seq[i + 1] != null && seq[i + 1] <= seq[i] ? "↩" : "→"}
+                    </span>
+                    <select
+                      className="cueSel"
+                      value={seq[i + 1] ?? Math.min((seq[i] || 1) + 1, pdf.total)}
+                      onChange={(e) => setSeqAt(i + 1, +e.target.value)}
+                      aria-label="도착 쪽"
+                    >
+                      {Array.from({ length: pdf.total }, (_, k) => k + 1).map(
+                        (p) => (
+                          <option key={p} value={p}>
+                            {p}
+                          </option>
+                        ),
+                      )}
+                    </select>
+                    쪽
                   </span>
                   <input
                     type="text"
@@ -1445,8 +1654,23 @@ export default function App() {
                       지금
                     </button>
                   )}
+                  <button
+                    className="cueDelBtn"
+                    onClick={() => removeCueRow(i)}
+                    title="이 넘김 삭제"
+                    aria-label={seq[i] + "쪽에서 " + seq[i + 1] + "쪽 넘김 삭제"}
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
+              <button
+                type="button"
+                className="btn ghost small cueAdd"
+                onClick={addCueRow}
+              >
+                ＋ 넘김 추가
+              </button>
             </div>
           </div>
         )}
@@ -1685,15 +1909,43 @@ export default function App() {
               }
             }}
           />
-          <button
-            className="btn tuneTap"
-            onClick={tap}
-            disabled={tapCursor >= pdf.total - 1}
-          >
-            {tapCursor < pdf.total - 1
-              ? `🎯 지금 넘김 — ${tapCursor + 1}→${tapCursor + 2}쪽`
-              : "✓ 모든 쪽을 찍었어요 — 완료를 눌러 주세요"}
+          <button className="btn tuneTap" onClick={tap} disabled={tapOverflow}>
+            {tapOverflow
+              ? "✓ 마지막 쪽까지 왔어요 — 완료를 눌러 주세요"
+              : `🎯 지금 넘김 — ${curFrom}→${curDest}쪽`}
           </button>
+          <div className="tuneRow2">
+            <label
+              className="switch-mini"
+              title="도돌이표·다카포가 있는 곡이면 켜 주세요. 돌아갈 쪽 번호를 그 순간 탭하면 기록돼요."
+            >
+              <input
+                type="checkbox"
+                checked={tuneRepeat}
+                onChange={toggleTuneRepeat}
+              />
+              <span className="box"></span>
+              <span>도돌이표 있음</span>
+            </label>
+            {tuneRepeat && (
+              <div className="tuneJump" aria-label="이 쪽으로 돌아가기">
+                {Array.from({ length: pdf.total }, (_, k) => k + 1).map(
+                  (p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      className="tuneJumpBtn"
+                      disabled={p === curFrom}
+                      onClick={() => jumpTap(p)}
+                      title={p + "쪽으로 지금 넘어감"}
+                    >
+                      {p}
+                    </button>
+                  ),
+                )}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

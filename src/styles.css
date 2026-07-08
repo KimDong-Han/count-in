@@ -172,13 +172,25 @@ input[type=range]::-moz-range-thumb{
 .cueDesc code{background:#100e26;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--glow-soft);font-size:12px}
 .cueDesc kbd{background:#100e26;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--ink);font-size:11px}
 .cueActions{display:flex;gap:8px;flex-shrink:0}
-.cueRows{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;max-height:150px;overflow:auto;padding-right:4px}
+.cueRows{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;max-height:200px;overflow:auto;padding-right:4px}
 .cueRow{
-  display:flex;align-items:center;gap:8px;background:#100e26;border:1px solid var(--line);
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#100e26;border:1px solid var(--line);
   border-radius:10px;padding:8px 10px;transition:border-color .15s,box-shadow .15s;
 }
 .cueRow.hot{border-color:var(--glow);box-shadow:0 0 0 2px rgba(255,202,95,.25)}
-.cueLabel{font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.cueLabel{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.cueSel{
+  background:#1a1740;border:1px solid var(--line);border-radius:7px;color:var(--ink);
+  font-size:13px;padding:5px 4px;font-variant-numeric:tabular-nums;cursor:pointer;
+}
+.cueSel:focus{outline:none;border-color:var(--accent)}
+.cueArrow{color:var(--glow-soft);font-size:13px;min-width:14px;text-align:center}
+.cueDelBtn{
+  background:transparent;border:none;color:var(--muted);font-size:15px;line-height:1;
+  padding:4px 6px;cursor:pointer;
+}
+.cueDelBtn:hover{color:#ff9db0}
+.cueAdd{width:100%;box-shadow:none}
 .cueRow input{
   width:64px;margin-left:auto;text-align:center;background:#1a1740;border:1px solid var(--line);
   border-radius:8px;color:var(--ink);font-size:14px;padding:7px 6px;font-variant-numeric:tabular-nums;
@@ -187,10 +199,8 @@ input[type=range]::-moz-range-thumb{
 
 /* 타이밍 입력 모드 */
 .tuneEnter{width:100%;box-shadow:none}
-.cueRowTools{display:flex;gap:4px;margin-left:auto}
+.cueRowTools{display:flex;gap:4px}
 .cueRowTools .btn.tiny{padding:5px 8px;font-size:12px;min-width:28px}
-.app.tune .cueRow{flex-wrap:wrap}
-.app.tune .cueRow input{margin-left:0}
 .tuneBar{
   position:fixed;left:0;right:0;bottom:0;z-index:35;
   display:flex;flex-direction:column;gap:8px;
@@ -208,10 +218,21 @@ input[type=range]::-moz-range-thumb{
 .tuneTime{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 .tuneSeek{width:100%}
 .tuneTap{width:100%;padding:14px 16px;font-size:16px}
+.tuneRow2{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-height:30px}
+.tuneRow2 .switch-mini{flex:0 0 auto}
+.tuneRow2 .switch-mini span{font-size:12.5px}
+.tuneJump{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;padding:2px 0}
+.tuneJumpBtn{
+  flex:0 0 auto;min-width:36px;padding:7px 0;border-radius:8px;cursor:pointer;
+  background:#100e26;border:1px solid var(--line);color:var(--ink);font-size:14px;
+  font-variant-numeric:tabular-nums;
+}
+.tuneJumpBtn:hover:not(:disabled){border-color:var(--glow);color:var(--glow-soft)}
+.tuneJumpBtn:disabled{opacity:.35;cursor:default}
 /* 하단 바가 가리지 않도록 본문·플레이어·토스트를 위로 */
-.app.tune .main{padding-bottom:158px}
-.app.tune .ytHost{bottom:158px}
-.app.tune .toast{position:fixed;bottom:166px}
+.app.tune .main{padding-bottom:200px}
+.app.tune .ytHost{bottom:200px}
+.app.tune .toast{position:fixed;bottom:208px}
 
 .btn{
   border:none;cursor:pointer;border-radius:12px;font-weight:700;font-size:15px;padding:12px 22px;
