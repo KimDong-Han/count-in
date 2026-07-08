@@ -170,11 +170,11 @@ export default function App() {
   );
 
   // ---- 짧은 조작 피드백 토스트 (집중 모드에서도 보임) ----
-  const showToast = useCallback((text) => {
+  const showToast = useCallback((text, ms) => {
     toastIdRef.current += 1;
     setToast({ text, id: toastIdRef.current });
     clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast(null), 1400);
+    toastTimerRef.current = setTimeout(() => setToast(null), ms || 1400);
   }, []);
 
   // ---- 넘김 스케줄: pageTimes[k] = (k+1)번째 페이지를 띄울 곡 진행 시각(초) ----
@@ -380,10 +380,53 @@ export default function App() {
   };
   const nowAt = (i) => {
     if (!armedRef.current) return;
-    const stamp = fmtCue(yt.getTime() || 0); // 0.1초 단위로 기록 (초 단위 절사보다 정확)
-    setCueAt(i, stamp);
+    const t = yt.getTime() || 0;
+    // 앞쪽에 이미 찍힌 넘김보다 빠른 시각이면 순서가 꼬이므로 저장하지 않는다
+    for (let k = i - 1; k >= 0; k--) {
+      const p = cuesRef.current[k];
+      if (p == null || !isFinite(p)) continue;
+      if (t <= p) {
+        showToast(
+          k +
+            1 +
+            "→" +
+            (k + 2) +
+            "쪽 넘김(" +
+            fmtCue(p) +
+            ")보다 빨라요 · 그 줄의 🔁로 다시 찍어 주세요",
+          2600,
+        );
+        return;
+      }
+      break;
+    }
+    const stamp = fmtCue(t); // 0.1초 단위로 기록 (초 단위 절사보다 정확)
+    // 새 시각보다 앞서게 된 뒤쪽 타이밍은 무효 — 지워서 이어서 다시 찍게 한다
+    const next = [...cueTextRef.current];
+    next[i] = stamp;
+    let cleared = 0;
+    for (let k = i + 1; k < next.length; k++) {
+      const v = parseTime(next[k]);
+      if (v != null && isFinite(v) && v <= t) {
+        next[k] = "";
+        cleared++;
+      }
+    }
+    setCueText(next);
+    recomputeCues(next);
+    saveCues(next);
     setTapCursor(i + 1);
-    showToast(i + 1 + "→" + (i + 2) + "쪽 넘김 " + stamp + " 저장");
+    showToast(
+      i +
+        1 +
+        "→" +
+        (i + 2) +
+        "쪽 넘김 " +
+        stamp +
+        " 저장" +
+        (cleared ? " · 순서가 꼬인 뒤 타이밍 " + cleared + "개는 지웠어요" : ""),
+      cleared ? 2600 : 1400,
+    );
   };
   const tap = () => {
     const idx = tapCursorRef.current;
@@ -408,7 +451,7 @@ export default function App() {
     setIsPlaying(true);
     showToast(i + 1 + "→" + (i + 2) + "쪽 · " + fmt(to) + "부터 다시 듣기");
   };
-  // 찍어둔 시각을 ±0.5초 미세 조정
+  // 찍어둔 시각을 ±0.5초 미세 조정 (이웃 타이밍의 순서는 넘지 않게)
   const nudgeCue = (i, delta) => {
     const c = cuesRef.current[i];
     if (c == null || isNaN(c)) {
@@ -416,6 +459,24 @@ export default function App() {
       return;
     }
     const nv = Math.max(0, c + delta);
+    for (let k = i - 1; k >= 0; k--) {
+      const p = cuesRef.current[k];
+      if (p == null || !isFinite(p)) continue;
+      if (nv <= p) {
+        showToast("앞 넘김(" + fmtCue(p) + ")보다 빨라질 수 없어요", 2000);
+        return;
+      }
+      break;
+    }
+    for (let k = i + 1; k < cuesRef.current.length; k++) {
+      const n = cuesRef.current[k];
+      if (n == null || !isFinite(n)) continue;
+      if (nv >= n) {
+        showToast("뒤 넘김(" + fmtCue(n) + ")보다 늦어질 수 없어요", 2000);
+        return;
+      }
+      break;
+    }
     setCueAt(i, fmtCue(nv));
     showToast(i + 1 + "→" + (i + 2) + "쪽 넘김 " + fmtCue(nv));
   };
