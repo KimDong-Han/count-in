@@ -1284,54 +1284,6 @@ export default function App() {
           </p>
         </header>
 
-        <div className="presets">
-          <div className="presetsHead">
-            <span>저장한 곡</span>
-          </div>
-          {presets.length === 0 ? (
-            <div className="presetsEmpty">
-              설정을 저장하면 여기서 골라 불러올 수 있어요.
-            </div>
-          ) : (
-            <>
-              <div className="presetList">
-                {presets.map((p) => (
-                  <div
-                    className={
-                      "presetChip" +
-                      (savedFlash && savedFlash.chipId === p.id ? " flash" : "")
-                    }
-                    key={p.id}
-                  >
-                    <button
-                      className="presetLoad"
-                      onClick={() => loadPreset(p)}
-                      title={
-                        p.url
-                          ? "불러오기 · " + p.url
-                          : "불러오기 · ⚠ 저장된 링크 없음"
-                      }
-                    >
-                      {p.name}
-                    </button>
-                    <button
-                      className="presetDel"
-                      onClick={() => deletePreset(p.id)}
-                      title="삭제"
-                      aria-label={p.name + " 삭제"}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <div className="presetsHint">
-                악보파일 선택 하고 저장된 곡 클릭
-              </div>
-            </>
-          )}
-        </div>
-
         <div className="controls">
           <div className="group grow">
             <label htmlFor="url">① 유튜브 반주 링크</label>
@@ -1708,6 +1660,54 @@ export default function App() {
             </div>
           </div>
         )}
+
+        <div className="presets">
+          <div className="presetsHead">
+            <span>저장한 곡</span>
+          </div>
+          {presets.length === 0 ? (
+            <div className="presetsEmpty">
+              설정을 저장하면 여기서 골라 불러올 수 있어요.
+            </div>
+          ) : (
+            <>
+              <div className="presetList">
+                {presets.map((p) => (
+                  <div
+                    className={
+                      "presetChip" +
+                      (savedFlash && savedFlash.chipId === p.id ? " flash" : "")
+                    }
+                    key={p.id}
+                  >
+                    <button
+                      className="presetLoad"
+                      onClick={() => loadPreset(p)}
+                      title={
+                        p.url
+                          ? "불러오기 · " + p.url
+                          : "불러오기 · ⚠ 저장된 링크 없음"
+                      }
+                    >
+                      {p.name}
+                    </button>
+                    <button
+                      className="presetDel"
+                      onClick={() => deletePreset(p.id)}
+                      title="삭제"
+                      aria-label={p.name + " 삭제"}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="presetsHint">
+                악보파일 선택 하고 저장된 곡 클릭
+              </div>
+            </>
+          )}
+        </div>
 
         <div className="sideActions">
           {saveOpen ? (
