@@ -1347,7 +1347,21 @@ export default function App() {
           </div>
 
           <div className="group">
-            <label htmlFor="delay">③ 시작</label>
+            <div className="labelRow">
+              <label htmlFor="delay">③ 시작</label>
+              <label
+                className="switch-mini noWaitToggle"
+                title="카운트다운 없이 바로 재생돼요."
+              >
+                <input
+                  type="checkbox"
+                  checked={noWait}
+                  onChange={(e) => setNoWait(e.target.checked)}
+                />
+                <span className="box"></span>
+                <span>바로 시작</span>
+              </label>
+            </div>
             <div className="startRow">
               <div className="time-inputs">
                 <input
@@ -1371,173 +1385,8 @@ export default function App() {
                 {playLabel}
               </button>
             </div>
-            <label
-              className="switch-mini noWaitToggle"
-              title="카운트다운 없이 바로 재생돼요."
-            >
-              <input
-                type="checkbox"
-                checked={noWait}
-                onChange={(e) => setNoWait(e.target.checked)}
-              />
-              <span className="box"></span>
-              <span>바로 시작</span>
-            </label>
           </div>
 
-          <button type="button" className="advToggle" onClick={toggleAdv}>
-            <span>
-              <Settings2 size={13} /> 세부 설정 — 넘김·볼륨·배속·소리
-            </span>
-            <span>{adv ? "▴" : "▾"}</span>
-          </button>
-
-          {adv && (
-            <div className="advBody">
-              <div className="group">
-                <label>넘김 방식</label>
-                <div className="seg">
-                  {[
-                    ["cue", "페이지마다 설정"],
-                    ["interval", "일정 간격"],
-                  ].map(([k, t]) => (
-                    <button
-                      key={k}
-                      type="button"
-                      className={flipMode === k ? "active" : ""}
-                      aria-pressed={flipMode === k}
-                      onClick={() => {
-                        setFlipMode(k);
-                        flipModeRef.current = k;
-                        buildSchedule();
-                      }}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {flipMode === "interval" && (
-                <div className="group">
-                  <label>페이지 간격</label>
-                  <div className="time-inputs">
-                    <input
-                      type="number"
-                      min="0"
-                      max="999"
-                      step="1"
-                      value={ivMin}
-                      onChange={(e) => setIvMin(e.target.value)}
-                    />
-                    <span className="unit">분</span>
-                    <input
-                      type="number"
-                      min="0"
-                      max="59"
-                      step="1"
-                      value={ivSec}
-                      onChange={(e) => setIvSec(e.target.value)}
-                    />
-                    <span className="unit">초</span>
-                  </div>
-                </div>
-              )}
-
-              <div className="group">
-                <label htmlFor="vol">반주 볼륨</label>
-                <div className="slider-row">
-                  <span className="vol-icon">
-                    <Volume2 size={17} />
-                  </span>
-                  <input
-                    id="vol"
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={volume}
-                    onChange={(e) => setVolume(parseInt(e.target.value, 10))}
-                  />
-                  <span className="vol-val">{volume}%</span>
-                </div>
-              </div>
-
-              <div className="group">
-                <label>재생 속도</label>
-                <div className="seg">
-                  {[
-                    [0.5, "0.5배"],
-                    [0.75, "0.75배"],
-                    [1, "원속"],
-                  ].map(([r, t]) => (
-                    <button
-                      key={r}
-                      type="button"
-                      className={rate === r ? "active" : ""}
-                      aria-pressed={rate === r}
-                      onClick={() => {
-                        setRate(r);
-                        rateRef.current = r;
-                        yt.setRate(r);
-                      }}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="group">
-                <label>카운트 소리</label>
-                <div className="seg">
-                  {[
-                    ["stick", "탁탁"],
-                    ["beep", "삑삑"],
-                    ["off", "끄기"],
-                  ].map(([k, t]) => (
-                    <button
-                      key={k}
-                      type="button"
-                      className={soundMode === k ? "active" : ""}
-                      aria-pressed={soundMode === k}
-                      onClick={() => {
-                        setSoundMode(k);
-                        soundModeRef.current = k;
-                        if (k !== "off") tickSound(false);
-                      }}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="group">
-                <label>옵션</label>
-                <label
-                  className="switch-mini"
-                  title="카운트다운 동안 반주를 음소거로 잠깐 돌려 버퍼링을 풀어두고 0:00으로 되감아둬요. 끄면 카운트 후 바로 재생돼요(맨 앞이 살짝 끊길 수 있어요)."
-                >
-                  <input
-                    type="checkbox"
-                    checked={preLoad}
-                    onChange={(e) => setPreLoad(e.target.checked)}
-                  />
-                  <span className="box"></span>
-                  <span>카운트 중 미리 재생 준비</span>
-                </label>
-                <label className="switch-mini">
-                  <input
-                    type="checkbox"
-                    checked={loopOn}
-                    onChange={(e) => setLoopOn(e.target.checked)}
-                  />
-                  <span className="box"></span>
-                  <span>끝나면 처음부터 반복</span>
-                </label>
-              </div>
-            </div>
-          )}
         </div>
 
         {flipMode === "cue" && pdf.total > 1 && (
@@ -1700,6 +1549,165 @@ export default function App() {
             </div>
           </div>
         )}
+
+          <button type="button" className="advToggle" onClick={toggleAdv}>
+            <span>
+              <Settings2 size={13} /> 세부 설정 — 넘김·볼륨·배속·소리
+            </span>
+            <span>{adv ? "▴" : "▾"}</span>
+          </button>
+
+          {adv && (
+            <div className="advBody">
+              <div className="group">
+                <label>넘김 방식</label>
+                <div className="seg">
+                  {[
+                    ["cue", "페이지마다 설정"],
+                    ["interval", "일정 간격"],
+                  ].map(([k, t]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      className={flipMode === k ? "active" : ""}
+                      aria-pressed={flipMode === k}
+                      onClick={() => {
+                        setFlipMode(k);
+                        flipModeRef.current = k;
+                        buildSchedule();
+                      }}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {flipMode === "interval" && (
+                <div className="group">
+                  <label>페이지 간격</label>
+                  <div className="time-inputs">
+                    <input
+                      type="number"
+                      min="0"
+                      max="999"
+                      step="1"
+                      value={ivMin}
+                      onChange={(e) => setIvMin(e.target.value)}
+                    />
+                    <span className="unit">분</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="59"
+                      step="1"
+                      value={ivSec}
+                      onChange={(e) => setIvSec(e.target.value)}
+                    />
+                    <span className="unit">초</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="group">
+                <label htmlFor="vol">반주 볼륨</label>
+                <div className="slider-row">
+                  <span className="vol-icon">
+                    <Volume2 size={17} />
+                  </span>
+                  <input
+                    id="vol"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={volume}
+                    onChange={(e) => setVolume(parseInt(e.target.value, 10))}
+                  />
+                  <span className="vol-val">{volume}%</span>
+                </div>
+              </div>
+
+              <div className="group">
+                <label>재생 속도</label>
+                <div className="seg">
+                  {[
+                    [0.5, "0.5배"],
+                    [0.75, "0.75배"],
+                    [1, "원속"],
+                  ].map(([r, t]) => (
+                    <button
+                      key={r}
+                      type="button"
+                      className={rate === r ? "active" : ""}
+                      aria-pressed={rate === r}
+                      onClick={() => {
+                        setRate(r);
+                        rateRef.current = r;
+                        yt.setRate(r);
+                      }}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="group">
+                <label>카운트 소리</label>
+                <div className="seg">
+                  {[
+                    ["stick", "탁탁"],
+                    ["beep", "삑삑"],
+                    ["off", "끄기"],
+                  ].map(([k, t]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      className={soundMode === k ? "active" : ""}
+                      aria-pressed={soundMode === k}
+                      onClick={() => {
+                        setSoundMode(k);
+                        soundModeRef.current = k;
+                        if (k !== "off") tickSound(false);
+                      }}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="group">
+                <label>옵션</label>
+                <div className="optRow">
+                  <label
+                    className="switch-mini"
+                    title="카운트다운 동안 반주를 음소거로 잠깐 돌려 버퍼링을 풀어두고 0:00으로 되감아둬요. 끄면 카운트 후 바로 재생돼요(맨 앞이 살짝 끊길 수 있어요)."
+                  >
+                    <input
+                      type="checkbox"
+                      checked={preLoad}
+                      onChange={(e) => setPreLoad(e.target.checked)}
+                    />
+                    <span className="box"></span>
+                    <span>미리 재생</span>
+                  </label>
+                  <label
+                    className="switch-mini"
+                    title="반주가 끝나면 처음부터 다시 재생해요."
+                  >
+                    <input
+                      type="checkbox"
+                      checked={loopOn}
+                      onChange={(e) => setLoopOn(e.target.checked)}
+                    />
+                    <span className="box"></span>
+                    <span>반복</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
 
         <div className="presets">
           <div className="presetsHead">

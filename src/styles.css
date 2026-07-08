@@ -165,7 +165,10 @@ input::placeholder{color:#A2A6B0}
 .time-inputs input:focus{outline:none;border-color:var(--indigo);box-shadow:0 0 0 3px rgba(85,88,200,.16)}
 .time-inputs .unit{color:var(--muted);font-size:13px}
 .time-inputs input:disabled{opacity:.4}
-.noWaitToggle{margin-top:9px}
+/* 라벨 옆에 작은 토글을 나란히 (③ 시작 · 바로 시작) */
+.labelRow{display:flex;align-items:center;gap:12px}
+/* 옵션 토글들을 한 줄에 */
+.optRow{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 
 .upload{
   display:inline-flex;align-items:center;gap:8px;background:var(--field);border:1px dashed var(--line-strong);
@@ -247,11 +250,11 @@ input[type=range]::-moz-range-thumb{
 .tuneEnter{width:100%;box-shadow:none}
 .cueRowTools{display:flex;gap:4px}
 .cueRowTools .btn.tiny{padding:5px 8px;font-size:12px;min-width:28px}
-/* 도돌이표 체크: 일반 토글보다 작게 */
-.cueRepeatToggle .box{width:32px;height:19px;flex:0 0 auto}
-.cueRepeatToggle .box::after{width:13px;height:13px;top:2px;left:2px}
-.cueRepeatToggle input:checked + .box::after{transform:translateX(13px)}
-.cueRepeatToggle span:last-child{font-size:12px;color:var(--muted)}
+/* 작은 토글 변형: 도돌이표 체크·바로 시작 */
+.cueRepeatToggle .box,.noWaitToggle .box{width:32px;height:19px;flex:0 0 auto}
+.cueRepeatToggle .box::after,.noWaitToggle .box::after{width:13px;height:13px;top:2px;left:2px}
+.cueRepeatToggle input:checked + .box::after,.noWaitToggle input:checked + .box::after{transform:translateX(13px)}
+.cueRepeatToggle span:last-child,.noWaitToggle span:last-child{font-size:12px;color:var(--muted)}
 /* "몇 페이지로?" 팝업 (도돌이표 곡에서 찍은 직후, 음악 일시정지 상태) */
 .pickOverlay{z-index:60}
 .pickCard{
