@@ -43,14 +43,8 @@ export default function App() {
   });
   const [tapCursor, setTapCursor] = useState(0); // 탭으로 기록할 다음 전환 index
   const [tuneMode, setTuneMode] = useState(false); // 타이밍 입력 모드 (카운트다운 없이 재생하며 찍기)
-  const [tuneRepeat, setTuneRepeat] = useState(() => {
-    // 도돌이표 있는 곡: 타이밍 입력 모드에서 찍을 때마다 몇 쪽으로 갈지 물어봄 (기억)
-    try {
-      return localStorage.getItem("cin:tune:repeat") === "1";
-    } catch {
-      return false;
-    }
-  });
+  // 도돌이표 있는 곡: 타이밍 입력 모드에서 찍을 때마다 몇 쪽으로 갈지 물어봄 (기본 꺼짐)
+  const [tuneRepeat, setTuneRepeat] = useState(false);
   const [pendingTap, setPendingTap] = useState(null); // 도돌이표 곡에서 찍은 순간 {i, t} — 목적지 선택 대기
   const [focus, setFocus] = useState(false); // 집중 모드(컨트롤 숨김)
   const [presets, setPresets] = useState(() => {
@@ -550,13 +544,7 @@ export default function App() {
     }
     recordAt(idx, null);
   };
-  const toggleTuneRepeat = () =>
-    setTuneRepeat((r) => {
-      try {
-        localStorage.setItem("cin:tune:repeat", r ? "0" : "1");
-      } catch {}
-      return !r;
-    });
+  const toggleTuneRepeat = () => setTuneRepeat((r) => !r);
 
   // ---- 넘김 목록 수동 편집: 출발/도착 쪽 변경, 줄 추가·삭제 ----
   const setSeqAt = (idx, p) => {
@@ -925,11 +913,15 @@ export default function App() {
     setArmed(false);
     armedRef.current = false;
     setIsPlaying(false);
+    setPendingTap(null);
+    setTuneMode(false); // 타이밍 입력 모드 카운트다운 중 취소 시 모드도 해제
+    tuneModeRef.current = false;
     yt.stop();
   }, [yt]);
 
   const startFlow = useCallback((opts) => {
-    const instant = noWaitRef.current || (opts && opts.instant); // 카운트다운 없이 즉시 재생
+    const tune = !!(opts && opts.tune); // 타이밍 입력 모드: 항상 3초 카운트 (바로 시작 무시)
+    const instant = !tune && (noWaitRef.current || (opts && opts.instant)); // 카운트다운 없이 즉시 재생
     setMsg({ text: "", kind: "ok" });
     if (totalRef.current === 0) {
       setMsg({ text: "먼저 악보 PDF를 불러와 주세요.", kind: "err" });
@@ -955,6 +947,7 @@ export default function App() {
     if (isNaN(secs) || secs < 0) secs = 0;
     if (secs > 60) secs = 60;
     if (instant) secs = 0;
+    if (tune) secs = 3; // 찍을 준비 시간 — 미리재생(버퍼→0초 되감기)도 이 사이에 그대로 적용됨
     ensureAudio();
     setArmed(true);
     armedRef.current = true;
@@ -1055,14 +1048,14 @@ export default function App() {
     if (clockRef.current) clockRef.current.textContent = "";
   }, [stopFollowing, yt, pdf]);
 
-  // ---- 타이밍 입력 모드: 카운트다운 없이 바로 재생하며 넘김 시각을 찍는다 ----
+  // ---- 타이밍 입력 모드: 3초 세고 재생하며 넘김 시각을 찍는다 ----
   const enterTune = useCallback(() => {
     setTapCursor(0);
-    if (!startFlow({ instant: true })) return;
+    if (!startFlow({ tune: true })) return;
     setTuneMode(true);
     tuneModeRef.current = true;
     setMsg({
-      text: "반주를 들으며 페이지가 넘어갈 순간마다 🎯 지금 넘김을 눌러 주세요.",
+      text: "반주를 들으며 페이지가 넘어갈 순간마다 🎯 지금 넘김(또는 Shift)을 눌러 주세요.",
       kind: "ok",
     });
   }, [startFlow]);
@@ -1173,6 +1166,7 @@ export default function App() {
     goToPage,
     overlayOpen: countText != null,
     pendingOpen: pendingTap != null,
+    tuneOpen: tuneMode,
   };
   useEffect(() => {
     const onKey = (e) => {
@@ -1199,6 +1193,8 @@ export default function App() {
         h.nudgeVolume(-5);
       } else if (e.code === "KeyM") {
         h.tap();
+      } else if (e.key === "Shift" && !e.repeat) {
+        if (h.tuneOpen) h.tap(); // 타이밍 입력 모드: Shift로도 찍기
       } else if (e.code === "Enter") {
         if (totalRef.current > 0 && !h.pendingOpen) setFocus((f) => !f);
       } else if (e.code === "Escape") {
@@ -1804,6 +1800,7 @@ export default function App() {
                   ["← →", "이전 · 다음 쪽"],
                   ["↑ ↓", "볼륨"],
                   ["M", "지금 넘김 (타이밍 찍기)"],
+                  ["Shift", "지금 넘김 (타이밍 입력 모드)"],
                   ["1~9", "해당 쪽으로 이동"],
                   ["Enter", "악보 크게 보기"],
                   ["0 · Esc", "처음으로"],
