@@ -1082,7 +1082,9 @@ export default function App() {
           <div className="group">
             <label>② 악보 파일</label>
             <label className="upload">
-              <input type="file" accept="application/pdf" onChange={onFile} />
+              {/* accept 미지정 — 삼성 인터넷은 PDF accept가 있으면 카메라·갤러리만 띄운다
+                  (태블릿은 데스크톱 모드 UA라 기기 감지도 불가). PDF 검증은 로드 단계에서 함. */}
+              <input type="file" onChange={onFile} />
               <span>
                 {pdf.total > 0
                   ? "📄 " + pdf.total + "쪽 불러옴"
