@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
+import { Analytics } from '@vercel/analytics/react' // Vite라 next가 아닌 react 진입점
 import App from './App.jsx'
 import Metronome from './Metronome.jsx'
 import { getPath } from './router.js'
@@ -43,7 +44,12 @@ function Root() {
     document.querySelector('meta[name="description"]')?.setAttribute('content', m.desc)
     document.querySelector('link[rel="canonical"]')?.setAttribute('href', m.canonical)
   }, [route])
-  return route === '/metronome' ? <Metronome /> : <App />
+  return (
+    <>
+      {route === '/metronome' ? <Metronome /> : <App />}
+      <Analytics /> {/* Vercel Analytics — index/metronome 두 엔트리 모두 이 Root를 쓴다 */}
+    </>
+  )
 }
 
 // StrictMode는 개발 중 effect를 두 번 호출해 유튜브 플레이어 DOM을
