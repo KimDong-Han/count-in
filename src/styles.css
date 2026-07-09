@@ -92,10 +92,11 @@ h1{font-size:12.5px;font-weight:700;letter-spacing:-.01em;line-height:1.5} /* �
 h1 .accent{color:var(--brass-deep)}
 .sub{color:var(--muted);font-size:12.5px;margin-top:4px;line-height:1.5}
 
-/* ③ 시작: 카운트 초 입력 + 큰 시작 버튼 */
+/* ③ 시작: 카운트 초 입력 + 큰 시작 버튼 (+ 전체화면으로 시작) */
 .startRow{display:flex;align-items:stretch;gap:10px}
 .startRow .time-inputs{flex:0 0 auto}
 .startRow .startBtn{flex:1;padding:11px 10px;font-size:15px;white-space:nowrap}
+.startFsBtn{width:100%;box-shadow:none;font-size:13.5px;padding:10px 12px}
 
 /* 세부 설정 접이 */
 .advToggle{

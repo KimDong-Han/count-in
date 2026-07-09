@@ -10,7 +10,9 @@ import {
   Drum,
   Eraser,
   FileText,
+  Maximize,
   Maximize2,
+  Minimize,
   Minimize2,
   Moon,
   Music,
@@ -124,6 +126,40 @@ export default function App() {
   useEffect(() => {
     sheetModeRef.current = sheetMode;
   }, [sheetMode]);
+  // 브라우저 전체화면 (Fullscreen API) — 페이지 전체가 들어가므로 자동 넘김·하단 바 그대로 동작.
+  // iPhone Safari 등 미지원 브라우저에선 버튼 자체를 숨긴다.
+  const fsSupported = !!(
+    document.documentElement.requestFullscreen ||
+    document.documentElement.webkitRequestFullscreen
+  );
+  const [isFs, setIsFs] = useState(false);
+  useEffect(() => {
+    const onFs = () =>
+      setIsFs(
+        !!(document.fullscreenElement || document.webkitFullscreenElement),
+      );
+    document.addEventListener("fullscreenchange", onFs);
+    document.addEventListener("webkitfullscreenchange", onFs);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFs);
+      document.removeEventListener("webkitfullscreenchange", onFs);
+    };
+  }, []);
+  const enterFs = () => {
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!req) return;
+    const p = req.call(el);
+    if (p && p.catch) p.catch(() => {}); // 기기 정책으로 거부돼도 조용히
+  };
+  const toggleFs = () => {
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if (exit) exit.call(document);
+    } else {
+      enterFs();
+    }
+  };
   // 모바일 브라우저 주소창·툴바 때문에 100vh가 실제 보이는 높이보다 커서
   // 악보 하단이 고정 바 뒤로 가려지는 문제 — 실제 높이를 재서 --appvh로 공급
   useEffect(() => {
@@ -1508,6 +1544,19 @@ export default function App() {
                 {playLabel}
               </button>
             </div>
+            {/* 전체화면으로 시작: 재생 시작 + 전체화면 진입 한 번에 (버튼 탭이 곧 사용자 제스처라 가능) */}
+            {fsSupported && !armed && (
+              <button
+                className="btn ghost startFsBtn"
+                onClick={() => {
+                  if (startFlow()) enterFs();
+                }}
+                disabled={playDisabled}
+                title="시작하면서 브라우저를 전체화면으로 바꿔요"
+              >
+                <Maximize size={14} /> 전체화면으로 시작
+              </button>
+            )}
             <div className="slider-row">
               <span className="vol-icon">
                 <Volume2 size={17} />
@@ -1962,6 +2011,28 @@ export default function App() {
           >
             처음으로
           </button>
+          {fsSupported && (
+            <button
+              className="btn ghost navFs"
+              onClick={toggleFs}
+              disabled={!armed && !isFs}
+              title={
+                isFs
+                  ? "전체화면에서 나가요"
+                  : "브라우저를 전체화면으로 — 자동 넘김은 그대로 돼요"
+              }
+            >
+              {isFs ? (
+                <>
+                  <Minimize size={13} /> 전체화면 종료
+                </>
+              ) : (
+                <>
+                  <Maximize size={13} /> 전체화면
+                </>
+              )}
+            </button>
+          )}
           <button
             className="btn ghost navZoom"
             onClick={() => setFocus((f) => !f)}
