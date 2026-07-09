@@ -464,10 +464,16 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 .app.video .ytHost::before{display:none}
 .app.video .stage.empty .big,.app.video .stage.empty .emptyHint{display:none}
 .ytHost::before{
-  content:"반주";position:absolute;top:0;left:0;right:0;font-size:11px;color:#cfd0dd;
-  background:rgba(9,8,22,.7);padding:3px 8px;z-index:2;pointer-events:none;
+  content:"반주 ▾";position:absolute;top:0;left:0;right:0;font-size:11px;color:#cfd0dd;
+  background:rgba(9,8,22,.7);padding:3px 8px;z-index:2;cursor:pointer;
 }
 .ytHost iframe{width:100%;height:100%;border:0}
+/* 접힘: 악보를 가리지 않는 작은 칩 — 영상만 숨고 소리는 계속 (띠 탭으로 전환) */
+.ytHost.min{width:130px;aspect-ratio:auto;height:26px;border-radius:999px}
+.ytHost.min::before{
+  content:"▸ 반주 보기";bottom:0;display:flex;align-items:center;justify-content:center;
+  padding:0;background:rgba(9,8,22,.85);
+}
 
 /* countdown overlay — 어두운 스크림 위 브라스 숫자 */
 .overlay{
@@ -556,15 +562,63 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 
 /* 모바일 하단 고정 재생 바 (좁은 화면에서만 표시) */
 .mobileBar{display:none}
+/* 시트 헤더(설정 · ×) — 시트 모드에서만 표시 */
+.sheetTop{display:none}
 
-/* 좁은 창: 사이드바를 위로 접어 세로 스택 */
-@media (max-width:760px){
-  .app{flex-direction:column;height:auto;min-height:100vh;overflow:visible}
-  .sidebar{flex:none;width:100%;height:auto;border-right:none;border-bottom:1px solid var(--line)}
-  .main{height:auto;min-height:70vh;padding-bottom:80px}
-  .stage{min-height:52vh}
+/* 시트 모드 — 폰·세로 태블릿: 악보(영상)가 기본 화면, 설정 사이드바는 하단 시트로.
+   미디어 쿼리는 App.jsx의 SHEET_MQ와 동일해야 함 */
+@media (max-width:760px), (max-width:1080px) and (orientation:portrait){
+  /* 주소창·툴바를 뺀 실제 보이는 높이(JS가 잰 --appvh) 기준 — 없으면 dvh로 폴백 */
+  .app{height:100dvh;height:var(--appvh,100dvh)}
+  /* 사이드바 → 하단 시트 (DOM은 그대로, CSS로만 변환 — 파일 input·YT 플레이어 상태 보존) */
+  .sidebar{
+    position:fixed;left:0;right:0;bottom:0;z-index:45;
+    flex:none;width:auto;height:auto;max-height:88vh;max-height:88dvh;
+    padding:0 16px calc(24px + env(safe-area-inset-bottom));
+    border-right:none;border-top:1px solid var(--line);border-radius:18px 18px 0 0;
+    box-shadow:0 -18px 50px rgba(20,24,40,.28);
+    transform:translateY(102%);visibility:hidden;
+    transition:transform .28s ease,visibility 0s .28s;
+  }
+  .sidebar.open{transform:none;visibility:visible;transition:transform .28s ease}
+  .app.focus .sidebar{display:flex} /* 이전에 켜둔 집중 모드가 시트를 막지 않게 */
+  .sheetTop{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    position:sticky;top:0;z-index:3;margin:0 -16px;
+    padding:12px 14px 10px 18px;
+    background:var(--side);border-bottom:1px solid var(--line);border-radius:18px 18px 0 0;
+  }
+  .sheetTop > span{font-size:13px;font-weight:700;letter-spacing:.04em}
+  /* 문의 이메일 — 모바일에선 하단 대신 시트 헤더 빈 공간에 (거슬리지 않게 흐리게) */
+  .sheetMail{margin-left:auto;margin-right:4px;font-size:11px;color:var(--muted);opacity:.75;text-decoration:none}
+  .sheetMail:hover{color:var(--ink)}
+  .sheetClose{
+    display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+    border-radius:10px;border:1px solid var(--line-strong);background:var(--panel);
+    color:var(--muted);cursor:pointer;
+  }
+  .sheetClose:hover{color:var(--ink);border-color:var(--indigo)}
+  .sheetBackdrop{
+    position:fixed;inset:0;z-index:44;background:rgba(18,16,42,.45);
+    animation:backdropIn .2s ease;
+  }
+  @keyframes backdropIn{from{opacity:0}to{opacity:1}}
+  .sheetMsg{margin-top:0;min-height:0;line-height:1.5}
+
+  /* 본문: 여백을 줄이고 하단 안내줄을 없애 악보를 최대한 크게. 하단 바 높이만큼만 띄움.
+     height는 100vh 고정을 풀고 .app(실제 보이는 높이)에 맞춰 늘어나게 */
+  .main{height:auto;padding:10px 10px calc(68px + env(safe-area-inset-bottom))}
+  .stage{padding:10px}
+  .footRow{display:none} /* 안내는 시트 안·토스트로, 이메일은 시트 헤더로 */
+  .navPlay,.navPrev,.navNext,.navZoom{display:none}
   .kbhint{display:none}
-  .toast{position:fixed;bottom:88px}
+  .toast{position:fixed;bottom:calc(92px + env(safe-area-inset-bottom));z-index:46}
+  /* 미니 반주 영상·칩: 좌상단(상단 바 아래) — 우하단보다 악보를 덜 가림 */
+  .ytHost{top:70px;left:12px;right:auto;bottom:auto;width:180px}
+  .ytHost.min{width:130px}
+  .app.tune .ytHost{top:70px;bottom:auto} /* 전역 튠 규칙(bottom:158px) 무효화 */
+
+  /* 하단 고정 바: 설정 · 시작 · 이전/다음 · 페이지 · 볼륨 */
   .mobileBar{
     display:flex;position:fixed;left:0;right:0;bottom:0;z-index:30;align-items:center;gap:8px;
     padding:10px 12px calc(10px + env(safe-area-inset-bottom));
@@ -573,12 +627,21 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
     box-shadow:0 -8px 22px rgba(20,24,40,.12);
   }
   .mobileBar .btn{box-shadow:none;padding:11px 14px;font-size:14px}
-  .mobileBar .btn:first-child{flex:1}
-  .mobileBar .page-ind{margin-left:2px;flex:0 0 auto}
-  .ytHost{bottom:86px}
+  .mobileBar .mbPlay{flex:1 1 auto;min-width:82px}
+  .mobileBar .mbNav{padding:11px 13px;font-size:17px;line-height:1}
+  .mobileBar .page-ind{flex:0 0 auto}
+  .mbVol{display:flex;align-items:center;gap:7px;flex:1 1 96px;min-width:72px;max-width:170px;color:var(--muted)}
+  .mbVol svg{flex:0 0 auto}
+  .mbVol input[type=range]{flex:1;min-width:0}
+
   /* iOS: 입력 포커스 시 화면 확대 방지 */
   input[type=text],.time-inputs input,.cueRow input,.saveRow input{font-size:16px}
 }
 @media (max-width:600px){
-  .ytHost{width:150px;right:10px;bottom:86px}
+  .ytHost{width:150px;right:10px}
+}
+@media (max-width:480px){
+  .mbSetTxt{display:none} /* 좁은 폰: 설정 버튼은 아이콘만 */
+  .mobileBar{gap:6px}
+  .mobileBar .btn{padding:11px 12px}
 }

@@ -25,6 +25,10 @@ import {
   X,
 } from "lucide-react";
 
+// 좁은 화면·세로 태블릿: 악보를 기본 화면으로 두고 설정을 하단 시트로 (styles.css 미디어 쿼리와 동일해야 함)
+const SHEET_MQ =
+  "(max-width:760px), (max-width:1080px) and (orientation:portrait)";
+
 export default function App() {
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
@@ -94,6 +98,51 @@ export default function App() {
       return false;
     }
   });
+  // 시트 모드: 사이드바가 하단 시트로 바뀌는 좁은 화면·세로 태블릿
+  const [sheetMode, setSheetMode] = useState(
+    () => window.matchMedia(SHEET_MQ).matches,
+  );
+  // 처음 들어오면 설정부터 하도록 시트를 열어둔다 (시작하면 자동으로 닫힘)
+  const [sheetOpen, setSheetOpen] = useState(
+    () => window.matchMedia(SHEET_MQ).matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia(SHEET_MQ);
+    const onChange = () => setSheetMode(mq.matches);
+    if (mq.addEventListener) mq.addEventListener("change", onChange);
+    else mq.addListener(onChange);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", onChange);
+      else mq.removeListener(onChange);
+    };
+  }, []);
+  // 미니 반주 영상 접기: 악보를 가리지 않게 칩으로 축소 (소리는 계속) — 시트 모드에선 기본 접힘
+  const [ytMin, setYtMin] = useState(
+    () => window.matchMedia(SHEET_MQ).matches,
+  );
+  const sheetModeRef = useRef(sheetMode);
+  useEffect(() => {
+    sheetModeRef.current = sheetMode;
+  }, [sheetMode]);
+  // 모바일 브라우저 주소창·툴바 때문에 100vh가 실제 보이는 높이보다 커서
+  // 악보 하단이 고정 바 뒤로 가려지는 문제 — 실제 높이를 재서 --appvh로 공급
+  useEffect(() => {
+    const setVh = () =>
+      document.documentElement.style.setProperty(
+        "--appvh",
+        window.innerHeight + "px",
+      );
+    setVh();
+    window.addEventListener("resize", setVh);
+    window.addEventListener("orientationchange", setVh);
+    const vv = window.visualViewport;
+    if (vv) vv.addEventListener("resize", setVh);
+    return () => {
+      window.removeEventListener("resize", setVh);
+      window.removeEventListener("orientationchange", setVh);
+      if (vv) vv.removeEventListener("resize", setVh);
+    };
+  }, []);
 
   // ---- 최신값을 rAF/콜백에서 읽기 위한 ref 미러 ----
   const totalRef = useRef(0);
@@ -917,10 +966,13 @@ export default function App() {
             text: "반주가 끝났어요. 다시 시작하려면 시작을 눌러 주세요.",
             kind: "ok",
           });
+          // 시트 모드에선 하단 안내줄이 없으므로 토스트로
+          if (sheetModeRef.current)
+            showToast("반주가 끝났어요 · 다시 들으려면 시작을 눌러 주세요", 2600);
         }
       }
     },
-    [yt, pdf, stopFollowing],
+    [yt, pdf, stopFollowing, showToast],
   );
 
   const cancelCountdown = useCallback(() => {
@@ -961,6 +1013,9 @@ export default function App() {
           text: "유튜브 반주 링크를 확인해 주세요. 주소를 그대로 붙여넣으면 돼요.",
           kind: "err",
         });
+        // 시트 모드: 하단 안내줄이 없으므로 토스트로
+        if (sheetModeRef.current)
+          showToast("유튜브 반주 링크를 확인해 주세요 · 설정에서 주소를 붙여넣으면 돼요", 2600);
         return false;
       }
       if (!yt.apiReady) {
@@ -968,6 +1023,8 @@ export default function App() {
           text: "플레이어를 준비 중이에요. 잠시 후 다시 눌러 주세요.",
           kind: "err",
         });
+        if (sheetModeRef.current)
+          showToast("플레이어를 준비 중이에요 · 잠시 후 다시 눌러 주세요", 2600);
         return false;
       }
       pendingIdRef.current = id;
@@ -979,6 +1036,7 @@ export default function App() {
       ensureAudio();
       setArmed(true);
       armedRef.current = true;
+      setSheetOpen(false); // 시트 모드: 시작하면 설정 시트를 닫고 악보(영상) 화면으로
       yt.ensure(ytInnerRef.current, id, {
         onReady: () => {
           applyVolume();
@@ -993,6 +1051,7 @@ export default function App() {
         onError: (code) => {
           cancelCountdown();
           setMsg({ text: ytErrMsg(code), kind: "err" });
+          if (sheetModeRef.current) showToast(ytErrMsg(code), 2600);
         },
       });
       return true;
@@ -1006,6 +1065,7 @@ export default function App() {
       runCountdown,
       onState,
       cancelCountdown,
+      showToast,
     ],
   );
 
@@ -1201,6 +1261,9 @@ export default function App() {
     overlayOpen: countText != null,
     pendingOpen: pendingTap != null,
     tuneOpen: tuneMode,
+    sheetMode,
+    sheetOpen: sheetMode && sheetOpen,
+    closeSheet: () => setSheetOpen(false),
   };
   useEffect(() => {
     const onKey = (e) => {
@@ -1230,9 +1293,12 @@ export default function App() {
       } else if (e.key === "Shift" && !e.repeat) {
         if (h.tuneOpen) h.tap(); // 타이밍 입력 모드: Shift로도 찍기
       } else if (e.code === "Enter") {
-        if (totalRef.current > 0 && !h.pendingOpen) setFocus((f) => !f);
+        // 시트 모드에선 악보가 이미 기본 화면이라 집중 모드 불필요 (켜지면 시트가 안 열림)
+        if (!h.sheetMode && totalRef.current > 0 && !h.pendingOpen)
+          setFocus((f) => !f);
       } else if (e.code === "Escape") {
-        if (h.pendingOpen) h.cancelPending();
+        if (h.sheetOpen) h.closeSheet();
+        else if (h.pendingOpen) h.cancelPending();
         else h.stopPlayback();
       } else {
         const m = e.code.match(/^(?:Digit|Numpad)([0-9])$/);
@@ -1301,7 +1367,34 @@ export default function App() {
         (armed && pdf.total === 0 ? " video" : "") // 악보 없음: 무대에 영상 크게
       }
     >
-      <aside className="sidebar">
+      {sheetMode && sheetOpen && (
+        <div
+          className="sheetBackdrop"
+          onClick={() => setSheetOpen(false)}
+          aria-hidden="true"
+        ></div>
+      )}
+      <aside className={"sidebar" + (sheetMode && sheetOpen ? " open" : "")}>
+        <div className="sheetTop">
+          <span>설정</span>
+          <a className="sheetMail" href="mailto:devkim1030@gmail.com">
+            devkim1030@gmail.com
+          </a>
+          <button
+            type="button"
+            className="sheetClose"
+            onClick={() => setSheetOpen(false)}
+            aria-label="설정 닫기"
+          >
+            <X size={17} />
+          </button>
+        </div>
+        {sheetMode && msg.text ? (
+          // 시트가 화면을 덮는 동안에도 안내·에러가 보이게 (본문 msg와 중복이라 스크린리더 제외)
+          <div className={"msg sheetMsg " + msg.kind} aria-hidden="true">
+            {msg.text}
+          </div>
+        ) : null}
         <header>
           <div className="eyebrowRow">
             <div className="eyebrow">Count-In</div>
@@ -1841,18 +1934,22 @@ export default function App() {
 
       <main className="main">
         <div className="navbar">
-          <button className="btn" onClick={togglePlay} disabled={playDisabled}>
+          <button
+            className="btn navPlay"
+            onClick={togglePlay}
+            disabled={playDisabled}
+          >
             {playLabel}
           </button>
           <button
-            className="btn ghost"
+            className="btn ghost navPrev"
             onClick={() => jump(-1)}
             disabled={navDisabled}
           >
             ‹ 이전
           </button>
           <button
-            className="btn ghost"
+            className="btn ghost navNext"
             onClick={() => jump(1)}
             disabled={navDisabled}
           >
@@ -1866,7 +1963,7 @@ export default function App() {
             처음으로
           </button>
           <button
-            className="btn ghost"
+            className="btn ghost navZoom"
             onClick={() => setFocus((f) => !f)}
             disabled={navDisabled}
           >
@@ -1964,10 +2061,18 @@ export default function App() {
               </div>
             </>
           )}
-          {/* 유튜브 플레이어: 평소엔 우하단 미니, 악보 없이 재생하면(.app.video) 무대를 꽉 채움 */}
+          {/* 유튜브 플레이어: 평소엔 우하단 미니, 악보 없이 재생하면(.app.video) 무대를 꽉 채움.
+              상단 "반주" 띠(::before)를 탭하면 칩으로 접힘/펼침 — 악보를 가리지 않게 (소리는 유지).
+              클릭은 띠에서만 잡힌다(영상 부분은 iframe이라 이 핸들러에 안 옴). */}
           <div
-            className={"ytHost" + (armed ? " show" : "")}
+            className={
+              "ytHost" +
+              (armed ? " show" : "") +
+              (ytMin && pdf.total > 0 ? " min" : "")
+            }
             ref={ytHostRef}
+            onClick={() => setYtMin((m) => !m)}
+            title={ytMin ? "반주 영상 펼치기" : "반주 영상 접기"}
           ></div>
         </div>
 
@@ -1987,24 +2092,58 @@ export default function App() {
         )}
       </main>
 
-      {(pdf.total > 0 || armed) && !tuneMode && (
+      {(sheetMode || pdf.total > 0 || armed) && !tuneMode && (
         <div className="mobileBar">
-          <button className="btn" onClick={togglePlay} disabled={playDisabled}>
+          {sheetMode && (
+            <button
+              className="btn ghost mbSet"
+              onClick={() => setSheetOpen(true)}
+              aria-label="설정 열기"
+              aria-expanded={sheetOpen}
+            >
+              <Settings2 size={16} />
+              <span className="mbSetTxt">설정</span>
+            </button>
+          )}
+          <button
+            className="btn mbPlay"
+            onClick={togglePlay}
+            disabled={playDisabled}
+          >
             {playLabel}
           </button>
           {pdf.total > 0 && (
             <>
-              <button className="btn ghost" onClick={() => jump(-1)}>
-                ‹ 이전
+              <button
+                className="btn ghost mbNav"
+                onClick={() => jump(-1)}
+                aria-label="이전 페이지"
+              >
+                ‹
               </button>
-              <button className="btn ghost" onClick={() => jump(1)}>
-                다음 ›
+              <button
+                className="btn ghost mbNav"
+                onClick={() => jump(1)}
+                aria-label="다음 페이지"
+              >
+                ›
               </button>
               <span className="page-ind">
                 <b>{pdf.pageNum}</b> / {pdf.total}
               </span>
             </>
           )}
+          <span className="mbVol">
+            <Volume2 size={15} />
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={volume}
+              onChange={(e) => setVolume(parseInt(e.target.value, 10))}
+              aria-label="반주 볼륨"
+            />
+          </span>
         </div>
       )}
 
@@ -2018,6 +2157,16 @@ export default function App() {
               0:00
             </span>
             <div className="spacer"></div>
+            {sheetMode && (
+              <button
+                className="btn ghost small"
+                onClick={() => setSheetOpen(true)}
+                aria-label="타이밍 목록 열기"
+                title="찍은 타이밍 목록 보기·수정"
+              >
+                <Settings2 size={13} />
+              </button>
+            )}
             <button className="btn ghost small" onClick={togglePlay}>
               {isPlaying ? (
                 <>
