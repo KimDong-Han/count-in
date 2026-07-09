@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { playBeep, playStick } from "./sound";
 import { navigate } from "./router.js";
 import { currentDark, setDark } from "./theme.js";
+import { STR, detectLang, saveLang, applyLangAttr } from "./i18n.jsx";
 import { Hand, Moon, Sun } from "lucide-react";
 
 // 별도 페이지(#/metronome)의 메트로놈.
@@ -34,6 +35,20 @@ export default function Metronome() {
   const flipTheme = () => {
     setDark(!darkMode);
     setDarkMode(!darkMode);
+  };
+  // 한/영 전환 (App.jsx와 같은 패턴 — cin:lang 공유)
+  const [lang, setLang] = useState(detectLang);
+  useEffect(() => {
+    applyLangAttr(lang);
+  }, [lang]);
+  const t = (key, ...args) => {
+    const v = STR[lang][key] ?? STR.ko[key];
+    return typeof v === "function" ? v(...args) : v;
+  };
+  const flipLang = () => {
+    const nl = lang === "ko" ? "en" : "ko";
+    saveLang(nl);
+    setLang(nl);
   };
 
   // 스케줄러 루프에서 최신값을 읽기 위한 ref 미러 (App.jsx와 같은 패턴)
@@ -189,16 +204,25 @@ export default function Metronome() {
             navigate("/");
           }}
         >
-          ‹ 연습 플레이어
+          {t("backLink")}
         </a>
         <span className="headLinks">
-          <h1 className="eyebrow">Count-In · 온라인 메트로놈</h1>
+          <h1 className="eyebrow">{t("mTitle")}</h1>
+          <button
+            type="button"
+            className="pageLink themeBtn langBtn"
+            onClick={flipLang}
+            title={t("langBtnTitle")}
+            aria-label={t("langBtnTitle")}
+          >
+            {lang === "ko" ? "EN" : "한"}
+          </button>
           <button
             type="button"
             className="pageLink themeBtn"
             onClick={flipTheme}
-            title={darkMode ? "밝은 화면으로" : "어두운 화면으로"}
-            aria-label={darkMode ? "밝은 화면으로" : "어두운 화면으로"}
+            title={darkMode ? t("themeToLight") : t("themeToDark")}
+            aria-label={darkMode ? t("themeToLight") : t("themeToDark")}
           >
             {darkMode ? <Sun size={13} /> : <Moon size={13} />}
           </button>
@@ -252,15 +276,15 @@ export default function Metronome() {
             className={"btn metroStart" + (running ? " running" : "")}
             onClick={toggle}
           >
-            {running ? "정지" : "시작"}
+            {running ? t("mStop") : t("mStart")}
           </button>
           <button className="btn ghost tapBtn" onClick={tap}>
-            <Hand size={15} /> 탭 템포 <kbd>T</kbd>
+            <Hand size={15} /> {t("tapTempo")} <kbd>T</kbd>
           </button>
         </div>
 
         <div className="metroRow">
-          <label>박자</label>
+          <label>{t("beatsLabel")}</label>
           <div className="seg">
             {[1, 2, 3, 4, 6].map((n) => (
               <button
@@ -274,14 +298,14 @@ export default function Metronome() {
                   if (beatCountRef.current >= n) beatCountRef.current = 0;
                 }}
               >
-                {n === 1 ? "없음" : n + "박"}
+                {n === 1 ? t("beatNone") : t("beatN", n)}
               </button>
             ))}
           </div>
         </div>
 
         <div className="metroRow">
-          <label>강세</label>
+          <label>{t("accentLabel")}</label>
           <label className="switch-mini">
             <input
               type="checkbox"
@@ -291,18 +315,19 @@ export default function Metronome() {
             />
             <span className="box"></span>
             <span>
-              첫박을 다른 소리로{beats === 1 ? " (박자 선택 시)" : ""}
+              {t("accentDesc")}
+              {beats === 1 ? t("accentNeedBeats") : ""}
             </span>
           </label>
         </div>
 
         <div className="metroRow">
-          <label>소리</label>
+          <label>{t("soundLabel")}</label>
           <div className="seg">
             {[
-              ["stick", "탁탁"],
-              ["beep", "삑삑"],
-            ].map(([k, t]) => (
+              ["stick", t("soundStick")],
+              ["beep", t("soundBeep")],
+            ].map(([k, label]) => (
               <button
                 key={k}
                 type="button"
@@ -310,14 +335,14 @@ export default function Metronome() {
                 aria-pressed={soundMode === k}
                 onClick={() => setSoundMode(k)}
               >
-                {t}
+                {label}
               </button>
             ))}
           </div>
         </div>
 
         <div className="metroRow">
-          <label htmlFor="mvol">볼륨</label>
+          <label htmlFor="mvol">{t("volumeLabel")}</label>
           <div className="slider-row">
             <input
               id="mvol"
@@ -332,9 +357,7 @@ export default function Metronome() {
         </div>
       </div>
 
-      <div className="kbhint metroHint">
-        <b>Space</b> 시작·정지 · <b>↑↓</b> ±1 · <b>←→</b> ±5 · <b>T</b> 탭 템포
-      </div>
+      <div className="kbhint metroHint">{t("mHint")}</div>
 
       <footer className="siteFoot">
         <a href="mailto:devkim1030@gmail.com">devkim1030@gmail.com</a>
