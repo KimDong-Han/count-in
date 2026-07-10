@@ -183,7 +183,8 @@ export const STR = {
     focusOff: "설정 보기",
     kbhintLine: (
       <>
-        <b>Space</b> 재생 · <b>←→</b> 페이지 · <b>Shift</b> 지금 넘김
+        <b>Space</b> 재생 · <b>←→</b> 페이지 · <b>Shift</b> 지금 넘김(타이밍
+        입력 모드에서)
       </>
     ),
     kbMoreTitle: "단축키 전체 보기",
