@@ -515,6 +515,9 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 .presetSearchTitle{font-size:18px;font-weight:800;color:var(--ink)}
 .presetSearchHint{margin-top:7px;color:var(--muted);font-size:13px;line-height:1.5}
 .presetSearchInput{width:100%;margin-top:16px;background:var(--field);border:1px solid var(--line-strong);border-radius:10px;color:var(--ink);font:inherit;font-size:14px;padding:11px 12px}
+.searchByRow{display:flex;gap:8px;margin-top:16px}
+.searchByRow .presetSearchInput{margin-top:0;flex:1;min-width:0}
+.searchBySel{flex:0 0 auto;background:var(--field);border:1px solid var(--line-strong);border-radius:10px;color:var(--ink);font:inherit;font-size:13px;padding:0 10px;cursor:pointer}
 .presetSearchInput:focus{outline:none;border-color:var(--indigo);box-shadow:0 0 0 3px rgba(85,88,200,.16)}
 .presetSearchActions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
 .presetSearchResults{margin-top:20px;border-top:1px solid var(--line);padding-top:14px}
@@ -524,10 +527,20 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 .sharedPresetInfo{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
 .sharedPresetInfo strong{font-size:14px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sharedPresetInfo span{font-size:11px;color:var(--muted)}
+.sharedPresetActions{display:flex;gap:6px;flex:0 0 auto}
+.delShareBtn{color:#c0453b}
+.delRow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;justify-content:flex-end}
+.delRow input{width:110px;background:var(--field);border:1px solid var(--line-strong);border-radius:8px;color:var(--ink);font:inherit;font-size:12px;padding:6px 8px}
+.delConfirmBtn{background:#c0453b;color:#fff;border-color:#c0453b}
+.delErr{font-size:11px;color:#c0453b;font-weight:700;width:100%;text-align:right}
 .shareField{display:flex;flex-direction:column;gap:5px;margin-top:13px}
 .shareField>span{font-size:12px;color:var(--muted)}
 .shareField .presetSearchInput{margin-top:0}
 .shareHint{font-size:11px;color:var(--muted);opacity:.85}
+.presetSearchResultsTitle{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.searchLoadHint{font-size:11px;font-weight:700;color:var(--brass-deep)}
+.shareNeedUrl{margin-top:12px;padding:9px 11px;border-radius:9px;font-size:12px;
+  color:var(--brass-deep);background:rgba(180,140,40,.1);border:1px solid rgba(180,140,40,.3)}
 
 @media (prefers-reduced-motion:reduce){ .count.tick{animation:none} }
 

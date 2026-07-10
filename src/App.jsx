@@ -8,7 +8,13 @@ import { currentDark, setDark } from "./theme.js";
 import { STR, detectLang, saveLang, applyLangAttr } from "./i18n.jsx";
 import { CuePanel } from "./components/CuePanel.jsx";
 import { PlaybackOverlays } from "./components/PlaybackOverlays.jsx";
-import { searchSharedPresets, getSharedPreset, sharePreset } from "./share.js";
+import {
+  searchSharedPresets,
+  getSharedPreset,
+  sharePreset,
+  updateSharedPreset,
+  deleteSharedPreset,
+} from "./share.js";
 import {
   Check,
   Drum,
@@ -24,6 +30,7 @@ import {
   Play,
   Save,
   Settings2,
+  Share2,
   Sun,
   Target,
   Timer,
@@ -114,68 +121,112 @@ export default function App() {
   const [presetSearchQuery, setPresetSearchQuery] = useState("");
   const [presetSearchResults, setPresetSearchResults] = useState(null);
   const [presetSearchBusy, setPresetSearchBusy] = useState(false);
+  const [presetSearchBy, setPresetSearchBy] = useState("name"); // name|singer|uploader
   // 공유 프리셋 검색 (API 연동, 서버 미연결 시 share.js가 데모로 폴백)
   const runPresetSearch = async () => {
     if (!presetSearchQuery.trim()) return;
     setPresetSearchBusy(true);
     try {
-      setPresetSearchResults(await searchSharedPresets(presetSearchQuery));
+      setPresetSearchResults(
+        await searchSharedPresets(presetSearchQuery, presetSearchBy),
+      );
     } finally {
       setPresetSearchBusy(false);
     }
   };
-  // 검색 결과에서 하나 선택 → 블롭 받아서 loadPreset 적용
+  // 공유 프리셋 삭제 (검색 결과 카드에서, 아이템 비번 확인)
+  const [deleteTarget, setDeleteTarget] = useState(null); // 삭제하려는 id
+  const [deletePw, setDeletePw] = useState("");
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteErr, setDeleteErr] = useState("");
+  const confirmDelete = async (id) => {
+    if (!deletePw.trim()) return;
+    setDeleteBusy(true);
+    setDeleteErr("");
+    try {
+      await deleteSharedPreset(id, deletePw.trim());
+      setPresetSearchResults((r) => (r ? r.filter((p) => p.id !== id) : r));
+      setDeleteTarget(null);
+      setDeletePw("");
+    } catch (e) {
+      setDeleteErr(
+        e.message === "wrong-password" ? t("delWrongPw") : t("delFail"),
+      );
+    } finally {
+      setDeleteBusy(false);
+    }
+  };
+  // 검색 결과에서 하나 선택 → 블롭 받아서 loadPreset 적용 + 수정 대상으로 기억
   const loadSharedPreset = async (id) => {
     try {
       const blob = await getSharedPreset(id);
-      loadPreset(blob);
+      loadPreset(blob); // loadedShareId를 null로 리셋함
+      setLoadedShareId(id);
+      setLoadedShareName(blob.name || "");
+      setLoadedShareSinger(blob.singer || "");
       setShowPresetSearch(false);
     } catch (e) {
       setMsg({ text: t("shareLoadFail"), kind: "err" });
     }
   };
-  // 공유(등록) 모달
+  // 공유 모달 — 로컬 저장곡이 아니라 "지금 설정한 것"을 그대로 올린다.
+  // mode: "new"(새로 공유·POST) | "edit"(불러온 공유 덮어쓰기·PATCH)
   const [showShare, setShowShare] = useState(false);
-  const [shareId, setShareId] = useState(null); // 공유할 저장곡 id
+  const [shareMode, setShareMode] = useState("new");
+  const [shareTitle, setShareTitle] = useState("");
   const [shareSinger, setShareSinger] = useState("");
   const [shareUploader, setShareUploader] = useState("");
   const [sharePw, setSharePw] = useState("");
   const [shareBusy, setShareBusy] = useState(false);
   const [shareDone, setShareDone] = useState(null); // 성공 시 공유한 곡 이름
-  const openShare = () => {
-    setShareId(presets[0]?.id ?? null);
-    setShareSinger("");
+  // 불러온 공유 프리셋 추적 (수정 대상)
+  const [loadedShareId, setLoadedShareId] = useState(null);
+  const [loadedShareName, setLoadedShareName] = useState("");
+  const [loadedShareSinger, setLoadedShareSinger] = useState("");
+  const openShare = (mode = "new") => {
+    setShareMode(mode);
+    setShareTitle(mode === "edit" ? loadedShareName : "");
+    setShareSinger(mode === "edit" ? loadedShareSinger : "");
     setShareUploader("");
     setSharePw("");
     setShareDone(null);
     setShowShare(true);
   };
   const shareValid =
-    !!shareId &&
+    !!url.trim() &&
+    !!shareTitle.trim() &&
     !!shareSinger.trim() &&
-    !!shareUploader.trim() &&
-    !!sharePw.trim();
+    !!sharePw.trim() &&
+    (shareMode === "edit" || !!shareUploader.trim());
   const submitShare = async () => {
-    const p = presets.find((x) => x.id === shareId);
-    if (!p || !shareValid) return;
+    if (!shareValid) return;
     setShareBusy(true);
     try {
-      await sharePreset({
-        song_name: p.name,
-        singer: shareSinger.trim() || null,
-        uploader: shareUploader.trim() || null,
-        uploader_pw: sharePw.trim() || null,
-        url: p.url,
-        flip_mode: p.flipMode,
-        ivMin: p.ivMin,
-        ivSec: p.ivSec,
-        cues: p.cues,
-        seq: p.seq,
-        total_page: p.pageCount,
-      });
-      setShareDone(p.name);
+      const payload = {
+        song_name: shareTitle.trim(),
+        singer: shareSinger.trim(),
+        uploader_pw: sharePw.trim(),
+        url,
+        flip_mode: flipMode,
+        ivMin,
+        ivSec,
+        cues: cueTextRef.current,
+        seq: seqRef.current,
+        total_page: pdf.total,
+      };
+      if (shareMode === "edit") {
+        await updateSharedPreset(loadedShareId, payload);
+        setLoadedShareName(shareTitle.trim());
+        setLoadedShareSinger(shareSinger.trim());
+      } else {
+        await sharePreset({ ...payload, uploader: shareUploader.trim() });
+      }
+      setShareDone(shareTitle.trim());
     } catch (e) {
-      setMsg({ text: t("shareFail"), kind: "err" });
+      setMsg({
+        text: e.message === "wrong-password" ? t("delWrongPw") : t("shareFail"),
+        kind: "err",
+      });
     } finally {
       setShareBusy(false);
     }
@@ -884,6 +935,7 @@ export default function App() {
   };
   const loadPreset = (p) => {
     stopPlayback();
+    setLoadedShareId(null); // 로컬 프리셋 로드면 공유 수정 대상 해제
     setUrl(p.url ?? "");
     setDelay(p.delay ?? 4);
     setVolume(p.volume ?? 80);
@@ -1784,15 +1836,6 @@ export default function App() {
         <div className="presets">
           <div className="presetsHead">
             <span>{t("savedSongs")}</span>
-            <button
-              type="button"
-              className="btn ghost tiny presetShareBtn"
-              disabled={presets.length === 0}
-              title={presets.length === 0 ? t("presetsEmpty") : t("shareBtn")}
-              onClick={openShare}
-            >
-              {t("shareBtn")}
-            </button>
           </div>
           {presets.length === 0 ? (
             <div className="presetsEmpty">{t("presetsEmpty")}</div>
@@ -1870,6 +1913,21 @@ export default function App() {
                   <Save size={14} /> {t("savePreset")}
                 </>
               )}
+            </button>
+          )}
+          <button
+            className="btn ghost sharePresetBtn"
+            onClick={() => openShare("new")}
+          >
+            <Share2 size={14} /> {t("shareBtn")}
+          </button>
+          {loadedShareId != null && (
+            <button
+              className="btn ghost shareEditBtn"
+              onClick={() => openShare("edit")}
+              title={t("shareEditTitle")}
+            >
+              <Share2 size={14} /> {t("shareEditBtn")}
             </button>
           )}
           <button
@@ -2234,17 +2292,29 @@ export default function App() {
           <div className="presetSearchCard" onClick={(e) => e.stopPropagation()}>
             <div className="presetSearchTitle">{t("searchPresetTitle")}</div>
             <p className="presetSearchHint">{t("searchPresetHint")}</p>
-            <input
-              autoFocus
-              type="text"
-              className="presetSearchInput"
-              value={presetSearchQuery}
-              onChange={(e) => setPresetSearchQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") runPresetSearch();
-              }}
-              placeholder={t("searchPresetPlaceholder")}
-            />
+            <div className="searchByRow">
+              <select
+                className="searchBySel"
+                value={presetSearchBy}
+                onChange={(e) => setPresetSearchBy(e.target.value)}
+                aria-label={t("searchByLabel")}
+              >
+                <option value="name">{t("searchByName")}</option>
+                <option value="singer">{t("searchBySinger")}</option>
+                <option value="uploader">{t("searchByUploader")}</option>
+              </select>
+              <input
+                autoFocus
+                type="text"
+                className="presetSearchInput"
+                value={presetSearchQuery}
+                onChange={(e) => setPresetSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") runPresetSearch();
+                }}
+                placeholder={t("searchPresetPlaceholder")}
+              />
+            </div>
             <div className="presetSearchActions">
               <button className="btn ghost small" onClick={() => setShowPresetSearch(false)}>
                 {t("cancelBtn")}
@@ -2259,7 +2329,10 @@ export default function App() {
             </div>
             {presetSearchResults && (
               <div className="presetSearchResults">
-                <div className="presetSearchResultsTitle">{t("searchResults")}</div>
+                <div className="presetSearchResultsTitle">
+                  {t("searchResults")}
+                  <span className="searchLoadHint">{t("searchLoadHint")}</span>
+                </div>
                 {presetSearchResults.length === 0 ? (
                   <div className="presetSearchEmpty">{t("noSearchResults")}</div>
                 ) : (
@@ -2267,15 +2340,65 @@ export default function App() {
                     <div className="sharedPresetRow" key={preset.id}>
                       <div className="sharedPresetInfo">
                         <strong>{preset.name}</strong>
-                        <span>{preset.author} · {t("pagesCount", preset.pages)}</span>
+                        <span>
+                          {preset.singer ? preset.singer + " · " : ""}
+                          {preset.author} · {t("pagesCount", preset.pages)}
+                        </span>
                       </div>
-                      <button
-                        type="button"
-                        className="btn ghost tiny"
-                        onClick={() => loadSharedPreset(preset.id)}
-                      >
-                        {t("loadShared")}
-                      </button>
+                      {deleteTarget === preset.id ? (
+                        <div className="delRow">
+                          <input
+                            autoFocus
+                            type="password"
+                            value={deletePw}
+                            onChange={(e) => setDeletePw(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") confirmDelete(preset.id);
+                            }}
+                            placeholder={t("sharePwPh")}
+                          />
+                          <button
+                            type="button"
+                            className="btn tiny delConfirmBtn"
+                            disabled={deleteBusy || !deletePw.trim()}
+                            onClick={() => confirmDelete(preset.id)}
+                          >
+                            {t("delShared")}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn ghost tiny"
+                            onClick={() => {
+                              setDeleteTarget(null);
+                              setDeleteErr("");
+                            }}
+                          >
+                            {t("cancelBtn")}
+                          </button>
+                          {deleteErr && <span className="delErr">{deleteErr}</span>}
+                        </div>
+                      ) : (
+                        <div className="sharedPresetActions">
+                          <button
+                            type="button"
+                            className="btn ghost tiny"
+                            onClick={() => loadSharedPreset(preset.id)}
+                          >
+                            {t("loadShared")}
+                          </button>
+                          <button
+                            type="button"
+                            className="btn ghost tiny delShareBtn"
+                            onClick={() => {
+                              setDeleteTarget(preset.id);
+                              setDeletePw("");
+                              setDeleteErr("");
+                            }}
+                          >
+                            {t("delShared")}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
@@ -2290,14 +2413,20 @@ export default function App() {
           className="overlay show presetSearchOverlay"
           role="dialog"
           aria-modal="true"
-          aria-label={t("shareModalTitle")}
+          aria-label={shareMode === "edit" ? t("shareEditTitle") : t("shareModalTitle")}
           onClick={() => setShowShare(false)}
         >
           <div className="presetSearchCard" onClick={(e) => e.stopPropagation()}>
-            <div className="presetSearchTitle">{t("shareModalTitle")}</div>
+            <div className="presetSearchTitle">
+              {shareMode === "edit" ? t("shareEditTitle") : t("shareModalTitle")}
+            </div>
             {shareDone != null ? (
               <>
-                <p className="presetSearchHint">{t("shareDoneMsg", shareDone)}</p>
+                <p className="presetSearchHint">
+                  {shareMode === "edit"
+                    ? t("shareUpdateDone", shareDone)
+                    : t("shareDoneMsg", shareDone)}
+                </p>
                 <div className="presetSearchActions">
                   <button className="btn small" onClick={() => setShowShare(false)}>
                     {t("closeBtn")}
@@ -2306,18 +2435,22 @@ export default function App() {
               </>
             ) : (
               <>
-                <p className="presetSearchHint">{t("shareModalHint")}</p>
+                <p className="presetSearchHint">
+                  {shareMode === "edit" ? t("shareEditHint") : t("shareModalHint")}
+                </p>
+                {!url.trim() && (
+                  <div className="shareNeedUrl">{t("shareNeedUrl")}</div>
+                )}
                 <label className="shareField">
-                  <span>{t("shareSong")}</span>
-                  <select
+                  <span>{t("shareTitle")}</span>
+                  <input
+                    autoFocus
+                    type="text"
                     className="presetSearchInput"
-                    value={shareId ?? ""}
-                    onChange={(e) => setShareId(e.target.value)}
-                  >
-                    {presets.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
+                    value={shareTitle}
+                    onChange={(e) => setShareTitle(e.target.value)}
+                    placeholder={t("shareTitlePh")}
+                  />
                 </label>
                 <label className="shareField">
                   <span>{t("shareSinger")}</span>
@@ -2329,16 +2462,18 @@ export default function App() {
                     placeholder={t("shareSingerPh")}
                   />
                 </label>
-                <label className="shareField">
-                  <span>{t("shareUploader")}</span>
-                  <input
-                    type="text"
-                    className="presetSearchInput"
-                    value={shareUploader}
-                    onChange={(e) => setShareUploader(e.target.value)}
-                    placeholder={t("shareUploaderPh")}
-                  />
-                </label>
+                {shareMode !== "edit" && (
+                  <label className="shareField">
+                    <span>{t("shareUploader")}</span>
+                    <input
+                      type="text"
+                      className="presetSearchInput"
+                      value={shareUploader}
+                      onChange={(e) => setShareUploader(e.target.value)}
+                      placeholder={t("shareUploaderPh")}
+                    />
+                  </label>
+                )}
                 <label className="shareField">
                   <span>{t("sharePw")}</span>
                   <input
@@ -2348,7 +2483,9 @@ export default function App() {
                     onChange={(e) => setSharePw(e.target.value)}
                     placeholder={t("sharePwPh")}
                   />
-                  <small className="shareHint">{t("sharePwHint")}</small>
+                  <small className="shareHint">
+                    {shareMode === "edit" ? t("shareEditPwHint") : t("sharePwHint")}
+                  </small>
                 </label>
                 <div className="presetSearchActions">
                   <button className="btn ghost small" onClick={() => setShowShare(false)}>
@@ -2359,7 +2496,11 @@ export default function App() {
                     disabled={!shareValid || shareBusy}
                     onClick={submitShare}
                   >
-                    {shareBusy ? t("sharing") : t("shareSubmit")}
+                    {shareBusy
+                      ? t("sharing")
+                      : shareMode === "edit"
+                        ? t("shareUpdateSubmit")
+                        : t("shareSubmit")}
                   </button>
                 </div>
               </>

@@ -11,18 +11,24 @@ const DEMO = [
   { id: "demo-3", name: "작은 별", author: "music-friend", pages: 3 },
 ];
 
-// 이름으로 공유 프리셋 검색 → [{id, name, author, pages}]
-export async function searchSharedPresets(query) {
+// 공유 프리셋 검색 → [{id, name, author, pages}]
+// by: "name"(제목) | "singer"(가수) | "uploader"(닉네임)
+export async function searchSharedPresets(query, by = "name") {
   const q = (query || "").trim();
   if (!q) return [];
   try {
-    const res = await fetch(`${BASE}?q=${encodeURIComponent(q)}`);
+    const res = await fetch(
+      `${BASE}?q=${encodeURIComponent(q)}&by=${encodeURIComponent(by)}`,
+    );
     if (!res.ok) throw new Error("search failed");
     return await res.json();
   } catch (e) {
-    // 백엔드 미연결 → 데모로 폴백
+    // 백엔드 미연결 → 데모로 폴백 (데모엔 가수 정보 없음)
     const lower = q.toLowerCase();
-    return DEMO.filter((p) => p.name.toLowerCase().includes(lower));
+    return DEMO.filter((p) => {
+      const v = by === "uploader" ? p.author : by === "singer" ? "" : p.name;
+      return (v || "").toLowerCase().includes(lower);
+    });
   }
 }
 
@@ -30,6 +36,30 @@ export async function searchSharedPresets(query) {
 export async function getSharedPreset(id) {
   const res = await fetch(`${BASE}/${encodeURIComponent(id)}`);
   if (!res.ok) throw new Error("load failed");
+  return await res.json();
+}
+
+// 공유 프리셋 수정/덮어쓰기 (아이템 비번 필요). 비번 틀리면 "wrong-password" throw.
+export async function updateSharedPreset(id, patch) {
+  const res = await fetch(`${BASE}/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (res.status === 403) throw new Error("wrong-password");
+  if (!res.ok) throw new Error("update failed");
+  return await res.json();
+}
+
+// 공유 프리셋 삭제 (아이템 비번 필요). 비번 틀리면 "wrong-password" throw.
+export async function deleteSharedPreset(id, pw) {
+  const res = await fetch(`${BASE}/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ uploader_pw: pw }),
+  });
+  if (res.status === 403) throw new Error("wrong-password");
+  if (!res.ok) throw new Error("delete failed");
   return await res.json();
 }
 

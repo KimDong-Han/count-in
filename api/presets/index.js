@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless";
-import { createHash, randomUUID } from "crypto";
+import { hashPw } from "../../lib/pw.js";
+import { parseShareFields } from "../../lib/preset.js";
 
 // 공유 프리셋 API — 목록 검색(GET) · 공유 등록(POST)
 //
@@ -33,75 +34,50 @@ const DB_URL =
   process.env.STORAGE_URL;
 const sql = neon(DB_URL);
 
-// 아이템 패스워드 해시: 행별 랜덤 솔트로 섞어 'salt:hash'로 저장.
-// (수정/삭제 검증 시 salt 떼어내 재계산 → verifyPw)
-function hashPw(pw) {
-  const salt = randomUUID().replace(/-/g, "").slice(0, 12);
-  const h = createHash("sha256").update(salt + ":" + pw).digest("hex");
-  return salt + ":" + h;
-}
-// 나중에 수정/삭제에서 쓸 검증 헬퍼
-export function verifyPw(pw, stored) {
-  if (!stored) return false;
-  const [salt, h] = stored.split(":");
-  return createHash("sha256").update(salt + ":" + pw).digest("hex") === h;
-}
-
 export default async function handler(req, res) {
   try {
     if (req.method === "GET") {
       const q = (req.query.q || "").toString().trim();
       if (!q) return res.status(200).json([]);
       const like = "%" + q + "%";
-      // 결과 카드가 기대하는 {id, name, author, pages} 형태로 별칭
-      const rows = await sql`
-        SELECT preset_id AS id, song_name AS name, uploader AS author, total_page AS pages
-        FROM preset
-        WHERE del_at IS NULL
-          AND (lower(song_name) LIKE lower(${like}) OR lower(singer) LIKE lower(${like}))
-        ORDER BY select_count DESC, reg_at DESC
-        LIMIT 50`;
+      // 검색 기준: name(제목) | singer(가수) | uploader(닉네임). 컬럼명은
+      // 파라미터화 불가라 분기. 결과는 카드용 {id,name,author,pages}로 별칭.
+      const by = (req.query.by || "name").toString();
+      let rows;
+      if (by === "singer") {
+        rows = await sql`
+          SELECT preset_id AS id, song_name AS name, singer, uploader AS author, total_page AS pages
+          FROM preset WHERE del_at IS NULL AND lower(singer) LIKE lower(${like})
+          ORDER BY select_count DESC, reg_at DESC LIMIT 50`;
+      } else if (by === "uploader") {
+        rows = await sql`
+          SELECT preset_id AS id, song_name AS name, singer, uploader AS author, total_page AS pages
+          FROM preset WHERE del_at IS NULL AND lower(uploader) LIKE lower(${like})
+          ORDER BY select_count DESC, reg_at DESC LIMIT 50`;
+      } else {
+        rows = await sql`
+          SELECT preset_id AS id, song_name AS name, singer, uploader AS author, total_page AS pages
+          FROM preset WHERE del_at IS NULL AND lower(song_name) LIKE lower(${like})
+          ORDER BY select_count DESC, reg_at DESC LIMIT 50`;
+      }
       return res.status(200).json(rows);
     }
 
     if (req.method === "POST") {
       const b = req.body || {};
-      const songName = (b.song_name ?? b.name ?? "").toString().trim();
-      const ytbUrl = (b.ytb_url ?? b.url ?? "").toString().trim();
-      const singerIn = (b.singer ?? "").toString().trim();
       const uploaderIn = (b.uploader ?? "").toString().trim();
       const pwIn = (b.uploader_pw ?? "").toString();
-      if (!songName) return res.status(400).json({ error: "song_name required" });
-      if (!ytbUrl) return res.status(400).json({ error: "ytb_url required" });
-      // 가수·닉네임·비밀번호 필수 (공유 등록 조건)
-      if (!singerIn) return res.status(400).json({ error: "singer required" });
+      const parsed = parseShareFields(b);
+      if (parsed.error)
+        return res
+          .status(parsed.error === "too large" ? 413 : 400)
+          .json({ error: parsed.error });
+      // 닉네임·비밀번호는 등록 전용 필수
       if (!uploaderIn) return res.status(400).json({ error: "uploader required" });
       if (!pwIn) return res.status(400).json({ error: "password required" });
 
-      const flipMode = (b.flip_mode ?? b.flipMode ?? "cue").toString();
-      // interval 모드면 총 초. flip_sec 우선, 없으면 ivMin/ivSec로 환산.
-      let flipSec = null;
-      if (flipMode === "interval") {
-        flipSec =
-          b.flip_sec != null
-            ? Number(b.flip_sec)
-            : (Number(b.ivMin) || 0) * 60 + (Number(b.ivSec) || 0);
-      }
-
-      const cues = Array.isArray(b.cues) ? b.cues : [];
-      const seq = Array.isArray(b.seq) ? b.seq : [];
-      const totalPage = Number.isFinite(b.total_page)
-        ? b.total_page
-        : Number.isFinite(b.pageCount)
-          ? b.pageCount
-          : null;
-
-      // 과대 페이로드 방지
-      if (JSON.stringify({ cues, seq }).length > 100_000)
-        return res.status(413).json({ error: "too large" });
-
+      const f = parsed.fields;
       const uploader = uploaderIn.slice(0, 30);
-      const singer = singerIn.slice(0, 200);
       const uploaderPw = hashPw(pwIn);
 
       // preset_id는 DB가 생성 → RETURNING으로 받아서 반환
@@ -110,9 +86,9 @@ export default async function handler(req, res) {
           (song_name, singer, uploader, uploader_pw,
            ytb_url, flip_mode, flip_sec, cues, seq, total_page)
         VALUES
-          (${songName.slice(0, 100)}, ${singer}, ${uploader}, ${uploaderPw},
-           ${ytbUrl}, ${flipMode}, ${flipSec},
-           ${JSON.stringify(cues)}::jsonb, ${JSON.stringify(seq)}::jsonb, ${totalPage})
+          (${f.songName}, ${f.singer}, ${uploader}, ${uploaderPw},
+           ${f.ytbUrl}, ${f.flipMode}, ${f.flipSec},
+           ${JSON.stringify(f.cues)}::jsonb, ${JSON.stringify(f.seq)}::jsonb, ${f.totalPage})
         RETURNING preset_id`;
 
       return res.status(200).json({ id: inserted[0].preset_id });
