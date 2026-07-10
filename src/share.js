@@ -23,11 +23,11 @@ export async function searchSharedPresets(query, by = "name") {
     if (!res.ok) throw new Error("search failed");
     return await res.json();
   } catch (e) {
-    // 백엔드 미연결 → 데모로 폴백 (데모엔 가수 정보 없음)
-    const lower = q.toLowerCase();
+    // 백엔드 미연결 → 데모로 폴백 (공백 무시, 데모엔 가수 정보 없음)
+    const norm = q.replace(/\s+/g, "").toLowerCase();
     return DEMO.filter((p) => {
       const v = by === "uploader" ? p.author : by === "singer" ? "" : p.name;
-      return (v || "").toLowerCase().includes(lower);
+      return (v || "").replace(/\s+/g, "").toLowerCase().includes(norm);
     });
   }
 }

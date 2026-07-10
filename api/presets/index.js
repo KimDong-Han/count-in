@@ -39,7 +39,11 @@ export default async function handler(req, res) {
     if (req.method === "GET") {
       const q = (req.query.q || "").toString().trim();
       if (!q) return res.status(200).json([]);
-      const like = "%" + q + "%";
+      // 공백 무시 검색: 입력·컬럼 양쪽에서 공백 제거 + 소문자화 후 부분일치.
+      // ("봄 날"로 "봄날" 찾기). 컬럼 쪽은 replace(lower(x),' ','')로 정규화.
+      const norm = q.replace(/\s+/g, "").toLowerCase();
+      if (!norm) return res.status(200).json([]);
+      const like = "%" + norm + "%";
       // 검색 기준: name(제목) | singer(가수) | uploader(닉네임). 컬럼명은
       // 파라미터화 불가라 분기. 결과는 카드용 {id,name,author,pages}로 별칭.
       const by = (req.query.by || "name").toString();
@@ -47,17 +51,17 @@ export default async function handler(req, res) {
       if (by === "singer") {
         rows = await sql`
           SELECT preset_id AS id, song_name AS name, singer, uploader AS author, total_page AS pages
-          FROM preset WHERE del_at IS NULL AND lower(singer) LIKE lower(${like})
+          FROM preset WHERE del_at IS NULL AND replace(lower(singer), ' ', '') LIKE ${like}
           ORDER BY select_count DESC, reg_at DESC LIMIT 50`;
       } else if (by === "uploader") {
         rows = await sql`
           SELECT preset_id AS id, song_name AS name, singer, uploader AS author, total_page AS pages
-          FROM preset WHERE del_at IS NULL AND lower(uploader) LIKE lower(${like})
+          FROM preset WHERE del_at IS NULL AND replace(lower(uploader), ' ', '') LIKE ${like}
           ORDER BY select_count DESC, reg_at DESC LIMIT 50`;
       } else {
         rows = await sql`
           SELECT preset_id AS id, song_name AS name, singer, uploader AS author, total_page AS pages
-          FROM preset WHERE del_at IS NULL AND lower(song_name) LIKE lower(${like})
+          FROM preset WHERE del_at IS NULL AND replace(lower(song_name), ' ', '') LIKE ${like}
           ORDER BY select_count DESC, reg_at DESC LIMIT 50`;
       }
       return res.status(200).json(rows);
