@@ -55,7 +55,8 @@ export const STR = {
     searchBySinger: "가수",
     searchByUploader: "닉네임",
     shareModalTitle: "곡 공유하기",
-    shareModalHint: "지금 설정한 유튜브 링크와 넘김 타이밍을 다른 사람도 검색해 쓸 수 있게 올려요.",
+    shareModalHint:
+      "지금 설정한 유튜브 링크와 넘김 타이밍을 다른 사람도 검색해 쓸 수 있게 올려요.",
     shareNeedUrl: "먼저 ① 유튜브 링크를 입력해 주세요.",
     shareTitle: "곡 제목",
     shareTitlePh: "예: 봄날",
@@ -68,10 +69,12 @@ export const STR = {
     sharePwHint: "나중에 이 공유를 고치거나 지울 때 쓰는 암호예요.",
     shareSubmit: "공유하기",
     sharing: "올리는 중…",
-    shareDoneMsg: (name) => `'${name}' 공유 완료! 이제 프리셋 검색에서 찾을 수 있어요.`,
+    shareDoneMsg: (name) =>
+      `'${name}' 공유 완료! 이제 프리셋 검색에서 찾을 수 있어요.`,
     shareEditBtn: "공유 수정",
     shareEditTitle: "공유 수정",
-    shareEditHint: "불러온 공유를 지금 설정(링크·타이밍)으로 덮어써요. 비밀번호가 필요해요.",
+    shareEditHint:
+      "불러온 공유를 지금 설정(링크·타이밍)으로 덮어써요. 비밀번호가 필요해요.",
     shareEditPwHint: "이 공유를 올릴 때 정한 비밀번호를 넣어 주세요.",
     shareUpdateSubmit: "덮어쓰기",
     shareUpdateDone: (name) => `'${name}' 수정 완료! 공유본이 바뀌었어요.`,
@@ -153,7 +156,7 @@ export const STR = {
     loopTitle: "반주가 끝나면 처음부터 다시 재생해요.",
     // 프리셋
     savedSongs: "저장한 곡",
-    shareBtn: "공유",
+    shareBtn: "내 타이밍 공유",
     presetsEmpty: "설정을 저장하면 여기서 골라 불러올 수 있어요.",
     presetsHint: "악보 파일을 연 뒤 저장한 곡을 눌러 주세요",
     presetLoadTitle: (url) => "불러오기 · " + url,
@@ -236,7 +239,8 @@ export const STR = {
       "악보 파일은 이 브라우저 안에서만 열려요. 어디로도 업로드되지 않아요.",
     tooEarly: (a, b, tm) =>
       `${a}→${b}페이지 넘김(${tm})보다 빨라요 · 조금 더 지나서 찍어 주세요`,
-    lastPageToast: "마지막 페이지예요 · 돌아가려면 페이지 번호 버튼을 눌러 주세요",
+    lastPageToast:
+      "마지막 페이지예요 · 돌아가려면 페이지 번호 버튼을 눌러 주세요",
     turnSaved: (a, b, tm) => `${a}→${b}페이지 넘김 ${tm} 저장`,
     turnSavedCleared: (n) => ` · 순서가 꼬인 뒤 타이밍 ${n}개는 지웠어요`,
     turnSavedDropped: " · 이후 순서는 이어서 찍어 주세요",
@@ -335,7 +339,8 @@ export const STR = {
     searchBySinger: "Artist",
     searchByUploader: "Uploader",
     shareModalTitle: "Share a song",
-    shareModalHint: "Publish the YouTube link and page-turn timing you've set up so others can find and use it.",
+    shareModalHint:
+      "Publish the YouTube link and page-turn timing you've set up so others can find and use it.",
     shareNeedUrl: "Enter a ① YouTube link first.",
     shareTitle: "Song title",
     shareTitlePh: "e.g. Spring Day",
@@ -348,13 +353,16 @@ export const STR = {
     sharePwHint: "Used later to edit or delete this shared preset.",
     shareSubmit: "Share",
     sharing: "Uploading…",
-    shareDoneMsg: (name) => `'${name}' shared! You can now find it in preset search.`,
+    shareDoneMsg: (name) =>
+      `'${name}' shared! You can now find it in preset search.`,
     shareEditBtn: "Edit share",
     shareEditTitle: "Edit shared preset",
-    shareEditHint: "Overwrite the loaded shared preset with your current link & timing. Password required.",
+    shareEditHint:
+      "Overwrite the loaded shared preset with your current link & timing. Password required.",
     shareEditPwHint: "Enter the password you set when you shared this.",
     shareUpdateSubmit: "Overwrite",
-    shareUpdateDone: (name) => `'${name}' updated! The shared copy has changed.`,
+    shareUpdateDone: (name) =>
+      `'${name}' updated! The shared copy has changed.`,
     shareFail: "Sharing failed. Please try again in a moment.",
     closeBtn: "Close",
     pagesCount: (n) => `${n} pages`,
@@ -378,8 +386,8 @@ export const STR = {
     cueDescTune: (
       <>
         Tap <b>Turn now</b> at every page turn. Made a mistake?{" "}
-        <b>Rewind with the seek bar</b> to retake that row. <b>−·＋</b> fine-tunes
-        by 0.5s.
+        <b>Rewind with the seek bar</b> to retake that row. <b>−·＋</b>{" "}
+        fine-tunes by 0.5s.
       </>
     ),
     cueDescNormal: (
@@ -392,7 +400,8 @@ export const STR = {
     repeatToggleTitle:
       "When on, each tap in timing mode pauses the music and asks which page to jump to.",
     tuneEnter: "Set times by listening",
-    tuneEnterTitle: "Starts after a 3-second countdown so you can tap each turn",
+    tuneEnterTitle:
+      "Starts after a 3-second countdown so you can tap each turn",
     tuneEnterDisabledTitle: "Add a link and a score first",
     tapNow: "Turn now",
     tapNowPages: (a, b) => ` (p.${a}→${b})`,
@@ -524,13 +533,13 @@ export const STR = {
     badLinkToast: "Check the YouTube link · paste the URL in Settings",
     notReady: "The player is loading — try again in a moment.",
     notReadyToast: "Player is loading · try again in a moment",
-    tuneIntro:
-      "Listen along and tap 'Turn now' (or Shift) at every page turn.",
+    tuneIntro: "Listen along and tap 'Turn now' (or Shift) at every page turn.",
     tuneDone: (n) => `${n} turn time(s) saved · press Start to use them.`,
     pdfCleared: "Score removed · reopen it to restore the times",
     pdfLoading: "Loading score…",
     pdfLoadedMsg: (n) => `${n} pages · add a YouTube link and press Start.`,
-    pdfPassword: "This PDF is password-protected. Remove the password and retry.",
+    pdfPassword:
+      "This PDF is password-protected. Remove the password and retry.",
     pdfInvalid: "Not a valid PDF, or the file is damaged.",
     pdfFail: (m) => "Couldn't open the PDF: " + m,
     volToast: (n) => "Volume " + n + "%",
