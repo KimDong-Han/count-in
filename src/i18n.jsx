@@ -110,7 +110,7 @@ export const STR = {
     cueDescNormal: (
       <>
         <b>페이지 넘김 시각</b> — <code>0:45</code>처럼 입력하거나{" "}
-        <b>지금 넘김</b>(<kbd>M</kbd>)으로 찍어요. 언제든 고칠 수 있어요.
+        <b>지금 넘김</b>(<kbd>Shift</kbd>)으로 찍어요. 언제든 고칠 수 있어요.
       </>
     ),
     repeatToggle: "도돌이표가 있으면 체크",
@@ -183,7 +183,7 @@ export const STR = {
     focusOff: "설정 보기",
     kbhintLine: (
       <>
-        <b>Space</b> 재생 · <b>←→</b> 페이지 · <b>M</b> 지금 넘김
+        <b>Space</b> 재생 · <b>←→</b> 페이지 · <b>Shift</b> 지금 넘김
       </>
     ),
     kbMoreTitle: "단축키 전체 보기",
