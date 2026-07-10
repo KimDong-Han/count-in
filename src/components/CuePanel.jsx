@@ -1,4 +1,4 @@
-import { Target, Timer } from "lucide-react";
+import { Timer } from "lucide-react";
 
 // Cue 편집 UI만 담당한다. 재생·저장 상태와 동기화는 App이 계속 소유한다.
 export function CuePanel({
@@ -39,21 +39,15 @@ export function CuePanel({
           <span className="box"></span>
           <span>{t("repeatToggle")}</span>
         </label>
-        {!tuneMode && (
-          <button
-            className="btn small tuneEnter"
-            onClick={onEnterTune}
-            disabled={playDisabled}
-            title={playDisabled ? t("tuneEnterDisabledTitle") : t("tuneEnterTitle")}
-          >
-            <Timer size={14} /> {t("tuneEnter")}
-          </button>
-        )}
         <div className="cueActions">
           {!tuneMode && (
-            <button className="btn small" onClick={onTap} disabled={!armed || tapOverflow}>
-              <Target size={13} /> {t("tapNow")}
-              {armed && !tapOverflow ? t("tapNowPages", curFrom, curDest) : ""}
+            <button
+              className="btn small tuneEnter"
+              onClick={onEnterTune}
+              disabled={playDisabled}
+              title={playDisabled ? t("tuneEnterDisabledTitle") : t("tuneEnterTitle")}
+            >
+              <Timer size={14} /> {t("tuneEnter")}
             </button>
           )}
           <button className="btn ghost small" onClick={onClear}>

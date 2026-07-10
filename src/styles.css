@@ -54,7 +54,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body,#root{min-height:100%;height:100%}
+html,body,#root{min-height:100%}
 body{
   font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
   background:
@@ -261,7 +261,7 @@ input[type=range]::-moz-range-thumb{
 .cueAdd{width:100%;box-shadow:none}
 
 /* 타이밍 입력 모드 */
-.tuneEnter{width:100%;box-shadow:none}
+.tuneEnter{flex:1;min-width:0;box-shadow:none;font-size:12.5px;padding:9px 8px;white-space:nowrap}
 .cueRowTools{display:flex;gap:4px}
 .cueRowTools .btn.tiny{padding:5px 8px;font-size:12px;min-width:28px}
 /* 작은 토글 변형: 도돌이표 체크·바로 시작 */
@@ -541,6 +541,20 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 .searchLoadHint{font-size:11px;font-weight:700;color:var(--brass-deep)}
 .shareNeedUrl{margin-top:12px;padding:9px 11px;border-radius:9px;font-size:12px;
   color:var(--brass-deep);background:rgba(180,140,40,.1);border:1px solid rgba(180,140,40,.3)}
+
+/* SEO 본문 — 도구(첫 화면 100vh) 아래. 스크롤해야 보임. 첫 화면 레이아웃엔 영향 없음 */
+.siteInfo{border-top:1px solid var(--line);background:var(--panel);padding:48px 20px 88px;color:var(--ink)}
+.siteInfoInner{max-width:760px;margin:0 auto;line-height:1.65}
+.siteInfo h2{font-size:20px;font-weight:800;margin:0 0 12px}
+.siteInfo h3{font-size:15px;font-weight:700;color:var(--brass-deep);margin:28px 0 8px}
+.siteInfoOrigin{font-size:13px;color:var(--brass-deep);margin:0 0 10px;font-style:italic}
+.siteInfoLead{font-size:14px;color:var(--muted);margin:0}
+.siteInfo ul,.siteInfo ol{margin:0;padding-left:20px;font-size:14px}
+.siteInfo li{margin:6px 0}
+.siteInfo dl{margin:0}
+.siteInfoFaq{margin:14px 0}
+.siteInfo dt{font-size:14px;font-weight:700;margin-bottom:4px}
+.siteInfo dd{margin:0;font-size:14px;color:var(--muted);white-space:pre-line}
 
 @media (prefers-reduced-motion:reduce){ .count.tick{animation:none} }
 

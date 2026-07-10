@@ -8,6 +8,7 @@ import { currentDark, setDark } from "./theme.js";
 import { STR, detectLang, saveLang, applyLangAttr } from "./i18n.jsx";
 import { CuePanel } from "./components/CuePanel.jsx";
 import { PlaybackOverlays } from "./components/PlaybackOverlays.jsx";
+import { SiteInfo } from "./components/SiteInfo.jsx";
 import {
   searchSharedPresets,
   getSharedPreset,
@@ -1474,6 +1475,7 @@ export default function App() {
   const tapOverflow = curFrom == null || curDest == null || curDest > pdf.total;
 
   return (
+    <>
     <div
       className={
         "app" +
@@ -2509,5 +2511,7 @@ export default function App() {
         </div>
       )}
     </div>
+    <SiteInfo lang={lang} />
+    </>
   );
 }
