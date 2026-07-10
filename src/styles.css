@@ -97,7 +97,7 @@ h1 .accent{color:var(--brass-deep)}
 .startRow{display:flex;align-items:stretch;gap:10px}
 .startRow .time-inputs{flex:0 0 auto}
 .startRow .startBtn{flex:1;padding:11px 10px;font-size:15px;white-space:nowrap}
-.startFsBtn{width:100%;box-shadow:none;font-size:13.5px;padding:10px 12px}
+.startRow .startFsBtn{flex:1;min-width:0;width:auto;box-shadow:none;font-size:12px;padding:9px 7px;white-space:nowrap}
 
 /* 세부 설정 접이 */
 .advToggle{
@@ -130,6 +130,7 @@ h1 .accent{color:var(--brass-deep)}
 .presets{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 12px 13px}
 .presetsHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
 .presetsHead span{font-size:12px;color:var(--muted);letter-spacing:.02em}
+.presetShareBtn{padding:5px 9px;font-size:11px}
 .presetsEmpty{font-size:12px;color:#A2A6B0;line-height:1.5}
 .presetsHint{font-size:12px;color:var(--brass-deep);opacity:.9;margin-top:9px;line-height:1.5}
 .presetList{display:flex;flex-wrap:wrap;gap:8px}
@@ -148,6 +149,7 @@ h1 .accent{color:var(--brass-deep)}
 
 /* 사이드바 안에서는 컨트롤을 세로로 쌓는다 */
 .controls{display:flex;flex-direction:column;gap:14px}
+.presetImportBtn{padding:5px 8px;font-size:11px;box-shadow:none;white-space:nowrap}
 .group{display:flex;flex-direction:column;gap:8px}
 .group.grow{min-width:0}
 .group label{font-size:12px;color:var(--muted)}
@@ -380,6 +382,7 @@ input[type=range]::-moz-range-thumb{
 }
 .stage.empty{color:var(--muted);font-size:14px;text-align:center;flex-direction:column;gap:10px}
 .stage.empty .big{font-size:40px;color:var(--muted);opacity:.8}
+.privacyHint{font-size:12px;line-height:1.5;opacity:.8}
 canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0 14px 36px rgba(35,40,59,.22)}
 
 /* 넘김 예고 배지 (followLoop에서 직접 갱신) */
@@ -464,7 +467,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
   border-radius:12px;box-shadow:0 14px 36px rgba(20,24,40,.35);
 }
 .app.video .ytHost::before{display:none}
-.app.video .stage.empty .big,.app.video .stage.empty .emptyHint{display:none}
+.app.video .stage.empty .big,.app.video .stage.empty .emptyHint,.app.video .stage.empty .privacyHint{display:none}
 .ytHost::before{
   content:"반주 ▾";position:absolute;top:0;left:0;right:0;font-size:11px;color:#cfd0dd;
   background:rgba(9,8,22,.7);padding:3px 8px;z-index:2;cursor:pointer;
@@ -504,6 +507,27 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 /* 팝업 카드 안의 취소는 밝은 배경 위 */
 .pickCard .cancel{border-color:var(--line-strong);color:var(--muted)}
 .pickCard .cancel:hover{color:var(--ink);border-color:var(--indigo)}
+
+.presetSearchCard{
+  width:min(92vw,420px);background:var(--panel);border:1px solid var(--line);
+  border-radius:18px;padding:22px;box-shadow:0 24px 60px rgba(20,24,40,.35);
+}
+.presetSearchTitle{font-size:18px;font-weight:800;color:var(--ink)}
+.presetSearchHint{margin-top:7px;color:var(--muted);font-size:13px;line-height:1.5}
+.presetSearchInput{width:100%;margin-top:16px;background:var(--field);border:1px solid var(--line-strong);border-radius:10px;color:var(--ink);font:inherit;font-size:14px;padding:11px 12px}
+.presetSearchInput:focus{outline:none;border-color:var(--indigo);box-shadow:0 0 0 3px rgba(85,88,200,.16)}
+.presetSearchActions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.presetSearchResults{margin-top:20px;border-top:1px solid var(--line);padding-top:14px}
+.presetSearchResultsTitle{font-size:12px;color:var(--muted);margin-bottom:8px}
+.presetSearchEmpty{font-size:13px;color:var(--muted);padding:12px 0}
+.sharedPresetRow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.sharedPresetInfo{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.sharedPresetInfo strong{font-size:14px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sharedPresetInfo span{font-size:11px;color:var(--muted)}
+.shareField{display:flex;flex-direction:column;gap:5px;margin-top:13px}
+.shareField>span{font-size:12px;color:var(--muted)}
+.shareField .presetSearchInput{margin-top:0}
+.shareHint{font-size:11px;color:var(--muted);opacity:.85}
 
 @media (prefers-reduced-motion:reduce){ .count.tick{animation:none} }
 

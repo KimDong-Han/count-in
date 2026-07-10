@@ -36,6 +36,32 @@ export const STR = {
     ),
     subline:
       "유튜브 반주와 악보 PDF를 넣고, 페이지 넘길 시각을 정해두면 그 시각에 넘어가요.",
+    importPreset: "프리셋 검색",
+    searchPresetTitle: "곡 이름 검색",
+    searchPresetPlaceholder: "곡 이름을 입력하세요",
+    searchPresetHint: "공유된 프리셋을 곡 이름으로 찾아요.",
+    searchBtn: "검색",
+    searchResults: "검색 결과",
+    noSearchResults: "일치하는 프리셋이 없어요.",
+    loadShared: "불러오기",
+    searching: "검색 중…",
+    shareLoadFail: "프리셋을 불러오지 못했어요.",
+    shareModalTitle: "곡 공유하기",
+    shareModalHint: "저장한 곡을 다른 사람도 검색해 쓸 수 있게 올려요. 유튜브 링크와 넘김 타이밍만 공유돼요.",
+    shareSong: "공유할 곡",
+    shareSinger: "가수",
+    shareSingerPh: "검색에 쓰여요",
+    shareUploader: "닉네임",
+    shareUploaderPh: "올린 사람 표시",
+    sharePw: "비밀번호",
+    sharePwPh: "수정·삭제할 때 필요",
+    sharePwHint: "나중에 이 공유를 고치거나 지울 때 쓰는 암호예요.",
+    shareSubmit: "공유하기",
+    sharing: "올리는 중…",
+    shareDoneMsg: (name) => `'${name}' 공유 완료! 이제 프리셋 검색에서 찾을 수 있어요.`,
+    shareFail: "공유에 실패했어요. 잠시 후 다시 시도해 주세요.",
+    closeBtn: "닫기",
+    pagesCount: (n) => `${n}페이지`,
     // ①②③
     step1: "① 유튜브 반주 링크",
     urlPlaceholder: "https://youtu.be/... 또는 watch?v=...",
@@ -47,19 +73,19 @@ export const STR = {
     step3: "③ 시작",
     noWait: "바로 시작",
     noWaitTitle: "카운트다운 없이 바로 재생돼요.",
-    secCount: "초 세고",
+    secCount: "초 후",
     start: "시작",
     pause: "일시정지",
     startDisabledTitle: "유튜브 링크를 먼저 넣어 주세요",
-    startFs: "전체화면으로 시작",
+    startFs: "전체화면",
     startFsTitle: "시작하면서 브라우저를 전체화면으로 바꿔요",
     volAria: "반주 볼륨",
     // cue 패널
     cueDescTune: (
       <>
         넘어갈 순간마다 <b>지금 넘김</b>을 눌러 주세요. 잘못 찍었으면{" "}
-        <b>시크 바로 되감으면</b> 그 줄부터 다시 찍혀요. <b>−·＋</b>는 0.5초
-        미세 조정이에요.
+        <b>시크 바</b>로 되감아 그 줄부터 다시 찍을 수 있어요. <b>−·＋</b>는
+        0.5초 미세 조정이에요.
       </>
     ),
     cueDescNormal: (
@@ -68,11 +94,11 @@ export const STR = {
         <b>지금 넘김</b>(<kbd>M</kbd>)으로 찍어요. 언제든 고칠 수 있어요.
       </>
     ),
-    repeatToggle: "도돌이표 있는 곡(악보)은 체크",
+    repeatToggle: "도돌이표가 있으면 체크",
     repeatToggleTitle:
-      "켜 두면 타이밍 입력 모드에서 찍을 때마다 음악을 잠깐 멈추고 몇 페이지로 갈지 물어봐요.",
+      "켜면 타이밍 입력 중 음악을 잠깐 멈추고 이동할 페이지를 물어봐요.",
     tuneEnter: "들으면서 시간 설정",
-    tuneEnterTitle: "카운트다운 없이 바로 재생하면서 넘김 시각을 찍는 모드예요",
+    tuneEnterTitle: "3초 카운트다운 후 재생하며 넘김 시각을 찍는 모드예요",
     tuneEnterDisabledTitle: "링크와 악보를 먼저 넣어 주세요",
     tapNow: "지금 넘김",
     tapNowPages: (a, b) => ` (${a}→${b}페이지)`,
@@ -106,13 +132,14 @@ export const STR = {
     optionsLabel: "옵션",
     preload: "미리 재생",
     preloadTitle:
-      "카운트다운 동안 반주를 음소거로 잠깐 돌려 버퍼링을 풀어두고 0:00으로 되감아둬요. 끄면 카운트 후 바로 재생돼요(맨 앞이 살짝 끊길 수 있어요).",
+      "카운트다운 중 음소거로 미리 재생해 버퍼를 채운 뒤 0:00으로 되감아요. 끄면 첫 부분이 끊길 수 있어요.",
     loop: "반복",
     loopTitle: "반주가 끝나면 처음부터 다시 재생해요.",
     // 프리셋
     savedSongs: "저장한 곡",
+    shareBtn: "공유",
     presetsEmpty: "설정을 저장하면 여기서 골라 불러올 수 있어요.",
-    presetsHint: "악보파일 선택 하고 저장된 곡 클릭",
+    presetsHint: "악보 파일을 연 뒤 저장한 곡을 눌러 주세요",
     presetLoadTitle: (url) => "불러오기 · " + url,
     presetNoLink: "불러오기 · ⚠ 저장된 링크 없음",
     presetDelTitle: "삭제",
@@ -186,6 +213,7 @@ export const STR = {
     pickCancel: "취소 (기록 안 함)",
     // 카운트다운
     countdownAria: "시작 카운트다운",
+    getReady: "준비하세요",
     cancel: "취소",
     // 안내·토스트
     privacyNote:
@@ -201,7 +229,7 @@ export const STR = {
     notAfterNext: (tm) => `뒤 넘김(${tm})보다 늦어질 수 없어요`,
     nudged: (a, b, tm) => `${a}→${b}페이지 넘김 ${tm}`,
     savedNoLink: (name) =>
-      `"${name}" 저장됨 · 유튜브 링크가 비어 있어서 링크는 저장되지 않았어요.`,
+      `"${name}" 저장됨 · 유튜브 링크가 없어 링크는 저장되지 않았어요.`,
     presetLoaded: (name) =>
       `"${name}" 불러옴 · 악보 PDF를 열면 저장된 타이밍이 적용돼요.`,
     resetDone: "저장한 곡을 뺀 나머지를 초기화했어요.",
@@ -272,9 +300,35 @@ export const STR = {
     ),
     subline:
       "Add a YouTube backing track and a score PDF; pages turn at the times you set.",
+    importPreset: "Search presets",
+    searchPresetTitle: "Search by song name",
+    searchPresetPlaceholder: "Enter a song name",
+    searchPresetHint: "Find a shared preset by song name.",
+    searchBtn: "Search",
+    searchResults: "Search results",
+    noSearchResults: "No matching presets found.",
+    loadShared: "Load",
+    searching: "Searching…",
+    shareLoadFail: "Couldn't load the preset.",
+    shareModalTitle: "Share a song",
+    shareModalHint: "Publish a saved song so others can find and use it. Only the YouTube link and page-turn timing are shared.",
+    shareSong: "Song to share",
+    shareSinger: "Artist",
+    shareSingerPh: "used for search",
+    shareUploader: "Nickname",
+    shareUploaderPh: "shown as uploader",
+    sharePw: "Password",
+    sharePwPh: "needed to edit/delete",
+    sharePwHint: "Used later to edit or delete this shared preset.",
+    shareSubmit: "Share",
+    sharing: "Uploading…",
+    shareDoneMsg: (name) => `'${name}' shared! You can now find it in preset search.`,
+    shareFail: "Sharing failed. Please try again in a moment.",
+    closeBtn: "Close",
+    pagesCount: (n) => `${n} pages`,
     step1: "① YouTube backing link",
     urlPlaceholder: "https://youtu.be/... or watch?v=...",
-    step2: "② Score PDF (optional — video plays big without it)",
+    step2: "② Score PDF (optional; video only if skipped)",
     pdfPick: "Open PDF",
     pdfLoaded: (n) => n + " pages loaded",
     pdfClearTitle: "Remove score (video goes full size while playing)",
@@ -282,18 +336,18 @@ export const STR = {
     step3: "③ Start",
     noWait: "Instant",
     noWaitTitle: "Play immediately, no countdown.",
-    secCount: "sec count",
+    secCount: "sec delay",
     start: "Start",
     pause: "Pause",
     startDisabledTitle: "Add a YouTube link first",
-    startFs: "Start in fullscreen",
+    startFs: "Fullscreen",
     startFsTitle: "Starts playback and enters fullscreen",
     volAria: "Volume",
     cueDescTune: (
       <>
-        Tap <b>Turn now</b> at every page turn. Tapped wrong?{" "}
-        <b>Rewind with the seek bar</b> and that row re-arms. <b>−·＋</b>{" "}
-        fine-tunes by 0.5s.
+        Tap <b>Turn now</b> at every page turn. Made a mistake?{" "}
+        <b>Rewind with the seek bar</b> to retake that row. <b>−·＋</b> fine-tunes
+        by 0.5s.
       </>
     ),
     cueDescNormal: (
@@ -302,11 +356,11 @@ export const STR = {
         <b>Turn now</b> (<kbd>M</kbd>) while listening. Edit anytime.
       </>
     ),
-    repeatToggle: "Song has repeats",
+    repeatToggle: "Has repeats",
     repeatToggleTitle:
       "When on, each tap in timing mode pauses the music and asks which page to jump to.",
     tuneEnter: "Set times by listening",
-    tuneEnterTitle: "Plays right away so you can tap each page turn",
+    tuneEnterTitle: "Starts after a 3-second countdown so you can tap each turn",
     tuneEnterDisabledTitle: "Add a link and a score first",
     tapNow: "Turn now",
     tapNowPages: (a, b) => ` (p.${a}→${b})`,
@@ -322,10 +376,10 @@ export const STR = {
     delCueAria: (a, b) => `Delete turn from page ${a} to ${b}`,
     addCue: "＋ Add turn",
     advToggle: "More settings — turns · speed · sound",
-    flipModeLabel: "Turn mode",
+    flipModeLabel: "Page-turn mode",
     flipCueSeg: "Per-page times",
     flipIntervalSeg: "Fixed interval",
-    intervalLabel: "Interval per page",
+    intervalLabel: "Time per page",
     minUnit: "min",
     secUnit: "sec",
     rateLabel: "Speed",
@@ -343,8 +397,9 @@ export const STR = {
     loop: "Loop",
     loopTitle: "Replay from the beginning when the track ends.",
     savedSongs: "Saved songs",
+    shareBtn: "Share",
     presetsEmpty: "Save your setup and reload it from here.",
-    presetsHint: "Open the score PDF, then tap a saved song",
+    presetsHint: "Open the score PDF, then load a saved song",
     presetLoadTitle: (url) => "Load · " + url,
     presetNoLink: "Load · ⚠ no link saved",
     presetDelTitle: "Delete",
@@ -357,7 +412,7 @@ export const STR = {
     savePreset: "Save current setup",
     resetConfirm: "Tap again to reset",
     resetAll: "Reset everything",
-    toHome: "Stop",
+    toHome: "Back to start",
     prevBtn: "‹ Prev",
     nextBtn: "Next ›",
     fsBtn: "Fullscreen",
@@ -383,7 +438,7 @@ export const STR = {
       ["Enter", "Score-only view"],
       ["0 · Esc", "Back to start"],
     ],
-    emptyStage: "Open a score PDF and it will show here.",
+    emptyStage: "Open a score PDF to show it here.",
     prevPage: "Previous page",
     nextPage: "Next page",
     toPageCue: (n) => "to p." + n,
@@ -401,7 +456,7 @@ export const STR = {
     resume: "Play",
     done: "Done",
     seekAria: "Position",
-    tuneTapPickBelow: "Pick the page to jump to below",
+    tuneTapPickBelow: "Choose a destination page below",
     tuneTapAgainNext: (n) => `Tap again → next page (p.${n})`,
     tuneTapLast: "Last page reached — tap Done",
     tuneTapPages: (a, b) => `Turn now — p.${a}→${b}`,
@@ -413,23 +468,22 @@ export const STR = {
     pickPageTitle: (n) => "To p." + n,
     pickCancel: "Cancel (don't record)",
     countdownAria: "Starting countdown",
+    getReady: "Get ready",
     cancel: "Cancel",
-    privacyNote:
-      "Your score PDF stays in this browser — it is never uploaded anywhere.",
+    privacyNote: "Your score PDF stays in this browser — it is never uploaded.",
     tooEarly: (a, b, tm) =>
       `Earlier than the p.${a}→${b} turn (${tm}) · tap a bit later`,
     lastPageToast: "Last page — use a page number button to jump back",
     turnSaved: (a, b, tm) => `Turn p.${a}→${b} saved at ${tm}`,
-    turnSavedCleared: (n) => ` · cleared ${n} later time(s) out of order`,
+    turnSavedCleared: (n) => ` · cleared ${n} later time(s)`,
     turnSavedDropped: " · keep tapping from here",
     needTimeFirst: "Tap or type a time first",
     notBeforePrev: (tm) => `Can't be earlier than the previous turn (${tm})`,
     notAfterNext: (tm) => `Can't be later than the next turn (${tm})`,
     nudged: (a, b, tm) => `Turn p.${a}→${b}: ${tm}`,
-    savedNoLink: (name) =>
-      `"${name}" saved · the YouTube link was empty, so no link was saved.`,
+    savedNoLink: (name) => `"${name}" saved · no YouTube link was saved.`,
     presetLoaded: (name) =>
-      `"${name}" loaded · open the score PDF to apply the saved times.`,
+      `"${name}" loaded · open the score PDF to restore its times.`,
     resetDone: "Everything reset (saved songs kept).",
     endedMsg: "The track ended. Press Start to play again.",
     endedToast: "Track ended · press Start to replay",
@@ -440,8 +494,7 @@ export const STR = {
     notReadyToast: "Player is loading · try again in a moment",
     tuneIntro:
       "Listen along and tap 'Turn now' (or Shift) at every page turn.",
-    tuneDone: (n) =>
-      `${n} turn time(s) saved · press Start to practice with them.`,
+    tuneDone: (n) => `${n} turn time(s) saved · press Start to use them.`,
     pdfCleared: "Score removed · reopen it to restore the times",
     pdfLoading: "Loading score…",
     pdfLoadedMsg: (n) => `${n} pages · add a YouTube link and press Start.`,
@@ -456,7 +509,7 @@ export const STR = {
         100: "Video not found — it may be deleted or private.",
         101: "The uploader has disabled external playback.",
         150: "The uploader has disabled external playback.",
-        153: "Couldn't verify the player origin.",
+        153: "YouTube couldn't verify this site's referrer.",
       };
       return (
         (codes[code] || `Playback error (code ${code}).`) +
@@ -470,15 +523,15 @@ export const STR = {
     tapTempo: "Tap tempo",
     beatsLabel: "Beats",
     beatNone: "None",
-    beatN: (n) => String(n),
+    beatN: (n) => n + " beats",
     accentLabel: "Accent",
-    accentDesc: "First beat sounds different",
+    accentDesc: "Different first beat",
     accentNeedBeats: " (pick beats first)",
     soundLabel: "Sound",
     volumeLabel: "Volume",
     mHint: (
       <>
-        <b>Space</b> start·stop · <b>↑↓</b> ±1 · <b>←→</b> ±5 · <b>T</b> tap
+        <b>Space</b> start/stop · <b>↑↓</b> ±1 · <b>←→</b> ±5 · <b>T</b> tap
       </>
     ),
   },

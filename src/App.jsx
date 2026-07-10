@@ -6,6 +6,9 @@ import { parseTime, fmt, fmtCue } from "./time";
 import { navigate } from "./router.js";
 import { currentDark, setDark } from "./theme.js";
 import { STR, detectLang, saveLang, applyLangAttr } from "./i18n.jsx";
+import { CuePanel } from "./components/CuePanel.jsx";
+import { PlaybackOverlays } from "./components/PlaybackOverlays.jsx";
+import { searchSharedPresets, getSharedPreset, sharePreset } from "./share.js";
 import {
   Check,
   Drum,
@@ -64,10 +67,7 @@ export default function App() {
   const [armed, setArmed] = useState(false); // 시작 눌러 재생/준비 중
   const [isPlaying, setIsPlaying] = useState(false);
   const [countText, setCountText] = useState(null); // null=숨김, 숫자 or '▶'
-  const [msg, setMsg] = useState(() => ({
-    text: STR[detectLang()].privacyNote,
-    kind: "ok",
-  }));
+  const [msg, setMsg] = useState(() => ({ text: "", kind: "ok" }));
   const [tapCursor, setTapCursor] = useState(0); // 탭으로 기록할 다음 전환 index
   const [tuneMode, setTuneMode] = useState(false); // 타이밍 입력 모드 (카운트다운 없이 재생하며 찍기)
   // 도돌이표 있는 곡: 타이밍 입력 모드에서 찍을 때마다 몇 페이지로 갈지 물어봄 (기본 꺼짐)
@@ -110,6 +110,76 @@ export default function App() {
   const [confirmReset, setConfirmReset] = useState(false); // 초기화 2단계 확인
   const [savedFlash, setSavedFlash] = useState(null); // 저장 직후 피드백 {name, chipId}
   const [showKeys, setShowKeys] = useState(false); // 단축키 전체 팝오버
+  const [showPresetSearch, setShowPresetSearch] = useState(false);
+  const [presetSearchQuery, setPresetSearchQuery] = useState("");
+  const [presetSearchResults, setPresetSearchResults] = useState(null);
+  const [presetSearchBusy, setPresetSearchBusy] = useState(false);
+  // 공유 프리셋 검색 (API 연동, 서버 미연결 시 share.js가 데모로 폴백)
+  const runPresetSearch = async () => {
+    if (!presetSearchQuery.trim()) return;
+    setPresetSearchBusy(true);
+    try {
+      setPresetSearchResults(await searchSharedPresets(presetSearchQuery));
+    } finally {
+      setPresetSearchBusy(false);
+    }
+  };
+  // 검색 결과에서 하나 선택 → 블롭 받아서 loadPreset 적용
+  const loadSharedPreset = async (id) => {
+    try {
+      const blob = await getSharedPreset(id);
+      loadPreset(blob);
+      setShowPresetSearch(false);
+    } catch (e) {
+      setMsg({ text: t("shareLoadFail"), kind: "err" });
+    }
+  };
+  // 공유(등록) 모달
+  const [showShare, setShowShare] = useState(false);
+  const [shareId, setShareId] = useState(null); // 공유할 저장곡 id
+  const [shareSinger, setShareSinger] = useState("");
+  const [shareUploader, setShareUploader] = useState("");
+  const [sharePw, setSharePw] = useState("");
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareDone, setShareDone] = useState(null); // 성공 시 공유한 곡 이름
+  const openShare = () => {
+    setShareId(presets[0]?.id ?? null);
+    setShareSinger("");
+    setShareUploader("");
+    setSharePw("");
+    setShareDone(null);
+    setShowShare(true);
+  };
+  const shareValid =
+    !!shareId &&
+    !!shareSinger.trim() &&
+    !!shareUploader.trim() &&
+    !!sharePw.trim();
+  const submitShare = async () => {
+    const p = presets.find((x) => x.id === shareId);
+    if (!p || !shareValid) return;
+    setShareBusy(true);
+    try {
+      await sharePreset({
+        song_name: p.name,
+        singer: shareSinger.trim() || null,
+        uploader: shareUploader.trim() || null,
+        uploader_pw: sharePw.trim() || null,
+        url: p.url,
+        flip_mode: p.flipMode,
+        ivMin: p.ivMin,
+        ivSec: p.ivSec,
+        cues: p.cues,
+        seq: p.seq,
+        total_page: p.pageCount,
+      });
+      setShareDone(p.name);
+    } catch (e) {
+      setMsg({ text: t("shareFail"), kind: "err" });
+    } finally {
+      setShareBusy(false);
+    }
+  };
   const [adv, setAdv] = useState(() => {
     // 세부 설정 펼침 여부 (기억)
     try {
@@ -1428,7 +1498,20 @@ export default function App() {
 
         <div className="controls">
           <div className="group grow">
-            <label htmlFor="url">{t("step1")}</label>
+            <div className="labelRow">
+              <label htmlFor="url">{t("step1")}</label>
+              <button
+                type="button"
+                className="btn ghost tiny presetImportBtn"
+                onClick={() => {
+                  setPresetSearchQuery("");
+                  setPresetSearchResults(null);
+                  setShowPresetSearch(true);
+                }}
+              >
+                {t("importPreset")}
+              </button>
+            </div>
             <input
               id="url"
               type="text"
@@ -1502,20 +1585,20 @@ export default function App() {
               >
                 {playLabel}
               </button>
+              {/* 시작과 전체화면 시작을 한 줄에 배치 */}
+              {fsSupported && !armed && (
+                <button
+                  className="btn ghost startFsBtn"
+                  onClick={() => {
+                    if (startFlow()) enterFs();
+                  }}
+                  disabled={playDisabled}
+                  title={t("startFsTitle")}
+                >
+                  <Maximize size={14} /> {t("startFs")}
+                </button>
+              )}
             </div>
-            {/* 전체화면으로 시작: 재생 시작 + 전체화면 진입 한 번에 (버튼 탭이 곧 사용자 제스처라 가능) */}
-            {fsSupported && !armed && (
-              <button
-                className="btn ghost startFsBtn"
-                onClick={() => {
-                  if (startFlow()) enterFs();
-                }}
-                disabled={playDisabled}
-                title={t("startFsTitle")}
-              >
-                <Maximize size={14} /> {t("startFs")}
-              </button>
-            )}
             <div className="slider-row">
               <span className="vol-icon">
                 <Volume2 size={17} />
@@ -1536,151 +1619,31 @@ export default function App() {
         </div>
 
         {flipMode === "cue" && pdf.total > 1 && (
-          <div className="cuePanel">
-            <div className="cueHead">
-              <div className="cueDesc">
-                {tuneMode ? t("cueDescTune") : t("cueDescNormal")}
-              </div>
-              <label
-                className="switch-mini cueRepeatToggle"
-                title={t("repeatToggleTitle")}
-              >
-                <input
-                  type="checkbox"
-                  checked={tuneRepeat}
-                  onChange={toggleTuneRepeat}
-                />
-                <span className="box"></span>
-                <span>{t("repeatToggle")}</span>
-              </label>
-              {!tuneMode && (
-                <button
-                  className="btn small tuneEnter"
-                  onClick={enterTune}
-                  disabled={playDisabled}
-                  title={
-                    playDisabled
-                      ? t("tuneEnterDisabledTitle")
-                      : t("tuneEnterTitle")
-                  }
-                >
-                  <Timer size={14} /> {t("tuneEnter")}
-                </button>
-              )}
-              <div className="cueActions">
-                {!tuneMode && (
-                  <button
-                    className="btn small"
-                    onClick={tap}
-                    disabled={!armed || tapOverflow}
-                  >
-                    <Target size={13} /> {t("tapNow")}
-                    {armed && !tapOverflow
-                      ? t("tapNowPages", curFrom, curDest)
-                      : ""}
-                  </button>
-                )}
-                <button className="btn ghost small" onClick={clearCues}>
-                  {t("clearBtn")}
-                </button>
-              </div>
-            </div>
-            <div className="cueRows" ref={cueRowsRef}>
-              {cueText.map((v, i) => (
-                <div
-                  className={
-                    "cueRow" + (armed && i === tapCursor ? " hot" : "")
-                  }
-                  key={i}
-                >
-                  <span className="cueLabel">
-                    {t("cuePagePrefix")}
-                    <select
-                      className="cueSel"
-                      value={seq[i] ?? 1}
-                      onChange={(e) => setSeqAt(i, +e.target.value)}
-                      aria-label={t("fromPageAria")}
-                    >
-                      {Array.from({ length: pdf.total }, (_, k) => k + 1).map(
-                        (p) => (
-                          <option key={p} value={p}>
-                            {p}
-                          </option>
-                        ),
-                      )}
-                    </select>
-                    <span className="cueArrow">
-                      {seq[i + 1] != null && seq[i + 1] <= seq[i] ? "↩" : "→"}
-                    </span>
-                    <select
-                      className="cueSel"
-                      value={
-                        seq[i + 1] ?? Math.min((seq[i] || 1) + 1, pdf.total)
-                      }
-                      onChange={(e) => setSeqAt(i + 1, +e.target.value)}
-                      aria-label={t("toPageAria")}
-                    >
-                      {Array.from({ length: pdf.total }, (_, k) => k + 1).map(
-                        (p) => (
-                          <option key={p} value={p}>
-                            {p}
-                          </option>
-                        ),
-                      )}
-                    </select>
-                    {t("cuePageSuffix")}
-                  </span>
-                  <input
-                    type="text"
-                    value={v}
-                    placeholder="0:00"
-                    onChange={(e) => setCueAt(i, e.target.value)}
-                  />
-                  {tuneMode ? (
-                    <span className="cueRowTools">
-                      <button
-                        className="btn ghost tiny"
-                        title={t("nudgeEarlier")}
-                        onClick={() => nudgeCue(i, -0.5)}
-                      >
-                        −
-                      </button>
-                      <button
-                        className="btn ghost tiny"
-                        title={t("nudgeLater")}
-                        onClick={() => nudgeCue(i, 0.5)}
-                      >
-                        ＋
-                      </button>
-                    </span>
-                  ) : (
-                    <button
-                      className="btn ghost tiny"
-                      onClick={() => nowAt(i)}
-                      disabled={!armed}
-                    >
-                      {t("nowBtn")}
-                    </button>
-                  )}
-                  <button
-                    className="cueDelBtn"
-                    onClick={() => removeCueRow(i)}
-                    title={t("delCueTitle")}
-                    aria-label={t("delCueAria", seq[i], seq[i + 1])}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                className="btn ghost small cueAdd"
-                onClick={addCueRow}
-              >
-                {t("addCue")}
-              </button>
-            </div>
-          </div>
+          <CuePanel
+            t={t}
+            total={pdf.total}
+            cueText={cueText}
+            seq={seq}
+            armed={armed}
+            tapCursor={tapCursor}
+            tuneMode={tuneMode}
+            tuneRepeat={tuneRepeat}
+            playDisabled={playDisabled}
+            tapOverflow={tapOverflow}
+            curFrom={curFrom}
+            curDest={curDest}
+            cueRowsRef={cueRowsRef}
+            onToggleRepeat={toggleTuneRepeat}
+            onEnterTune={enterTune}
+            onTap={tap}
+            onClear={clearCues}
+            onSetSequencePage={setSeqAt}
+            onSetCue={setCueAt}
+            onNudgeCue={nudgeCue}
+            onNow={nowAt}
+            onRemove={removeCueRow}
+            onAdd={addCueRow}
+          />
         )}
 
           <button type="button" className="advToggle" onClick={toggleAdv}>
@@ -1821,6 +1784,15 @@ export default function App() {
         <div className="presets">
           <div className="presetsHead">
             <span>{t("savedSongs")}</span>
+            <button
+              type="button"
+              className="btn ghost tiny presetShareBtn"
+              disabled={presets.length === 0}
+              title={presets.length === 0 ? t("presetsEmpty") : t("shareBtn")}
+              onClick={openShare}
+            >
+              {t("shareBtn")}
+            </button>
           </div>
           {presets.length === 0 ? (
             <div className="presetsEmpty">{t("presetsEmpty")}</div>
@@ -2022,6 +1994,7 @@ export default function App() {
                 <Music size={44} />
               </div>
               <div className="emptyHint">{t("emptyStage")}</div>
+              <div className="privacyHint">{t("privacyNote")}</div>
             </>
           )}
           <canvas
@@ -2236,65 +2209,162 @@ export default function App() {
         </div>
       )}
 
-      {pendingTap != null && (
+      <PlaybackOverlays
+        t={t}
+        total={pdf.total}
+        pendingTap={pendingTap}
+        countText={countText}
+        tapOverflow={tapOverflow}
+        curFrom={curFrom}
+        curDest={curDest}
+        formatCue={fmtCue}
+        onCommitPending={commitPending}
+        onCancelPending={cancelPending}
+        onCancelCountdown={cancelCountdown}
+      />
+
+      {showPresetSearch && (
         <div
-          className="overlay show pickOverlay"
+          className="overlay show presetSearchOverlay"
           role="dialog"
-          aria-label={t("pickAria")}
+          aria-modal="true"
+          aria-label={t("searchPresetTitle")}
+          onClick={() => setShowPresetSearch(false)}
         >
-          <div className="pickCard">
-            <div className="pickTime">
-              <Pause size={12} /> {t("pickTime", fmtCue(pendingTap.t))}
-            </div>
-            <div className="pickTitle">{t("pickTitle")}</div>
-            {!tapOverflow && (
-              <button
-                className="btn pickNext"
-                onClick={() => commitPending(null)}
-              >
-                {t("pickNext", curDest)}
+          <div className="presetSearchCard" onClick={(e) => e.stopPropagation()}>
+            <div className="presetSearchTitle">{t("searchPresetTitle")}</div>
+            <p className="presetSearchHint">{t("searchPresetHint")}</p>
+            <input
+              autoFocus
+              type="text"
+              className="presetSearchInput"
+              value={presetSearchQuery}
+              onChange={(e) => setPresetSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") runPresetSearch();
+              }}
+              placeholder={t("searchPresetPlaceholder")}
+            />
+            <div className="presetSearchActions">
+              <button className="btn ghost small" onClick={() => setShowPresetSearch(false)}>
+                {t("cancelBtn")}
               </button>
-            )}
-            <div className="pickPages" aria-label={t("pickPagesAria")}>
-              {Array.from({ length: pdf.total }, (_, k) => k + 1).map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  className="tuneJumpBtn"
-                  disabled={p === curFrom}
-                  onClick={() => commitPending(p)}
-                  title={t("pickPageTitle", p)}
-                >
-                  {p}
-                </button>
-              ))}
+              <button
+                className="btn small"
+                disabled={!presetSearchQuery.trim() || presetSearchBusy}
+                onClick={runPresetSearch}
+              >
+                {presetSearchBusy ? t("searching") : t("searchBtn")}
+              </button>
             </div>
-            <button className="cancel" onClick={cancelPending}>
-              {t("pickCancel")}
-            </button>
+            {presetSearchResults && (
+              <div className="presetSearchResults">
+                <div className="presetSearchResultsTitle">{t("searchResults")}</div>
+                {presetSearchResults.length === 0 ? (
+                  <div className="presetSearchEmpty">{t("noSearchResults")}</div>
+                ) : (
+                  presetSearchResults.map((preset) => (
+                    <div className="sharedPresetRow" key={preset.id}>
+                      <div className="sharedPresetInfo">
+                        <strong>{preset.name}</strong>
+                        <span>{preset.author} · {t("pagesCount", preset.pages)}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn ghost tiny"
+                        onClick={() => loadSharedPreset(preset.id)}
+                      >
+                        {t("loadShared")}
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
 
-
-      {countText != null && (
+      {showShare && (
         <div
-          className="overlay show"
-          role="alertdialog"
-          aria-label={t("countdownAria")}
-          aria-live="assertive"
+          className="overlay show presetSearchOverlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t("shareModalTitle")}
+          onClick={() => setShowShare(false)}
         >
-          <div className="get-ready">Get ready</div>
-          {countText === "▶" ? (
-            <div className="go">▶</div>
-          ) : (
-            <div className="count tick" key={countText}>
-              {countText}
-            </div>
-          )}
-          <button className="cancel" onClick={cancelCountdown}>
-            {t("cancel")}
-          </button>
+          <div className="presetSearchCard" onClick={(e) => e.stopPropagation()}>
+            <div className="presetSearchTitle">{t("shareModalTitle")}</div>
+            {shareDone != null ? (
+              <>
+                <p className="presetSearchHint">{t("shareDoneMsg", shareDone)}</p>
+                <div className="presetSearchActions">
+                  <button className="btn small" onClick={() => setShowShare(false)}>
+                    {t("closeBtn")}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="presetSearchHint">{t("shareModalHint")}</p>
+                <label className="shareField">
+                  <span>{t("shareSong")}</span>
+                  <select
+                    className="presetSearchInput"
+                    value={shareId ?? ""}
+                    onChange={(e) => setShareId(e.target.value)}
+                  >
+                    {presets.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="shareField">
+                  <span>{t("shareSinger")}</span>
+                  <input
+                    type="text"
+                    className="presetSearchInput"
+                    value={shareSinger}
+                    onChange={(e) => setShareSinger(e.target.value)}
+                    placeholder={t("shareSingerPh")}
+                  />
+                </label>
+                <label className="shareField">
+                  <span>{t("shareUploader")}</span>
+                  <input
+                    type="text"
+                    className="presetSearchInput"
+                    value={shareUploader}
+                    onChange={(e) => setShareUploader(e.target.value)}
+                    placeholder={t("shareUploaderPh")}
+                  />
+                </label>
+                <label className="shareField">
+                  <span>{t("sharePw")}</span>
+                  <input
+                    type="password"
+                    className="presetSearchInput"
+                    value={sharePw}
+                    onChange={(e) => setSharePw(e.target.value)}
+                    placeholder={t("sharePwPh")}
+                  />
+                  <small className="shareHint">{t("sharePwHint")}</small>
+                </label>
+                <div className="presetSearchActions">
+                  <button className="btn ghost small" onClick={() => setShowShare(false)}>
+                    {t("cancelBtn")}
+                  </button>
+                  <button
+                    className="btn small"
+                    disabled={!shareValid || shareBusy}
+                    onClick={submitShare}
+                  >
+                    {shareBusy ? t("sharing") : t("shareSubmit")}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 {
   "rewrites": [
     { "source": "/metronome", "destination": "/metronome.html" },
-    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+    { "source": "/((?!assets/|api/).*)", "destination": "/index.html" }
   ]
 }
