@@ -43,6 +43,11 @@ import {
 const SHEET_MQ =
   "(max-width:760px), (max-width:1080px) and (orientation:portrait)";
 
+const guideDayKey = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+};
+
 export default function App() {
   const canvasRef = useRef(null);
   const stageRef = useRef(null);
@@ -60,6 +65,13 @@ export default function App() {
 
   // ---- UI 상태 ----
   const [url, setUrl] = useState("");
+  const [firstRunDismissed, setFirstRunDismissed] = useState(() => {
+    try {
+      return localStorage.getItem("cin:first-run-guide-until") === guideDayKey();
+    } catch {
+      return false;
+    }
+  });
   const [delay, setDelay] = useState(4);
   const [volume, setVolume] = useState(80);
   const [rate, setRate] = useState(1); // 재생 속도 0.5 | 0.75 | 1
@@ -1161,6 +1173,11 @@ export default function App() {
         if (sheetModeRef.current) showToast(t("notReadyToast"), 2600);
         return false;
       }
+      // 첫 실행 흐름을 실제로 시작했으면 다음 방문부터는 안내를 접어 둔다.
+      setFirstRunDismissed(true);
+      try {
+        localStorage.setItem("cin:first-run-guide-until", guideDayKey());
+      } catch {}
       pendingIdRef.current = id;
       let secs = parseInt(delayRef.current, 10);
       if (isNaN(secs) || secs < 0) secs = 0;
@@ -1464,6 +1481,22 @@ export default function App() {
   const playDisabled = !yt.apiReady; // 악보 없이도 시작 가능 (영상만 크게 재생)
   const navDisabled = pdf.total === 0;
   const playLabel = armed && isPlaying ? t("pause") : t("start");
+  const guideStep = !url.trim() ? 1 : pdf.total === 0 ? 2 : 3;
+  const guideVisible = !firstRunDismissed && !armed;
+  const dismissFirstRun = () => {
+    setFirstRunDismissed(true);
+    try {
+      localStorage.setItem("cin:first-run-guide-until", guideDayKey());
+    } catch {}
+  };
+  const focusGuideTarget = (step) => {
+    const target = document.getElementById(
+      step === 1 ? "url" : step === 2 ? "pdf-picker" : "start-button",
+    );
+    if (sheetMode) setSheetOpen(true);
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (step !== 2) target?.focus();
+  };
   // 다음 탭이 기록할 전환: 어느 페이지에서 어느 페이지로 가는지 (순서 끝의 마지막 쪽이면 overflow)
   const curFrom = seq[tapCursor];
   const curDest =
@@ -1578,7 +1611,7 @@ export default function App() {
           <div className="group">
             <label>{t("step2")}</label>
             <div className="uploadRow">
-              <label className="upload">
+              <label className="upload" id="pdf-picker">
                 {/* accept 미지정 — 삼성 인터넷은 PDF accept가 있으면 카메라·갤러리만 띄운다
                     (태블릿은 데스크톱 모드 UA라 기기 감지도 불가). PDF 검증은 로드 단계에서 함. */}
                 <input type="file" onChange={onFile} />
@@ -1632,6 +1665,7 @@ export default function App() {
                 <span className="unit">{t("secCount")}</span>
               </div>
               <button
+                id="start-button"
                 className="btn startBtn"
                 onClick={togglePlay}
                 disabled={playDisabled}
@@ -2049,13 +2083,52 @@ export default function App() {
           ref={stageRef}
         >
           {pdf.total === 0 && (
-            <>
-              <div className="big">
-                <Music size={44} />
-              </div>
-              <div className="emptyHint">{t("emptyStage")}</div>
-              <div className="privacyHint">{t("privacyNote")}</div>
-            </>
+            guideVisible ? (
+              <>
+                <section className="firstRun stageGuide" aria-label={t("guideAria")}>
+                  <div className="firstRunHead">
+                    <div>
+                      <span className="firstRunKicker">{t("guideKicker")}</span>
+                      <h2>{t("guideTitle")}</h2>
+                    </div>
+                    <button type="button" className="guideDismiss" onClick={dismissFirstRun}>
+                      {t("guideDismiss")}
+                    </button>
+                  </div>
+                  <div className="guideSteps">
+                    {[1, 2, 3].map((step) => {
+                      const done = step < guideStep;
+                      const active = step === guideStep;
+                      return (
+                        <button
+                          type="button"
+                          key={step}
+                          className={`guideStep${active ? " active" : ""}${done ? " done" : ""}`}
+                          onClick={() => !done && focusGuideTarget(step)}
+                          aria-current={active ? "step" : undefined}
+                        >
+                          <span className="guideDot">{done ? <Check size={12} /> : step}</span>
+                          <span className="guideStepText">
+                            <b>{t(`guideStep${step}`)}</b>
+                            <small>{done ? t("guideDone") : active ? t(`guideHelp${step}`) : t("guideNext")}</small>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="guideNote"><span>✦</span> {t("guideNote")}</p>
+                </section>
+                <div className="emptyHint">{t("emptyStage")}</div>
+              </>
+            ) : (
+              <>
+                <div className="big">
+                  <Music size={44} />
+                </div>
+                <div className="emptyHint">{t("emptyStage")}</div>
+                <div className="privacyHint">{t("privacyNote")}</div>
+              </>
+            )
           )}
           <canvas
             ref={canvasRef}
