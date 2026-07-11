@@ -1481,7 +1481,6 @@ export default function App() {
   const playDisabled = !yt.apiReady; // 악보 없이도 시작 가능 (영상만 크게 재생)
   const navDisabled = pdf.total === 0;
   const playLabel = armed && isPlaying ? t("pause") : t("start");
-  const guideStep = !url.trim() ? 1 : pdf.total === 0 ? 2 : 3;
   const guideVisible = !firstRunDismissed && !armed;
   const dismissFirstRun = () => {
     setFirstRunDismissed(true);
@@ -1489,14 +1488,44 @@ export default function App() {
       localStorage.setItem("cin:first-run-guide-until", guideDayKey());
     } catch {}
   };
-  const focusGuideTarget = (step) => {
-    const target = document.getElementById(
-      step === 1 ? "url" : step === 2 ? "pdf-picker" : "start-button",
-    );
-    if (sheetMode) setSheetOpen(true);
-    target?.scrollIntoView({ behavior: "smooth", block: "center" });
-    if (step !== 2) target?.focus();
-  };
+  const guideCard = (className = "stageGuide") => (
+    <section className={`firstRun ${className}`} aria-label={t("guideAria")}>
+      <div className="firstRunHead">
+        <div>
+          <span className="firstRunKicker">{t("guideKicker")}</span>
+          <h2>{t("guideTitle")}</h2>
+        </div>
+        <button type="button" className="guideDismiss" onClick={dismissFirstRun}>
+          {t("guideDismiss")}
+        </button>
+      </div>
+      <div className="guideSteps">
+        {[1, 2, 3, 4].map((step) => {
+          const helpText =
+            step === 2
+              ? t("guideNext2")
+              : step === 3
+                ? t("guideHelp3")
+                : step === 4
+                  ? t("guideHelp4")
+                  : t("guideHelp1");
+          return (
+            <div
+              key={step}
+              className="guideStep"
+            >
+              <span className="guideDot">{step}</span>
+              <span className="guideStepText">
+                <b>{t(`guideStep${step}`)}</b>
+                <small>{helpText}</small>
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      <p className="guideNote"><span>✦</span> {t("guideNote")}</p>
+    </section>
+  );
   // 다음 탭이 기록할 전환: 어느 페이지에서 어느 페이지로 가는지 (순서 끝의 마지막 쪽이면 overflow)
   const curFrom = seq[tapCursor];
   const curDest =
@@ -2085,39 +2114,7 @@ export default function App() {
           {pdf.total === 0 && (
             guideVisible ? (
               <>
-                <section className="firstRun stageGuide" aria-label={t("guideAria")}>
-                  <div className="firstRunHead">
-                    <div>
-                      <span className="firstRunKicker">{t("guideKicker")}</span>
-                      <h2>{t("guideTitle")}</h2>
-                    </div>
-                    <button type="button" className="guideDismiss" onClick={dismissFirstRun}>
-                      {t("guideDismiss")}
-                    </button>
-                  </div>
-                  <div className="guideSteps">
-                    {[1, 2, 3].map((step) => {
-                      const done = step < guideStep;
-                      const active = step === guideStep;
-                      return (
-                        <button
-                          type="button"
-                          key={step}
-                          className={`guideStep${active ? " active" : ""}${done ? " done" : ""}`}
-                          onClick={() => !done && focusGuideTarget(step)}
-                          aria-current={active ? "step" : undefined}
-                        >
-                          <span className="guideDot">{done ? <Check size={12} /> : step}</span>
-                          <span className="guideStepText">
-                            <b>{t(`guideStep${step}`)}</b>
-                            <small>{done ? t("guideDone") : active ? t(`guideHelp${step}`) : t("guideNext")}</small>
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="guideNote"><span>✦</span> {t("guideNote")}</p>
-                </section>
+                {guideCard()}
                 <div className="emptyHint">{t("emptyStage")}</div>
               </>
             ) : (

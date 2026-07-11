@@ -101,22 +101,18 @@ h1 .accent{color:var(--brass-deep)}
 .guideDismiss{border:0;background:transparent;color:var(--muted);cursor:pointer;font:inherit;font-size:11px;padding:2px 0;white-space:nowrap}
 .guideDismiss:hover{color:var(--ink)}
 .guideSteps{display:grid;gap:5px}
-.guideStep{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--ink);padding:7px 8px;cursor:pointer;font:inherit;transition:background .15s,border-color .15s}
-.guideStep.active{background:var(--panel);border-color:var(--brass);box-shadow:0 2px 8px rgba(192,138,37,.12)}
-.guideStep.done{color:var(--muted);cursor:default}
+.guideStep{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--ink);padding:7px 8px;font:inherit}
 .guideDot{display:inline-flex;align-items:center;justify-content:center;flex:0 0 22px;width:22px;height:22px;border-radius:50%;background:var(--track);border:1px solid var(--line-strong);font-size:11px;font-weight:800;color:var(--muted)}
-.guideStep.active .guideDot{background:var(--brass);border-color:var(--brass);color:#2B1D04}
-.guideStep.done .guideDot{background:#5FBF8B;border-color:#5FBF8B;color:#fff}
 .guideStepText{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0;flex:1}
 .guideStepText b{font-size:12px;white-space:nowrap}
 .guideStepText small{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .guideNote{display:flex;gap:6px;align-items:flex-start;color:var(--muted);font-size:11px;line-height:1.45;margin-top:9px;padding:0 2px}
 .guideNote span{color:var(--brass-deep);font-size:12px;line-height:1.2}
-.guideStep:focus-visible,.guideDismiss:focus-visible{outline:2px solid var(--indigo);outline-offset:2px}
+.guideDismiss:focus-visible{outline:2px solid var(--indigo);outline-offset:2px}
 .stage.empty .stageGuide{width:min(100%,620px);text-align:left}
-.stage.empty .stageGuide .guideSteps{grid-template-columns:repeat(3,minmax(0,1fr))}
+.stage.empty .stageGuide .guideSteps{grid-template-columns:repeat(2,minmax(0,1fr))}
 .stage.empty .stageGuide .guideStepText{display:block}
-.stage.empty .stageGuide .guideStepText small{display:block;margin-top:3px;line-height:1.35}
+.stage.empty .stageGuide .guideStepText small{display:block;margin-top:3px;line-height:1.35;overflow:visible;text-overflow:clip;white-space:pre-line}
 
 /* ③ 시작: 카운트 초 입력 + 큰 시작 버튼 (+ 전체화면으로 시작) */
 .startRow{display:flex;align-items:stretch;gap:10px}
@@ -692,7 +688,6 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
   .guideStepText small{display:block;margin-top:2px}
   .stage.empty .stageGuide{width:min(100%,520px)}
   .stage.empty .stageGuide .guideSteps{grid-template-columns:1fr}
-
   /* 본문: 여백을 줄이고 하단 안내줄을 없애 악보를 최대한 크게. 하단 바 높이만큼만 띄움.
      height는 100vh 고정을 풀고 .app(실제 보이는 높이)에 맞춰 늘어나게 */
   .main{height:auto;padding:10px 10px calc(68px + env(safe-area-inset-bottom))}
