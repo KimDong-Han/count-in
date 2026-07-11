@@ -15,12 +15,12 @@ const META = {
   '/': {
     title: 'Count-In — 악보 PDF 자동 넘김 · 유튜브 카운트다운 재생',
     desc: '유튜브 반주에 맞춰 악보 PDF가 자동으로 넘어가는 무료 연습 도구예요. 카운트다운 후 반주가 시작되고, 정해둔 시각에 악보가 넘어가요. 온라인 메트로놈도 함께 제공해요.',
-    canonical: 'https://count-in.vercel.app/',
+    canonical: 'https://www.count-in.com/',
   },
   '/metronome': {
     title: '온라인 메트로놈 (Metronome Online) — Count-In',
     desc: '설치 없이 브라우저에서 바로 쓰는 무료 온라인 메트로놈이에요. 30~240 BPM, 박자·첫박 강세·탭 템포를 지원하고, Web Audio 기반이라 박자가 밀리지 않아요. Free online metronome.',
-    canonical: 'https://count-in.vercel.app/metronome',
+    canonical: 'https://www.count-in.com/metronome',
   },
 }
 
