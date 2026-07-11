@@ -46,7 +46,7 @@ const CONTENT = {
       ["회원가입이 필요한가요?", "아니요, 회원가입 없이도 사용할 수 있습니다."],
       [
         "버그 제보 및 문의",
-        "devkim1030@gmail.com 로 이메일 보내주시면 확인 후 개선하겠습니다. 감사합니다.",
+        "developer@count-in.com 로 이메일 보내주시면 확인 후 개선하겠습니다. 감사합니다.",
       ],
     ],
   },
@@ -90,7 +90,7 @@ const CONTENT = {
       ],
       [
         "Where do I send bugs or feedback?",
-        "Email devkim1030@gmail.com and I'll look into it and improve. Thank you!",
+        "Email developer@count-in.com and I'll look into it and improve. Thank you!",
       ],
     ],
   },

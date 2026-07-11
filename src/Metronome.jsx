@@ -360,7 +360,7 @@ export default function Metronome() {
       <div className="kbhint metroHint">{t("mHint")}</div>
 
       <footer className="siteFoot">
-        <a href="mailto:devkim1030@gmail.com">devkim1030@gmail.com</a>
+        <a href="mailto:developer@count-in.com">developer@count-in.com</a>
       </footer>
     </div>
   );

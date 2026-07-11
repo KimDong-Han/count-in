@@ -1556,8 +1556,8 @@ export default function App() {
       <aside className={"sidebar" + (sheetMode && sheetOpen ? " open" : "")}>
         <div className="sheetTop">
           <span>{t("sheetTitle")}</span>
-          <a className="sheetMail" href="mailto:devkim1030@gmail.com">
-            devkim1030@gmail.com
+          <a className="sheetMail" href="mailto:developer@count-in.com">
+            developer@count-in.com
           </a>
           <button
             type="button"
@@ -2176,7 +2176,7 @@ export default function App() {
             {msg.text}
           </div>
           <footer className="siteFoot">
-            <a href="mailto:devkim1030@gmail.com">devkim1030@gmail.com</a>
+            <a href="mailto:developer@count-in.com">developer@count-in.com</a>
           </footer>
         </div>
 
