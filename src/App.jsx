@@ -22,9 +22,7 @@ import {
   Eraser,
   FileText,
   Maximize,
-  Maximize2,
   Minimize,
-  Minimize2,
   Moon,
   Music,
   Pause,
@@ -115,7 +113,6 @@ export default function App() {
     setLang(nl);
   };
   const [pendingTap, setPendingTap] = useState(null); // 도돌이표 곡에서 찍은 순간 {i, t} — 목적지 선택 대기
-  const [focus, setFocus] = useState(false); // 집중 모드(컨트롤 숨김)
   const [presets, setPresets] = useState(() => {
     // 저장한 곡 프리셋 목록
     try {
@@ -1397,6 +1394,8 @@ export default function App() {
     sheetMode,
     sheetOpen: sheetMode && sheetOpen,
     closeSheet: () => setSheetOpen(false),
+    toggleFs,
+    fsSupported,
   };
   useEffect(() => {
     const onKey = (e) => {
@@ -1426,9 +1425,11 @@ export default function App() {
       } else if (e.key === "Shift" && !e.repeat) {
         if (h.tuneOpen) h.tap(); // 타이밍 입력 모드: Shift로도 찍기
       } else if (e.code === "Enter") {
-        // 시트 모드에선 악보가 이미 기본 화면이라 집중 모드 불필요 (켜지면 시트가 안 열림)
-        if (!h.sheetMode && totalRef.current > 0 && !h.pendingOpen)
-          setFocus((f) => !f);
+        // 전체화면 토글. 키 입력은 사용자 제스처라 requestFullscreen이 허용된다.
+        if (h.fsSupported && !h.pendingOpen) {
+          e.preventDefault();
+          h.toggleFs();
+        }
       } else if (e.code === "Escape") {
         if (h.sheetOpen) h.closeSheet();
         else if (h.pendingOpen) h.cancelPending();
@@ -1541,7 +1542,6 @@ export default function App() {
     <div
       className={
         "app" +
-        (focus ? " focus" : "") +
         (tuneMode ? " tune" : "") +
         (armed && pdf.total === 0 ? " video" : "") // 악보 없음: 무대에 영상 크게
       }
@@ -2044,7 +2044,6 @@ export default function App() {
             <button
               className="btn ghost navFs"
               onClick={toggleFs}
-              disabled={!armed && !isFs}
               title={isFs ? t("fsExitTitle") : t("fsTitle")}
             >
               {isFs ? (
@@ -2058,21 +2057,6 @@ export default function App() {
               )}
             </button>
           )}
-          <button
-            className="btn ghost navZoom"
-            onClick={() => setFocus((f) => !f)}
-            disabled={navDisabled}
-          >
-            {focus ? (
-              <>
-                <Minimize2 size={13} /> {t("focusOff")}
-              </>
-            ) : (
-              <>
-                <Maximize2 size={13} /> {t("focusOn")}
-              </>
-            )}
-          </button>
           <span className="kbhint" ref={kbWrapRef}>
             {t("kbhintLine")}
             <button

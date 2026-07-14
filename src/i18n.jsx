@@ -194,8 +194,6 @@ export const STR = {
     fsExit: "전체화면 종료",
     fsTitle: "브라우저를 전체화면으로 — 자동 넘김은 그대로 돼요",
     fsExitTitle: "전체화면에서 나가요",
-    focusOn: "악보 크게",
-    focusOff: "설정 보기",
     kbhintLine: (
       <>
         <b>Space</b> 재생 · <b>←→</b> 페이지 · <b>Shift</b> 지금 넘김(타이밍
@@ -211,7 +209,7 @@ export const STR = {
       ["Shift", "지금 넘김 (타이밍 찍기)"],
       ["Shift", "지금 넘김 (타이밍 입력 모드)"],
       ["1~9", "해당 페이지로 이동"],
-      ["Enter", "악보 크게 보기"],
+      ["Enter", "전체화면 켜기 · 끄기"],
       ["0 · Esc", "처음으로"],
     ],
     emptyStage: "악보 PDF를 불러오면 여기에 표시돼요.",
@@ -491,8 +489,6 @@ export const STR = {
     fsExit: "Exit fullscreen",
     fsTitle: "Browser fullscreen — auto page turns keep working",
     fsExitTitle: "Leave fullscreen",
-    focusOn: "Score only",
-    focusOff: "Show controls",
     kbhintLine: (
       <>
         <b>Space</b> play · <b>←→</b> pages · <b>M</b> turn now
@@ -507,7 +503,7 @@ export const STR = {
       ["M", "Turn now (tap timing)"],
       ["Shift", "Turn now (timing mode)"],
       ["1~9", "Go to page"],
-      ["Enter", "Score-only view"],
+      ["Enter", "Toggle fullscreen"],
       ["0 · Esc", "Back to start"],
     ],
     emptyStage: "Open a score PDF to show it here.",
