@@ -462,6 +462,11 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 /* 다크에선 토스트를 반전(밝은 칩)해 또렷하게 */
 :root[data-theme="dark"] .toast{background:#EDEEF6;border-color:#EDEEF6;color:#23283B}
 
+/* 전체화면 — 사이드바를 숨기고 악보를 최대로. 하단 타이밍 바는 유지 */
+.app.fs .sidebar{display:none}
+.app.fs .main{padding:12px 16px 10px}
+.app.fs .msg{display:none}
+
 .msg{margin-top:10px;font-size:13px;min-height:18px}
 /* 안내 문구와 이메일을 한 줄에 (하단 공간 최소화) */
 .footRow{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:2px}
@@ -469,6 +474,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
 .siteFoot{margin-top:0;font-size:12px;color:var(--muted);white-space:nowrap}
 .siteFoot a{color:var(--muted);text-decoration:none}
 .siteFoot a:hover{color:var(--ink);text-decoration:underline}
+.app.fs .footRow,.app.fs .siteFoot{display:none}
 .msg.err{color:#C4425A}
 .msg.ok{color:var(--muted)}
 
@@ -655,6 +661,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:8px;box-shadow:0
     transition:transform .28s ease,visibility 0s .28s;
   }
   .sidebar.open{transform:none;visibility:visible;transition:transform .28s ease}
+  .app.fs .sidebar{display:flex} /* 전체화면이어도 모바일 설정 시트는 열 수 있게 */
   .sheetTop{
     display:flex;align-items:center;justify-content:space-between;gap:8px;
     position:sticky;top:0;z-index:3;margin:0 -16px;

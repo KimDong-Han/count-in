@@ -1542,6 +1542,7 @@ export default function App() {
     <div
       className={
         "app" +
+        (isFs ? " fs" : "") + // 전체화면: 사이드바 숨기고 악보 최대
         (tuneMode ? " tune" : "") +
         (armed && pdf.total === 0 ? " video" : "") // 악보 없음: 무대에 영상 크게
       }
