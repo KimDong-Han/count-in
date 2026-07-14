@@ -135,8 +135,8 @@ h1 .accent{color:var(--brass-deep)}
 .sideActions .btn{box-shadow:none;font-size:13px;padding:10px 12px}
 .sideActions .resetAllBtn{font-size:12px;padding:8px 12px}
 .sideActions .resetAllBtn.arm{color:#C4425A;border-color:#C4425A}
-.savePresetBtn.saved{
-  background:linear-gradient(180deg,#5FBF8B,#3E9A68);color:#fff;
+.btn.savePresetBtn.saved{
+  background:linear-gradient(180deg,#5FBF8B,#3E9A68);color:#fff;border-color:transparent;
   transition:background .2s;cursor:default;
 }
 .saveRow{display:flex;gap:6px;align-items:center}
@@ -335,15 +335,18 @@ input[type=range]::-moz-range-thumb{
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
   border:none;cursor:pointer;border-radius:12px;font-weight:700;font-size:15px;padding:12px 22px;
-  color:#2B1D04;background:linear-gradient(180deg,var(--btn-hi),var(--btn-lo));
-  box-shadow:0 6px 16px rgba(192,138,37,.3);transition:transform .08s,filter .15s;
+  color:#fff;background:var(--brass);
+  box-shadow:0 1px 2px rgba(35,40,59,.2),inset 0 -1px 0 rgba(0,0,0,.14);transition:transform .08s,filter .15s;
 }
 .btn svg{flex:0 0 auto}
-.btn:hover:not(:disabled){filter:brightness(1.04)}
+.btn:hover:not(:disabled){filter:brightness(1.06)}
 .btn:active:not(:disabled){transform:translateY(1px)}
 .btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.3);box-shadow:none}
 .btn.ghost{background:var(--panel);border:1px solid var(--line-strong);color:var(--ink);box-shadow:none;font-weight:600}
 .btn.ghost:hover:not(:disabled){color:var(--ink);border-color:var(--indigo)}
+/* 보조 액션: 은은한 톤(연한 황동 배경) — 주 버튼(시작)보다 한 단계 낮은 위계 */
+.btn.tonal{background:var(--brassTint);color:var(--brass-deep);border:1px solid rgba(192,138,37,.35);box-shadow:none}
+.btn.tonal:hover:not(:disabled){filter:none;border-color:var(--brass);color:var(--brass-deep)}
 .btn.small{padding:9px 14px;font-size:13px}
 .btn.tiny{padding:6px 10px;font-size:12px;border-radius:8px}
 

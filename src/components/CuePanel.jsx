@@ -43,7 +43,7 @@ export function CuePanel({
           {!tuneMode && (
             <button
               id="tune-enter-button"
-              className="btn small tuneEnter"
+              className="btn small tonal tuneEnter"
               onClick={onEnterTune}
               disabled={playDisabled}
               title={playDisabled ? t("tuneEnterDisabledTitle") : t("tuneEnterTitle")}

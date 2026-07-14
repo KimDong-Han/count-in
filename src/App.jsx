@@ -1966,7 +1966,7 @@ export default function App() {
             </div>
           ) : (
             <button
-              className={"btn savePresetBtn" + (savedFlash ? " saved" : "")}
+              className={"btn tonal savePresetBtn" + (savedFlash ? " saved" : "")}
               onClick={openSave}
             >
               {savedFlash ? (
