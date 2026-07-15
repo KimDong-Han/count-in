@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @page {
+        size: A4 landscape;
+        margin: 0;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+        color: #23283b;
+      }
+      .page {
+        width: 297mm;
+        height: 209mm;
+        padding: 22mm 24mm;
+        page-break-after: always;
+        position: relative;
+        overflow: hidden;
+        background: #fdfdfb;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .page:last-child {
+        page-break-after: auto;
+      }
+      /* 오선: 상단에 한 벌만, 아주 은은하게 */
+      .staff {
+        position: absolute;
+        top: 16mm;
+        left: 24mm;
+        right: 24mm;
+        height: 12mm;
+        opacity: 0.28;
+        background: repeating-linear-gradient(
+          to bottom,
+          #a9aca0 0 0.4mm,
+          transparent 0.4mm 3mm
+        );
+      }
+      .kicker {
+        font-size: 4mm;
+        letter-spacing: 0.3em;
+        color: #8a8e9c;
+        font-weight: 700;
+        margin-bottom: 7mm;
+        text-transform: uppercase;
+      }
+      h1 {
+        font-size: 13mm;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.3;
+        margin-bottom: 7mm;
+      }
+      p.lead {
+        font-size: 6.5mm;
+        line-height: 1.65;
+        color: #23283b;
+        margin-bottom: 4mm;
+      }
+      p.lead b {
+        color: #96690f;
+      } /* 시각 숫자만 브라스 */
+      p.en {
+        font-size: 4mm;
+        color: #9a9eab;
+        line-height: 1.5;
+      }
+      .flipAt {
+        position: absolute;
+        right: 24mm;
+        bottom: 18mm;
+        font-size: 4.5mm;
+        color: #96690f;
+        font-weight: 700;
+      }
+      .pageNo {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 16mm;
+        font-size: 4mm;
+        color: #a2a6b0;
+      }
+      ol.steps {
+        list-style: none;
+        font-size: 6.2mm;
+        line-height: 1.5;
+        margin: 1mm 0 6mm;
+      }
+      ol.steps li {
+        margin: 3.2mm 0;
+        display: flex;
+        align-items: baseline;
+        gap: 4.5mm;
+      }
+      ol.steps .n {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 8.5mm;
+        height: 8.5mm;
+        border-radius: 50%;
+        border: 0.5mm solid #c08a25;
+        color: #96690f;
+        font-size: 4.3mm;
+        font-weight: 800;
+        flex: 0 0 auto;
+        position: relative;
+        top: 1.5mm;
+      }
+      ol.steps small {
+        font-size: 3.8mm;
+        color: #9a9eab;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="staff"></div>
+      <div class="kicker">Count-In · Demo</div>
+      <h1>
+        데모 악보입니다.<br />시작을 누르고 반주가 흐르는 동안 가만히 보세요.
+      </h1>
+      <p class="lead">
+        잠시 후 <b>0:12</b>가 되면, 이 페이지가 저절로 넘어갑니다.
+      </p>
+      <p class="en">
+        This is a demo score. At 0:12 this page will turn by itself — just
+        watch.
+      </p>
+      <div class="flipAt">다음 넘김 0:12 →</div>
+      <div class="pageNo">— 1 —</div>
+    </div>
+
+    <div class="page">
+      <div class="staff"></div>
+      <div class="kicker">Count-In · Demo</div>
+      <h1>방금, 저절로 넘어갔죠?</h1>
+      <p class="lead">
+        Count-In은 여러분이 정해둔 시각에 악보를 넘겨줍니다.<br />연주 중에 손이
+        자유로워져요. 다음 넘김은 <b>0:24</b>.
+      </p>
+      <p class="en">
+        It turned on its own. Count-In flips pages at the moments you set —
+        hands stay free. Next turn at 0:24.
+      </p>
+      <div class="flipAt">다음 넘김 0:24 →</div>
+      <div class="pageNo">— 2 —</div>
+    </div>
+
+    <div class="page">
+      <div class="staff"></div>
+      <div class="kicker">Count-In · Demo</div>
+      <h1>이제 여러분의 곡으로.</h1>
+      <ol class="steps">
+        <li><span class="n">1</span><span>유튜브 반주 링크 붙여넣기</span></li>
+        <li>
+          <span class="n">2</span
+          ><span
+            >악보 PDF 불러오기
+            <small>— 브라우저 밖으로 업로드되지 않아요</small></span
+          >
+        </li>
+        <li>
+          <span class="n">3</span
+          ><span
+            >타이밍 입력
+            <small
+              >— 들으면서 넘길 순간에 탭 (Shift로도 가능) · 프리셋 검색으로
+              공유된 타이밍을 불러올 수도 있어요</small
+            ></span
+          >
+        </li>
+        <li>
+          <span class="n">4</span
+          ><span>시작 <small>— 카운트다운 후 자동으로 넘어갑니다</small></span>
+        </li>
+      </ol>
+      <p class="en">
+        Your turn: paste a YouTube link, open your score PDF, tap the flip
+        timings once, then press Start.
+      </p>
+      <div class="pageNo">— 3 —</div>
+    </div>
+  </body>
+</html>

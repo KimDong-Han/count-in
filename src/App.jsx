@@ -6,6 +6,7 @@ import { parseTime, fmt, fmtCue } from "./time";
 import { navigate } from "./router.js";
 import { currentDark, setDark } from "./theme.js";
 import { STR, detectLang, saveLang, applyLangAttr } from "./i18n.jsx";
+import { DEMO_PRESET } from "./demo.js";
 import { CuePanel } from "./components/CuePanel.jsx";
 import { PlaybackOverlays } from "./components/PlaybackOverlays.jsx";
 import { SiteInfo } from "./components/SiteInfo.jsx";
@@ -122,6 +123,8 @@ export default function App() {
     }
   });
   const [toast, setToast] = useState(null); // 짧은 조작 피드백 {text,id}
+  const [demoFlash, setDemoFlash] = useState(false); // 데모 로드 직후 ▶ 시작 버튼 반짝임
+  const demoFlashTimerRef = useRef(null);
   const [saveOpen, setSaveOpen] = useState(false); // 프리셋 저장 인라인 입력 열림
   const [saveName, setSaveName] = useState("");
   const [confirmReset, setConfirmReset] = useState(false); // 초기화 2단계 확인
@@ -1306,6 +1309,31 @@ export default function App() {
     showToast(t("pdfCleared"));
   };
 
+  // ---- 데모: 내장 예제(자기설명 악보 3쪽 + 잔잔한 피아노 반주)로 30초 체험 ----
+  const loadDemo = async () => {
+    setMsg({ text: t("pdfLoading"), kind: "ok" });
+    try {
+      const res = await fetch("/demo.pdf");
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const blob = await res.blob();
+      stopPlayback();
+      await pdf.load(blob);
+      loadPreset(DEMO_PRESET);
+      setMsg({ text: t("demoReady"), kind: "ok" });
+      // 다음 행동(▶ 시작)을 시각적으로 가리킨다 — 한 번만 반짝
+      setDemoFlash(true);
+      clearTimeout(demoFlashTimerRef.current);
+      demoFlashTimerRef.current = setTimeout(() => setDemoFlash(false), 2400);
+      if (sheetModeRef.current) {
+        setSheetOpen(false); // 시트를 닫아 악보 무대 + 하단 ▶가 보이게
+        showToast(t("demoReadyToast"), 2600);
+      }
+    } catch (err) {
+      console.error("[demo]", err);
+      setMsg({ text: t("demoFail"), kind: "err" });
+    }
+  };
+
   // ---- PDF 파일 선택 ----
   const onFile = async (e) => {
     const f = e.target.files && e.target.files[0];
@@ -1524,6 +1552,9 @@ export default function App() {
           );
         })}
       </div>
+      <button type="button" className="btn tonal demoBtn" onClick={loadDemo}>
+        <Play size={14} /> {t("demoBtn")}
+      </button>
       <p className="guideNote"><span>✦</span> {t("guideNote")}</p>
     </section>
   );
@@ -1696,7 +1727,7 @@ export default function App() {
               </div>
               <button
                 id="start-button"
-                className="btn startBtn"
+                className={"btn startBtn" + (demoFlash ? " flash" : "")}
                 onClick={togglePlay}
                 disabled={playDisabled}
                 title={playDisabled ? t("startDisabledTitle") : ""}
@@ -2108,6 +2139,9 @@ export default function App() {
                   <Music size={44} />
                 </div>
                 <div className="emptyHint">{t("emptyStage")}</div>
+                <button type="button" className="btn tonal demoBtn" onClick={loadDemo}>
+                  <Play size={14} /> {t("demoBtn")}
+                </button>
                 <div className="privacyHint">{t("privacyNote")}</div>
               </>
             )
