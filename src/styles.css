@@ -554,6 +554,8 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
   100%{transform:scale(1);opacity:1}
 }
 .overlay .go{color:var(--btn-hi);font-size:min(22vw,120px);font-weight:800;letter-spacing:.05em}
+/* 자동재생 차단 복구: 어두운 스크림 위 큰 탭 버튼 */
+.resumeBtn{font-size:18px;padding:16px 36px;border-radius:var(--r-pill)}
 .cancel{
   margin-top:34px;background:transparent;border:1px solid rgba(255,255,255,.4);color:#E7E8F2;
   padding:10px 20px;border-radius:var(--r-pill);font-size:13px;cursor:pointer;

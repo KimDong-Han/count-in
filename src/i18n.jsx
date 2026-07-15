@@ -100,6 +100,8 @@ export const STR = {
     demoReady: "데모 준비 완료 — ▶ 시작을 누르면 카운트 후 악보가 저절로 넘어가요.",
     demoReadyToast: "▶ 시작을 눌러보세요",
     demoFail: "데모를 불러오지 못했어요. 네트워크를 확인해 주세요.",
+    playBlockedHint: "브라우저가 자동 재생을 막았어요",
+    playBlockedBtn: "탭해서 시작",
     // ①②③
     step1: "① 유튜브 반주 링크",
     urlPlaceholder: "https://youtu.be/... 또는 watch?v=...",
@@ -403,6 +405,8 @@ export const STR = {
     demoReady: "Demo ready — press ▶ Start and watch the pages turn by themselves.",
     demoReadyToast: "Press ▶ Start",
     demoFail: "Couldn't load the demo. Please check your network.",
+    playBlockedHint: "Your browser blocked autoplay",
+    playBlockedBtn: "Tap to start",
     step1: "① YouTube backing link",
     urlPlaceholder: "https://youtu.be/... or watch?v=...",
     step2: "② Score PDF (optional; video only if skipped)",

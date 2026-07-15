@@ -125,6 +125,10 @@ export default function App() {
   const [toast, setToast] = useState(null); // 짧은 조작 피드백 {text,id}
   const [demoFlash, setDemoFlash] = useState(false); // 데모 로드 직후 ▶ 시작 버튼 반짝임
   const demoFlashTimerRef = useRef(null);
+  // 자동재생 차단 복구: 카운트다운 동안 클릭 제스처가 만료되면(주로 첫 방문) play가 무시됨
+  // → 감지해서 "탭해서 시작" 오버레이. 정상 환경에선 절대 안 뜬다.
+  const [playBlocked, setPlayBlocked] = useState(false);
+  const playBlockedTimerRef = useRef(null);
   const [saveOpen, setSaveOpen] = useState(false); // 프리셋 저장 인라인 입력 열림
   const [saveName, setSaveName] = useState("");
   const [confirmReset, setConfirmReset] = useState(false); // 초기화 2단계 확인
@@ -256,10 +260,16 @@ export default function App() {
   const [sheetMode, setSheetMode] = useState(
     () => window.matchMedia(SHEET_MQ).matches,
   );
-  // 처음 들어오면 설정부터 하도록 시트를 열어둔다 (시작하면 자동으로 닫힘)
-  const [sheetOpen, setSheetOpen] = useState(
-    () => window.matchMedia(SHEET_MQ).matches,
-  );
+  // 시트 기본값: 저장한 곡이 있는 기존 사용자는 열어둔다(첫 행동 = 프리셋 불러오기).
+  // 신규 방문자는 닫아둬서 무대의 안내 카드 + "예제로 30초 체험"이 먼저 보이게.
+  const [sheetOpen, setSheetOpen] = useState(() => {
+    if (!window.matchMedia(SHEET_MQ).matches) return false;
+    try {
+      return JSON.parse(localStorage.getItem("cin:presets") || "[]").length > 0;
+    } catch {
+      return true;
+    }
+  });
   useEffect(() => {
     const mq = window.matchMedia(SHEET_MQ);
     const onChange = () => setSheetMode(mq.matches);
@@ -1075,8 +1085,25 @@ export default function App() {
     yt.setVolume(volumeRef.current);
     yt.play();
     yt.setRate(rateRef.current);
+    // 1.2초 안에 재생이 안 붙으면 자동재생 차단으로 판단 (PLAYING 수신 시 해제)
+    clearTimeout(playBlockedTimerRef.current);
+    playBlockedTimerRef.current = setTimeout(() => {
+      const YT = window.YT;
+      const st = yt.getState();
+      const ok =
+        YT && (st === YT.PlayerState.PLAYING || st === YT.PlayerState.BUFFERING);
+      if (!ok) setPlayBlocked(true);
+    }, 1200);
     startFollowing();
   }, [pdf, buildSchedule, yt, startFollowing]);
+
+  // 차단된 재생을 사용자 탭(새 제스처)으로 재개
+  const resumeBlocked = useCallback(() => {
+    setPlayBlocked(false);
+    yt.unMute();
+    yt.setVolume(volumeRef.current);
+    yt.play();
+  }, [yt]);
 
   const runCountdown = useCallback(
     (secs) => {
@@ -1112,8 +1139,11 @@ export default function App() {
     (data) => {
       const YT = window.YT;
       if (!YT) return;
-      if (data === YT.PlayerState.PLAYING) setIsPlaying(true);
-      else if (data === YT.PlayerState.PAUSED) setIsPlaying(false);
+      if (data === YT.PlayerState.PLAYING) {
+        setIsPlaying(true);
+        clearTimeout(playBlockedTimerRef.current);
+        setPlayBlocked(false);
+      } else if (data === YT.PlayerState.PAUSED) setIsPlaying(false);
       else if (data === YT.PlayerState.ENDED) {
         if (loopRef.current) {
           yt.seek(0);
@@ -1141,6 +1171,8 @@ export default function App() {
       clearTimeout(primeTimerRef.current);
       primeTimerRef.current = null;
     }
+    clearTimeout(playBlockedTimerRef.current);
+    setPlayBlocked(false);
     setCountText(null);
     setArmed(false);
     armedRef.current = false;
@@ -1272,6 +1304,8 @@ export default function App() {
       clearTimeout(primeTimerRef.current);
       primeTimerRef.current = null;
     }
+    clearTimeout(playBlockedTimerRef.current);
+    setPlayBlocked(false);
     stopFollowing();
     setCountText(null);
     setArmed(false);
@@ -2370,6 +2404,8 @@ export default function App() {
         onCommitPending={commitPending}
         onCancelPending={cancelPending}
         onCancelCountdown={cancelCountdown}
+        playBlocked={playBlocked}
+        onResumeBlocked={resumeBlocked}
       />
 
       {showPresetSearch && (

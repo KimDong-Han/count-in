@@ -12,6 +12,8 @@ export function PlaybackOverlays({
   onCommitPending,
   onCancelPending,
   onCancelCountdown,
+  playBlocked,
+  onResumeBlocked,
 }) {
   return (
     <>
@@ -41,6 +43,16 @@ export function PlaybackOverlays({
             </div>
             <button className="cancel" onClick={onCancelPending}>{t("pickCancel")}</button>
           </div>
+        </div>
+      )}
+
+      {/* 자동재생 차단(주로 첫 방문): 탭 = 새 제스처라 확실히 재생됨 */}
+      {playBlocked && (
+        <div className="overlay show" role="alertdialog" aria-label={t("playBlockedHint")}>
+          <div className="get-ready">{t("playBlockedHint")}</div>
+          <button className="btn resumeBtn" onClick={onResumeBlocked}>
+            ▶ {t("playBlockedBtn")}
+          </button>
         </div>
       )}
 
