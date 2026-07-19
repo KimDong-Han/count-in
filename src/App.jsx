@@ -22,6 +22,7 @@ import {
   Drum,
   Eraser,
   FileText,
+  Link2,
   Maximize,
   Minimize,
   Moon,
@@ -29,11 +30,13 @@ import {
   Pause,
   Play,
   Save,
+  Search,
   Settings2,
   Share2,
   Sun,
   Target,
   Timer,
+  Trash2,
   Volume2,
   X,
 } from "lucide-react";
@@ -575,7 +578,14 @@ export default function App() {
           fc.classList.add("show");
           fh.classList.remove("show");
         } else {
-          fh.textContent = L.flipHintText(sec, jumpTxt);
+          // 시트 모드(폰·세로 태블릿): 상단이 좁으니 숫자만 담은 작은 원 (목업 3c)
+          if (sheetModeRef.current) {
+            fh.textContent = String(sec);
+            fh.classList.add("num");
+          } else {
+            fh.textContent = L.flipHintText(sec, jumpTxt);
+            fh.classList.remove("num");
+          }
           fh.classList.add("show");
           fc.classList.remove("show");
         }
@@ -1678,8 +1688,10 @@ export default function App() {
           <p className="sub">{t("subline")}</p>
         </header>
 
+        {/* ①②③ 스텝 레일: 세로선 + 브라스 원형 번호 (번호는 장식 — 라벨이 의미 전달) */}
         <div className="controls">
           <div className="group grow">
+            <span className="stepNum" aria-hidden="true">1</span>
             <div className="labelRow">
               <label htmlFor="url">{t("step1")}</label>
               <button
@@ -1704,16 +1716,25 @@ export default function App() {
           </div>
 
           <div className="group">
-            <label>{t("step2")}</label>
+            <span className="stepNum" aria-hidden="true">2</span>
+            <label>
+              {t("step2")} <span className="labelHint">{t("step2Hint")}</span>
+            </label>
             <div className="uploadRow">
-              <label className="upload" id="pdf-picker">
+              <label
+                className={"upload" + (pdf.total > 0 ? " loaded" : "")}
+                id="pdf-picker"
+              >
                 {/* accept 미지정 — 삼성 인터넷은 PDF accept가 있으면 카메라·갤러리만 띄운다
                     (태블릿은 데스크톱 모드 UA라 기기 감지도 불가). PDF 검증은 로드 단계에서 함. */}
                 <input type="file" onChange={onFile} />
                 <span>
-                  <FileText size={15} />
+                  {pdf.total > 0 ? <Check size={15} /> : <FileText size={15} />}
                   {pdf.total > 0 ? t("pdfLoaded", pdf.total) : t("pdfPick")}
                 </span>
+                {pdf.total > 0 && (
+                  <span className="pdfChange">{t("pdfChange")}</span>
+                )}
               </label>
               {pdf.total > 0 && (
                 <button
@@ -1730,8 +1751,23 @@ export default function App() {
           </div>
 
           <div className="group">
+            <span className="stepNum" aria-hidden="true">3</span>
             <div className="labelRow">
               <label htmlFor="delay">{t("step3")}</label>
+              {/* 카운트 초: 자주 만지는 값이라 라벨 줄에 컴팩트하게 (버튼 라벨 "N초 후 시작"이 따라감) */}
+              <span className="delayMini">
+                <input
+                  id="delay"
+                  type="number"
+                  min="0"
+                  max="60"
+                  step="1"
+                  value={delay}
+                  disabled={noWait}
+                  onChange={(e) => setDelay(e.target.value)}
+                />
+                {t("secUnit")}
+              </span>
               <label
                 className="switch-mini noWaitToggle"
                 title={t("noWaitTitle")}
@@ -1745,20 +1781,8 @@ export default function App() {
                 <span>{t("noWait")}</span>
               </label>
             </div>
+            {/* 주 버튼이 카운트 초를 라벨로 흡수("N초 후 시작") — 초 입력은 세부 설정에 */}
             <div className="startRow">
-              <div className="time-inputs">
-                <input
-                  id="delay"
-                  type="number"
-                  min="0"
-                  max="60"
-                  step="1"
-                  value={delay}
-                  disabled={noWait}
-                  onChange={(e) => setDelay(e.target.value)}
-                />
-                <span className="unit">{t("secCount")}</span>
-              </div>
               <button
                 id="start-button"
                 className={"btn startBtn" + (demoFlash ? " flash" : "")}
@@ -1766,9 +1790,14 @@ export default function App() {
                 disabled={playDisabled}
                 title={playDisabled ? t("startDisabledTitle") : ""}
               >
-                {playLabel}
+                {armed && isPlaying ? <Pause size={15} /> : <Play size={15} />}
+                {armed
+                  ? playLabel
+                  : noWait || !(parseInt(delay, 10) > 0)
+                    ? t("startNow")
+                    : t("startAfterSec", parseInt(delay, 10))}
               </button>
-              {/* 시작과 전체화면 시작을 한 줄에 배치 */}
+              {/* 전체화면 시작은 48px 아이콘 버튼으로 — 주 버튼과 경쟁시키지 않는다 */}
               {fsSupported && !armed && (
                 <button
                   className="btn ghost startFsBtn"
@@ -1777,8 +1806,9 @@ export default function App() {
                   }}
                   disabled={playDisabled}
                   title={t("startFsTitle")}
+                  aria-label={t("startFsTitle")}
                 >
-                  <Maximize size={14} /> {t("startFs")}
+                  <Maximize size={17} />
                 </button>
               )}
             </div>
@@ -1792,6 +1822,7 @@ export default function App() {
                 min="0"
                 max="100"
                 value={volume}
+                style={{ "--fill": volume + "%" }}
                 onChange={(e) => setVolume(parseInt(e.target.value, 10))}
                 aria-label={t("volAria")}
               />
@@ -2007,6 +2038,7 @@ export default function App() {
         </div>
 
         <div className="sideActions">
+          {/* 저장·공유를 한 줄에 (목업 1b) — 저장 이름 입력 중엔 입력줄이 그 자리를 차지 */}
           {saveOpen ? (
             <div className="saveRow">
               <input
@@ -2031,27 +2063,29 @@ export default function App() {
               </button>
             </div>
           ) : (
-            <button
-              className={"btn tonal savePresetBtn" + (savedFlash ? " saved" : "")}
-              onClick={openSave}
-            >
-              {savedFlash ? (
-                <>
-                  <Check size={14} /> {t("savedFlash", savedFlash.name)}
-                </>
-              ) : (
-                <>
-                  <Save size={14} /> {t("savePreset")}
-                </>
-              )}
-            </button>
+            <div className="sideRow">
+              <button
+                className={"btn tonal savePresetBtn" + (savedFlash ? " saved" : "")}
+                onClick={openSave}
+              >
+                {savedFlash ? (
+                  <>
+                    <Check size={14} /> {t("savedFlash", savedFlash.name)}
+                  </>
+                ) : (
+                  <>
+                    <Save size={14} /> {t("savePreset")}
+                  </>
+                )}
+              </button>
+              <button
+                className="btn ghost sharePresetBtn"
+                onClick={() => openShare("new")}
+              >
+                <Share2 size={14} /> {t("shareBtn")}
+              </button>
+            </div>
           )}
-          <button
-            className="btn ghost sharePresetBtn"
-            onClick={() => openShare("new")}
-          >
-            <Share2 size={14} /> {t("shareBtn")}
-          </button>
           {loadedShareId != null && (
             <button
               className="btn ghost shareEditBtn"
@@ -2085,20 +2119,23 @@ export default function App() {
           >
             {playLabel}
           </button>
-          <button
-            className="btn ghost navPrev"
-            onClick={() => jump(-1)}
-            disabled={navDisabled}
-          >
-            {t("prevBtn")}
-          </button>
-          <button
-            className="btn ghost navNext"
-            onClick={() => jump(1)}
-            disabled={navDisabled}
-          >
-            {t("nextBtn")}
-          </button>
+          {/* 이전·다음: 흰 배경 + 구분선 한 덩어리 세그먼트 */}
+          <div className="navSeg">
+            <button
+              className="btn ghost navPrev"
+              onClick={() => jump(-1)}
+              disabled={navDisabled}
+            >
+              {t("prevBtn")}
+            </button>
+            <button
+              className="btn ghost navNext"
+              onClick={() => jump(1)}
+              disabled={navDisabled}
+            >
+              {t("nextBtn")}
+            </button>
+          </div>
           <button
             className="btn ghost"
             onClick={stopPlayback}
@@ -2149,6 +2186,7 @@ export default function App() {
           <div className="spacer"></div>
           <div className="page-ind">
             <b>{pdf.total ? pdf.pageNum : "–"}</b> / {pdf.total || "–"}
+            {t("pageUnit")}
           </div>
           <div className="clock" ref={clockRef}></div>
         </div>
@@ -2288,6 +2326,7 @@ export default function App() {
               min="0"
               max="100"
               value={volume}
+              style={{ "--fill": volume + "%" }}
               onChange={(e) => setVolume(parseInt(e.target.value, 10))}
               aria-label={t("volAria")}
             />
@@ -2417,37 +2456,58 @@ export default function App() {
           onClick={() => setShowPresetSearch(false)}
         >
           <div className="presetSearchCard" onClick={(e) => e.stopPropagation()}>
-            <div className="presetSearchTitle">{t("searchPresetTitle")}</div>
-            <p className="presetSearchHint">{t("searchPresetHint")}</p>
-            <div className="searchByRow">
-              <select
-                className="searchBySel"
-                value={presetSearchBy}
-                onChange={(e) => setPresetSearchBy(e.target.value)}
-                aria-label={t("searchByLabel")}
+            {/* 아이콘 헤더 + 닫기 (목업 4b) */}
+            <div className="modalHead">
+              <span className="modalHeadIcon" aria-hidden="true">
+                <Search size={17} />
+              </span>
+              <div className="modalHeadTxt">
+                <div className="presetSearchTitle">{t("searchPresetTitle")}</div>
+                <p className="presetSearchHint">{t("searchPresetHint")}</p>
+              </div>
+              <button
+                type="button"
+                className="modalClose"
+                onClick={() => setShowPresetSearch(false)}
+                aria-label={t("closeBtn")}
               >
-                <option value="name">{t("searchByName")}</option>
-                <option value="singer">{t("searchBySinger")}</option>
-                <option value="uploader">{t("searchByUploader")}</option>
-              </select>
+                <X size={16} />
+              </button>
+            </div>
+            {/* 검색 기준: select → 세그먼트 */}
+            <div className="seg searchBySeg" role="group" aria-label={t("searchByLabel")}>
+              {[
+                ["name", t("searchByName")],
+                ["singer", t("searchBySinger")],
+                ["uploader", t("searchByUploader")],
+              ].map(([k, label]) => (
+                <button
+                  key={k}
+                  type="button"
+                  className={presetSearchBy === k ? "active" : ""}
+                  aria-pressed={presetSearchBy === k}
+                  onClick={() => setPresetSearchBy(k)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            {/* 검색바: 아이콘 + 입력 + 인라인 검색 버튼 */}
+            <div className="searchBar">
+              <Search size={15} aria-hidden="true" />
               <input
                 autoFocus
                 type="text"
-                className="presetSearchInput"
                 value={presetSearchQuery}
                 onChange={(e) => setPresetSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") runPresetSearch();
                 }}
                 placeholder={t("searchPresetPlaceholder")}
+                aria-label={t("searchPresetTitle")}
               />
-            </div>
-            <div className="presetSearchActions">
-              <button className="btn ghost small" onClick={() => setShowPresetSearch(false)}>
-                {t("cancelBtn")}
-              </button>
               <button
-                className="btn small"
+                className="btn small searchGo"
                 disabled={!presetSearchQuery.trim() || presetSearchBusy}
                 onClick={runPresetSearch}
               >
@@ -2465,6 +2525,7 @@ export default function App() {
                 ) : (
                   presetSearchResults.map((preset) => (
                     <div className="sharedPresetRow" key={preset.id}>
+                      <div className="sharedThumb" aria-hidden="true"></div>
                       <div className="sharedPresetInfo">
                         <strong>{preset.name}</strong>
                         <span>
@@ -2508,21 +2569,23 @@ export default function App() {
                         <div className="sharedPresetActions">
                           <button
                             type="button"
-                            className="btn ghost tiny"
+                            className="btn tiny loadShareBtn"
                             onClick={() => loadSharedPreset(preset.id)}
                           >
                             {t("loadShared")}
                           </button>
                           <button
                             type="button"
-                            className="btn ghost tiny delShareBtn"
+                            className="iconBtn delShareBtn"
+                            title={t("delShared")}
+                            aria-label={t("delShared")}
                             onClick={() => {
                               setDeleteTarget(preset.id);
                               setDeletePw("");
                               setDeleteErr("");
                             }}
                           >
-                            {t("delShared")}
+                            <Trash2 size={15} />
                           </button>
                         </div>
                       )}
@@ -2544,8 +2607,27 @@ export default function App() {
           onClick={() => setShowShare(false)}
         >
           <div className="presetSearchCard" onClick={(e) => e.stopPropagation()}>
-            <div className="presetSearchTitle">
-              {shareMode === "edit" ? t("shareEditTitle") : t("shareModalTitle")}
+            {/* 아이콘 헤더 + 닫기 (목업 4c) */}
+            <div className="modalHead">
+              <span className="modalHeadIcon" aria-hidden="true">
+                <Share2 size={16} />
+              </span>
+              <div className="modalHeadTxt">
+                <div className="presetSearchTitle">
+                  {shareMode === "edit" ? t("shareEditTitle") : t("shareModalTitle")}
+                </div>
+                <p className="presetSearchHint">
+                  {shareMode === "edit" ? t("shareEditHint") : t("shareModalHint")}
+                </p>
+              </div>
+              <button
+                type="button"
+                className="modalClose"
+                onClick={() => setShowShare(false)}
+                aria-label={t("closeBtn")}
+              >
+                <X size={16} />
+              </button>
             </div>
             {shareDone != null ? (
               <>
@@ -2562,58 +2644,75 @@ export default function App() {
               </>
             ) : (
               <>
-                <p className="presetSearchHint">
-                  {shareMode === "edit" ? t("shareEditHint") : t("shareModalHint")}
-                </p>
+                {/* 올라가는 내용 요약: 쪽수 · 넘김 개수 · 링크 상태 */}
+                <div className="shareSummary">
+                  <span>
+                    <FileText size={14} /> {t("pagesCount", pdf.total)}
+                  </span>
+                  <span>
+                    <Timer size={14} />{" "}
+                    {t("shareFlips", cueText.filter((v) => v && v.trim()).length)}
+                  </span>
+                  <span className={url.trim() ? "" : "off"}>
+                    <Link2 size={14} />{" "}
+                    {url.trim() ? t("shareLinkOk") : t("shareLinkNone")}
+                  </span>
+                </div>
                 {!url.trim() && (
                   <div className="shareNeedUrl">{t("shareNeedUrl")}</div>
                 )}
-                <label className="shareField">
-                  <span>{t("shareTitle")}</span>
-                  <input
-                    autoFocus
-                    type="text"
-                    className="presetSearchInput"
-                    value={shareTitle}
-                    onChange={(e) => setShareTitle(e.target.value)}
-                    placeholder={t("shareTitlePh")}
-                  />
-                </label>
-                <label className="shareField">
-                  <span>{t("shareSinger")}</span>
-                  <input
-                    type="text"
-                    className="presetSearchInput"
-                    value={shareSinger}
-                    onChange={(e) => setShareSinger(e.target.value)}
-                    placeholder={t("shareSingerPh")}
-                  />
-                </label>
-                {shareMode !== "edit" && (
+                <div className="shareGrid">
                   <label className="shareField">
-                    <span>{t("shareUploader")}</span>
+                    <span>{t("shareTitle")}</span>
+                    <input
+                      autoFocus
+                      type="text"
+                      className="presetSearchInput"
+                      value={shareTitle}
+                      onChange={(e) => setShareTitle(e.target.value)}
+                      placeholder={t("shareTitlePh")}
+                    />
+                  </label>
+                  <label className="shareField">
+                    <span>{t("shareSinger")}</span>
                     <input
                       type="text"
                       className="presetSearchInput"
-                      value={shareUploader}
-                      onChange={(e) => setShareUploader(e.target.value)}
-                      placeholder={t("shareUploaderPh")}
+                      value={shareSinger}
+                      onChange={(e) => setShareSinger(e.target.value)}
+                      placeholder={t("shareSingerPh")}
                     />
                   </label>
-                )}
-                <label className="shareField">
-                  <span>{t("sharePw")}</span>
-                  <input
-                    type="password"
-                    className="presetSearchInput"
-                    value={sharePw}
-                    onChange={(e) => setSharePw(e.target.value)}
-                    placeholder={t("sharePwPh")}
-                  />
-                  <small className="shareHint">
-                    {shareMode === "edit" ? t("shareEditPwHint") : t("sharePwHint")}
-                  </small>
-                </label>
+                </div>
+                <div className="shareGrid">
+                  {shareMode !== "edit" && (
+                    <label className="shareField">
+                      <span>{t("shareUploader")}</span>
+                      <input
+                        type="text"
+                        className="presetSearchInput"
+                        value={shareUploader}
+                        onChange={(e) => setShareUploader(e.target.value)}
+                        placeholder={t("shareUploaderPh")}
+                      />
+                    </label>
+                  )}
+                  <label className="shareField">
+                    <span>
+                      {t("sharePw")} <span className="labelHint">{t("sharePwSub")}</span>
+                    </span>
+                    <input
+                      type="password"
+                      className="presetSearchInput"
+                      value={sharePw}
+                      onChange={(e) => setSharePw(e.target.value)}
+                      placeholder={t("sharePwPh")}
+                    />
+                  </label>
+                </div>
+                <small className="shareHint">
+                  {shareMode === "edit" ? t("shareEditPwHint") : t("sharePwHint")}
+                </small>
                 <div className="presetSearchActions">
                   <button className="btn ghost small" onClick={() => setShowShare(false)}>
                     {t("cancelBtn")}
@@ -2623,6 +2722,7 @@ export default function App() {
                     disabled={!shareValid || shareBusy}
                     onClick={submitShare}
                   >
+                    <Share2 size={14} />{" "}
                     {shareBusy
                       ? t("sharing")
                       : shareMode === "edit"

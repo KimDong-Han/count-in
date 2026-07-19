@@ -30,6 +30,22 @@ export function CuePanel({
 
   return (
     <div className="cuePanel">
+      {/* 타이틀 + '들으며 찍기'(브라스 텍스트 버튼) 한 줄 — 목업 1b 타이밍 카드 */}
+      <div className="cueTitleRow">
+        <span className="cueTitle">{t("cueTitle")}</span>
+        {!tuneMode && (
+          <button
+            id="tune-enter-button"
+            type="button"
+            className="cueTuneLink"
+            onClick={onEnterTune}
+            disabled={playDisabled}
+            title={playDisabled ? t("tuneEnterDisabledTitle") : t("tuneEnterTitle")}
+          >
+            <Timer size={13} /> {t("tuneEnter")}
+          </button>
+        )}
+      </div>
       <div className="cueHead">
         <div className="cueDesc">
           {tuneMode ? t("cueDescTune") : t("cueDescNormal")}
@@ -40,17 +56,6 @@ export function CuePanel({
           <span>{t("repeatToggle")}</span>
         </label>
         <div className="cueActions">
-          {!tuneMode && (
-            <button
-              id="tune-enter-button"
-              className="btn small tonal tuneEnter"
-              onClick={onEnterTune}
-              disabled={playDisabled}
-              title={playDisabled ? t("tuneEnterDisabledTitle") : t("tuneEnterTitle")}
-            >
-              <Timer size={14} /> {t("tuneEnter")}
-            </button>
-          )}
           <button className="btn ghost small" onClick={onClear}>
             {t("clearBtn")}
           </button>
