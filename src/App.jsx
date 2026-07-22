@@ -1572,6 +1572,10 @@ export default function App() {
           {t("guideDismiss")}
         </button>
       </div>
+      {/* 토스 'Value first, cost later': 노력 없는 체험(데모)을 스텝 안내보다 먼저 */}
+      <button type="button" className="btn tonal demoBtn" onClick={loadDemo}>
+        <Play size={14} /> {t("demoBtn")}
+      </button>
       <div className="guideSteps">
         {[1, 2, 3, 4].map((step) => {
           const helpText =
@@ -1596,9 +1600,6 @@ export default function App() {
           );
         })}
       </div>
-      <button type="button" className="btn tonal demoBtn" onClick={loadDemo}>
-        <Play size={14} /> {t("demoBtn")}
-      </button>
       <p className="guideNote"><span>✦</span> {t("guideNote")}</p>
     </section>
   );
@@ -2503,7 +2504,7 @@ export default function App() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") runPresetSearch();
                 }}
-                placeholder={t("searchPresetPlaceholder")}
+                placeholder={t("searchPresetPlaceholder", presetSearchBy)}
                 aria-label={t("searchPresetTitle")}
               />
               <button

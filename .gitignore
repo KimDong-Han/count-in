@@ -10,3 +10,14 @@ WORKLOG.md
 .agents
 .claude/skills
 skills-lock.json
+tossdes/DESIGN.md
+tossdes/toss.theme.css
+tossdes/toss.tokens.css
+tossdes/toss.tokens.json
+# 디자인 시스템·에이전트 로컬 파일 (사이트 빌드에 불필요)
+DESIGN.md
+CLAUDE.md
+AGENTS.md
+.omd/
+.cursor/
+docs/

@@ -38,7 +38,13 @@ export const STR = {
       "유튜브 반주와 악보 PDF를 넣고, 페이지 넘길 시각을 정해두면 그 시각에 넘어가요.",
     importPreset: "프리셋 검색",
     searchPresetTitle: "공유된 타이밍 찾기",
-    searchPresetPlaceholder: "곡 이름을 입력하세요",
+    // 검색 기준(제목/가수/닉네임)에 따라 입력 안내도 함께 바뀐다
+    searchPresetPlaceholder: (by) =>
+      by === "singer"
+        ? "가수 이름을 입력하세요"
+        : by === "uploader"
+          ? "닉네임을 입력하세요"
+          : "곡 이름을 입력하세요",
     searchPresetHint: "곡 이름·가수·닉네임으로 검색해요.",
     searchBtn: "검색",
     searchResults: "검색 결과",
@@ -85,8 +91,8 @@ export const STR = {
     closeBtn: "닫기",
     pagesCount: (n) => `${n}페이지`,
     guideAria: "첫 사용 안내",
-    guideKicker: "처음이라면 여기부터",
-    guideTitle: "세 가지만 넣으면 바로 연습할 수 있어요",
+    guideKicker: "처음이세요?",
+    guideTitle: "연주에 집중하세요 — 악보는 저절로 넘어가요",
     guideDismiss: "오늘은 안 보기",
     guideStep1: "유튜브 링크",
     guideStep2: "악보 PDF",
@@ -95,11 +101,11 @@ export const STR = {
     guideHelp1: "반주 주소를 붙여넣어요",
     guideHelp2: "파일을 골라 악보를 열어요",
     guideHelp3:
-      "들으면서 시간 설정 클릭(shift로 설정가능해요)&\n프리셋 검색으로 공유된 타이밍을 불러올 수도 있어요",
+      "재생하며 '지금 넘김'을 누르면 그 순간이 저장돼요.\n공유된 타이밍을 검색해 불러올 수도 있어요",
     guideHelp4: "연주 시작!",
-    guideNext2: "가지고있는 악보PDF파일을 올려주세요",
+    guideNext2: "가지고 있는 악보 PDF를 올려 주세요",
     guideNote: "PDF는 이 브라우저 안에서만 열리고 업로드되지 않아요.",
-    demoBtn: "예제로 30초 체험",
+    demoBtn: "준비물 없이 30초 체험",
     demoReady: "데모 준비 완료 — ▶ 시작을 누르면 카운트 후 악보가 저절로 넘어가요.",
     demoReadyToast: "▶ 시작을 눌러보세요",
     demoFail: "데모를 불러오지 못했어요. 네트워크를 확인해 주세요.",
@@ -351,7 +357,12 @@ export const STR = {
       "Add a YouTube backing track and a score PDF; pages turn at the times you set.",
     importPreset: "Search presets",
     searchPresetTitle: "Find shared timings",
-    searchPresetPlaceholder: "Enter a song name",
+    searchPresetPlaceholder: (by) =>
+      by === "singer"
+        ? "Enter an artist name"
+        : by === "uploader"
+          ? "Enter a nickname"
+          : "Enter a song name",
     searchPresetHint: "Search by title, artist, or uploader.",
     searchBtn: "Search",
     searchResults: "Search results",
@@ -399,8 +410,8 @@ export const STR = {
     closeBtn: "Close",
     pagesCount: (n) => `${n} pages`,
     guideAria: "Getting started guide",
-    guideKicker: "Start here",
-    guideTitle: "Add three things, then start rehearsing",
+    guideKicker: "First time here?",
+    guideTitle: "Focus on playing — pages turn themselves",
     guideDismiss: "Hide for today",
     guideStep1: "YouTube link",
     guideStep2: "Score PDF",
@@ -409,11 +420,11 @@ export const STR = {
     guideHelp1: "Paste the backing track URL",
     guideHelp2: "Choose the score file",
     guideHelp3:
-      "Listen and click set time (Shift also works)\nYou can also load shared timings from preset search",
+      "While it plays, tap 'Turn now' to save that moment.\nYou can also search shared timings",
     guideHelp4: "Start playing!",
-    guideNext2: "Upload your score PDF file",
+    guideNext2: "Upload your score PDF",
     guideNote: "Your PDF stays in this browser and is never uploaded.",
-    demoBtn: "Try a 30-second demo",
+    demoBtn: "Try a 30-second demo — no setup",
     demoReady: "Demo ready — press ▶ Start and watch the pages turn by themselves.",
     demoReadyToast: "Press ▶ Start",
     demoFail: "Couldn't load the demo. Please check your network.",

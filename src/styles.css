@@ -1,33 +1,35 @@
-/* ---- 리허설룸 테마: 악보 종이(라이트) + 잉크 + 브라스 + 송진 그린 ----
-   paper  종이 배경 / panel 카드 / ink 본문 / brass 금관(주 액션·정체성)
-   accent 송진(로진) 그린 — 인터랙션(포커스·활성·토글). 목재 무대·악기 케이스 안감 */
+/* ---- 토스 스타일 테마 (DESIGN.md, bootstrapped from toss) ----
+   paper  페이지 배경(grey100) / panel 카드(흰색) / ink 본문(grey900)
+   brass  = 인터랙션 블루 #3182f6 (주 액션·진행·타이밍 시그널 — 변수명은 호환 유지)
+   accent = 같은 블루: 포커스·활성·토글. 기능적 파랑 하나만 쓴다 */
 :root{
-  --paper:#F2F3EF;
-  --panel:#FFFFFF;
-  --ink:#23283B;
-  --muted:#6C7180;
-  --line:#E2E3DC;
-  --line-strong:#CFD1C6;
-  --field:#FCFCFA;
-  --brass:#C08A25;
-  --brass-deep:#96690F;
-  --btn-hi:#F6C95E;
-  --btn-lo:#E2A83B;
-  --accent:#2F6B4F;
-  --night:#12102a; /* 유튜브 미니 플레이어 등 어두운 요소용 */
-  --side:#FAFAF6;        /* 사이드바 */
-  --track:#EDEEE8;       /* 세그·토글 트랙 */
-  --chip:#F6F6F1;        /* 프리셋 칩 */
-  --rowBg:#F8F8F4;       /* cue 줄 */
-  --kbd:#F1F1EB;         /* kbd·code 칩 */
-  --stageBg:#E9EAE3;     /* 악보 무대 */
+  --paper:#f2f4f6;
+  --panel:#ffffff;
+  --ink:#191f28;
+  --muted:#6b7684;
+  --line:#e5e8eb;
+  --line-strong:#d1d6db;
+  --field:#f2f4f6;
+  --brass:#3182f6;
+  --brass-deep:#1b64da;
+  --btn-hi:#4593fc;
+  --btn-lo:#2272eb;
+  --accent:#3182f6;
+  --body:#4e5968;        /* 강조 본문·중립 액션 텍스트 (toss body) */
+  --night:#001a33; /* 유튜브 미니 플레이어 등 어두운 요소용 */
+  --side:#f2f4f6;        /* 사이드바 = 회색 캔버스, 그 위에 흰 카드 */
+  --track:#f2f4f6;       /* 세그·토글 트랙 (흰 카드 안) */
+  --chip:#f2f4f6;        /* 프리셋 칩 (흰 카드 안) */
+  --rowBg:#f2f4f6;       /* cue 줄 (흰 카드 안) */
+  --kbd:#f2f4f6;         /* kbd·code 칩 */
+  --stageBg:#e5e8eb;     /* 악보 무대 */
   --barBg:rgba(255,255,255,.95); /* 고정 바(튠·모바일)·배지 */
-  --brassTint:#FBF4E3;   /* 브라스 옅은 배경 */
+  --brassTint:#e8f3ff;   /* 블루 weak 배경 (toss weak-background) */
   --stageGlow:rgba(255,255,255,.9); /* 무대 위 글자 후광 */
-  --danger:#C4425A;      /* 삭제·초기화·오류 (한 곳에서만 관리) */
-  --ok-hi:#5FBF8B;       /* 저장 완료 그라데이션 */
-  --ok-lo:#3E9A68;
-  --placeholder:#A2A6B0;
+  --danger:#e42939;      /* 삭제·초기화·오류 (한 곳에서만 관리) */
+  --ok-hi:#4593fc;       /* 저장 완료 — 토스식 파란 확인 */
+  --ok-lo:#2272eb;
+  --placeholder:#b0b8c1;
   /* 포커스·강조 링: 테마의 액센트/브라스에서 파생 — 다크 전환 시 자동 추종 */
   --ring:color-mix(in oklab, var(--accent) 18%, transparent);
   --brass-ring:color-mix(in oklab, var(--brass) 20%, transparent);
@@ -35,8 +37,8 @@
   --ok-tint:color-mix(in oklab, var(--accent) 7%, var(--panel));
   --ok-line:color-mix(in oklab, var(--accent) 32%, var(--panel));
   --gold-line:color-mix(in oklab, var(--brass) 40%, var(--panel));
-  /* 모서리 스케일 (칩 → 카드 순) */
-  --r-xs:6px; --r-sm:8px; --r-md:10px; --r-lg:12px; --r-xl:16px; --r-2xl:20px; --r-pill:999px;
+  /* 모서리 스케일 (토스 rounded: 4/6 소형 표면, 버튼 8/10/14/16, 카드 16~20) */
+  --r-xs:4px; --r-sm:6px; --r-md:10px; --r-lg:14px; --r-xl:16px; --r-2xl:20px; --r-pill:999px;
   /* z-index 층: 무대 배지 < 플로팅 < 토스트 < 바 < 튠바 < 팝오버 < 시트 < 오버레이 < 최상단 */
   --z-stage:5; --z-float:20; --z-toast:25; --z-bar:30; --z-tunebar:35;
   --z-pop:40; --z-sheet:45; --z-overlay:50; --z-top:60;
@@ -46,35 +48,37 @@
   --ease-drawer:cubic-bezier(.32,.72,0,1);
   color-scheme:light;
 }
-/* 다크: 늦은 연습·어두운 무대 대기실용 — 같은 잉크·브라스 정체성의 밤 버전 */
+/* 다크: 늦은 연습·어두운 무대 대기실용 — 토스 grey 램프의 밤 버전 (블루는 한 단계 밝게) */
 :root[data-theme="dark"]{
-  --paper:#131420;
-  --panel:#1C1E2C;
-  --ink:#EDEEF6;
-  --muted:#9CA1B5;
-  --line:#2B2D3D;
-  --line-strong:#3B3E52;
-  --field:#181A27;
-  --brass:#D9A63C;
-  --brass-deep:#E8BE63;
-  --btn-hi:#F2C14E;
-  --btn-lo:#D99A2B;
-  --accent:#5FA382;
-  --side:#171927;
-  --track:#262838;
-  --chip:#232537;
-  --rowBg:#20222F;
-  --kbd:#262838;
-  --stageBg:#0F1019;
-  --barBg:rgba(23,25,39,.95);
-  --brassTint:#2E2817;
+  --paper:#101419;
+  --panel:#191f28;
+  --ink:#f2f4f6;
+  --muted:#8b95a1;
+  --line:#2c3542;
+  --line-strong:#4e5968;
+  --field:#232b36;
+  --brass:#4593fc;
+  --brass-deep:#82b4ff;
+  --btn-hi:#5aa1ff;
+  --btn-lo:#3d8bfa;
+  --accent:#4593fc;
+  --body:#b0b8c1;
+  --side:#101419;
+  --track:#232b36;
+  --chip:#232b36;
+  --rowBg:#232b36;
+  --kbd:#2a323e;
+  --stageBg:#0b0e13;
+  --barBg:rgba(22,27,34,.95);
+  --brassTint:#1a2b45;
   --stageGlow:rgba(0,0,0,.6);
+  --placeholder:#6b7684;
   color-scheme:dark;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body,#root{min-height:100%}
 body{
-  font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  font-family:"Toss Product Sans","Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
   background:var(--paper); /* 틴트 그라데이션 제거 — 종이는 조용해야 한다 */
   color:var(--ink);
   min-height:100vh;
@@ -82,17 +86,18 @@ body{
 /* 2단 레이아웃: 왼쪽 컨트롤 사이드바 + 오른쪽 악보 메인 */
 .app{display:flex;height:100vh;overflow:hidden}
 .sidebar{
-  flex:0 0 336px;width:336px;height:100vh;overflow-y:auto;
-  padding:18px 18px 22px;border-right:1px solid var(--line);
+  flex:0 0 344px;width:344px;height:100vh;overflow-y:auto;
+  padding:20px 16px 22px;
   background:var(--side);
-  display:flex;flex-direction:column;gap:16px;
+  display:flex;flex-direction:column;gap:12px;
 }
 .main{flex:1;min-width:0;height:100vh;display:flex;flex-direction:column;padding:14px 18px 12px;position:relative}
 
-header{margin-bottom:2px}
-.eyebrow{font-size:13px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink);font-weight:800}
-.eyebrow::before{content:"♩ ";color:var(--brass);letter-spacing:0}
-h1.eyebrow{font-weight:800} /* 메트로놈 h1(SEO용)도 같은 모양 유지 */
+/* 헤더: 대문자 트래킹 대신 토스식 워드마크 — 크고 담백하게 */
+header{margin-bottom:4px;padding:0 4px}
+.eyebrow{font-size:17px;letter-spacing:-.01em;color:var(--ink);font-weight:700}
+.eyebrow::before{content:"♩ ";color:var(--brass)}
+h1.eyebrow{font-weight:700} /* 메트로놈 h1(SEO용)도 같은 모양 유지 */
 .eyebrowRow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
 .pageLink{
   display:inline-flex;align-items:center;gap:5px;
@@ -104,27 +109,31 @@ h1.eyebrow{font-weight:800} /* 메트로놈 h1(SEO용)도 같은 모양 유지 *
 .headLinks{display:flex;align-items:center;gap:6px}
 .themeBtn{font:inherit;font-size:12px;cursor:pointer;line-height:1.3;padding:4px 9px}
 .langBtn{font-weight:700;letter-spacing:.03em;min-width:31px;text-align:center}
-h1{font-size:15px;font-weight:800;letter-spacing:-.01em;line-height:1.45}
-h1 .accent{color:var(--brass-deep)}
-.sub{color:var(--muted);font-size:12.5px;margin-top:5px;line-height:1.5}
+h1{font-size:18px;font-weight:700;letter-spacing:-.02em;line-height:1.4;margin-top:10px}
+h1 .accent{color:var(--brass)}
+.sub{color:var(--muted);font-size:13px;margin-top:4px;line-height:1.55}
 
 /* 첫 방문 안내: 사이드바 안에서만 짧게 머무는 리허설 큐 */
-/* 안내 카드: 노란 광고 배너가 아니라 조용한 종이 한 장 */
-.firstRun{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-xl);padding:14px 13px 12px}
+/* 안내 카드: 회색 캔버스 위 보더 없는 흰 카드 */
+.firstRun{background:var(--panel);border:0;border-radius:var(--r-2xl);padding:18px 16px 14px}
 .firstRunHead{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:11px}
-.firstRunKicker{display:block;color:var(--brass-deep);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;margin-bottom:3px}
-.firstRun h2{font-size:14px;line-height:1.35;letter-spacing:-.02em}
+.firstRunKicker{display:block;color:var(--brass);font-size:12px;font-weight:600;margin-bottom:3px}
+.firstRun h2{font-size:15px;line-height:1.4;letter-spacing:-.02em}
 .guideDismiss{border:0;background:transparent;color:var(--muted);cursor:pointer;font:inherit;font-size:11px;padding:2px 0;white-space:nowrap}
 .guideDismiss:hover{color:var(--ink)}
 .guideSteps{display:grid;gap:5px}
 .guideStep{display:flex;align-items:center;gap:9px;width:100%;text-align:left;border:1px solid transparent;border-radius:var(--r-sm);background:transparent;color:var(--ink);padding:7px 8px;font:inherit}
-.guideDot{display:inline-flex;align-items:center;justify-content:center;flex:0 0 22px;width:22px;height:22px;border-radius:50%;background:var(--track);border:1px solid var(--line-strong);font-size:11px;font-weight:800;color:var(--muted)}
+.guideDot{display:inline-flex;align-items:center;justify-content:center;flex:0 0 22px;width:22px;height:22px;border-radius:8px;background:var(--track);border:0;font-size:11px;font-weight:700;color:var(--body)}
 .guideStepText{display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-width:0;flex:1}
 .guideStepText b{font-size:12px;white-space:nowrap}
 .guideStepText small{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* 데모 체험 버튼: 새 사용자의 첫 행동 — 카드 안에서 잘 보이되 브라스는 아님 */
-.demoBtn{width:100%;margin-top:10px;font-size:13px;padding:10px 14px}
-.stage.empty > .demoBtn{width:auto;margin-top:2px}
+/* 데모 = 노력 없는 첫 가치 체험 — weak 블루 CTA로 스텝 안내보다 먼저 보인다
+   (.btn.tonal보다 뒤에 정의된 tonal 규칙을 이기도록 3클래스 특이도) */
+.demoBtn{width:100%;margin:2px 0 12px;font-size:13.5px;padding:12px 14px}
+.btn.tonal.demoBtn{background:var(--brassTint);color:var(--brass-deep)}
+.btn.tonal.demoBtn:hover:not(:disabled){background:color-mix(in oklab, var(--brass) 14%, var(--brassTint));color:var(--brass-deep)}
+.stage.empty > .demoBtn{width:auto;margin:2px 0 0}
 /* 데모 로드 직후 ▶ 시작 버튼이 한 번 반짝 — 다음 행동 안내 */
 .startBtn.flash{animation:chipFlash 1.6s ease-out}
 .guideNote{display:flex;gap:6px;align-items:flex-start;color:var(--muted);font-size:11px;line-height:1.45;margin-top:9px;padding:0 2px}
@@ -138,32 +147,36 @@ h1 .accent{color:var(--brass-deep)}
 /* ③ 시작: 풀폭 브라스 주 버튼("N초 후 시작") + 48px 전체화면 아이콘 버튼 */
 .startRow{display:flex;align-items:stretch;gap:8px}
 .startRow .startBtn{
-  flex:1;padding:14px 12px;font-size:15px;font-weight:800;white-space:nowrap;
-  border-radius:var(--r-lg);
-  box-shadow:0 6px 18px color-mix(in oklab, var(--brass) 35%, transparent);
+  flex:1;padding:14px 12px;font-size:15px;font-weight:700;white-space:nowrap;
+  border-radius:var(--r-xl); /* TDS xlarge 주 액션 = 16px */
 }
-.startRow .startFsBtn{
+/* (.btn.ghost 전역 규칙보다 높은 특이도로 — 회색 면 아이콘 버튼 유지) */
+.startRow .btn.startFsBtn{
   flex:0 0 48px;width:48px;min-width:0;padding:0;box-shadow:none;
-  border-radius:var(--r-lg);border-color:var(--line-strong);color:var(--muted);
+  border-radius:var(--r-xl);background:var(--field);color:var(--body);
 }
-.startRow .startFsBtn:hover:not(:disabled){color:var(--ink);border-color:var(--accent)}
+.startRow .btn.startFsBtn:hover:not(:disabled){color:var(--ink);background:color-mix(in oklab, var(--ink) 6%, var(--field))}
 
 /* 세부 설정 접이 */
+/* 세부 설정: 흰 카드 리스트 행 — 보더 대신 면 */
 .advToggle{
   display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px;
-  background:var(--panel);border:1px solid var(--line);border-radius:var(--r-md);color:var(--muted);
-  font-size:12.5px;padding:10px 12px;cursor:pointer;transition:color .15s,border-color .15s;text-align:left;
+  background:var(--panel);border:0;border-radius:var(--r-xl);color:var(--body);
+  font-size:13px;font-weight:600;padding:13px 16px;cursor:pointer;transition:color .15s,background-color .15s;text-align:left;
 }
-.advToggle:hover{color:var(--ink);border-color:var(--accent)}
+.advToggle:hover{color:var(--ink)}
 .advToggle span{display:inline-flex;align-items:center;gap:6px}
-.advBody{display:flex;flex-direction:column;gap:14px}
+.advBody{display:flex;flex-direction:column;gap:16px;background:var(--panel);border-radius:var(--r-2xl);padding:16px}
 
 /* 사이드바 하단: 저장·공유 한 줄 + 초기화 */
 .sideActions{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:6px}
 .sideRow{display:flex;gap:8px}
 .sideRow .btn{flex:1;min-width:0}
-.sideActions .btn{box-shadow:none;font-size:13px;padding:10px 12px}
-.sideActions .resetAllBtn{font-size:12px;padding:8px 12px}
+.sideActions .btn{box-shadow:none;font-size:13px;padding:11px 12px}
+/* 회색 캔버스 위라 weak/ghost 보조 버튼은 흰 면으로 */
+.sideActions .btn.tonal,.sideActions .btn.ghost{background:var(--panel);color:var(--body)}
+.sideActions .btn.tonal:hover:not(:disabled),.sideActions .btn.ghost:hover:not(:disabled){background:color-mix(in oklab, var(--ink) 5%, var(--panel));color:var(--ink)}
+.sideActions .btn.ghost.resetAllBtn{font-size:12px;padding:9px 12px;background:transparent}
 .sideActions .resetAllBtn.arm{color:var(--danger);border-color:var(--danger)}
 .btn.savePresetBtn.saved{
   background:var(--ok-lo);color:#fff;border-color:transparent;
@@ -171,22 +184,22 @@ h1 .accent{color:var(--brass-deep)}
 }
 .saveRow{display:flex;gap:6px;align-items:center}
 .saveRow input{
-  flex:1;min-width:0;background:var(--panel);border:1px solid var(--line-strong);border-radius:var(--r-md);
+  flex:1;min-width:0;background:var(--panel);border:1px solid transparent;border-radius:var(--r-md);
   color:var(--ink);font-size:14px;padding:10px 12px;
 }
 .saveRow input:focus{outline:none;box-shadow:0 0 0 3px var(--ring)}
 .saveRow .btn{white-space:nowrap;box-shadow:none}
 
 /* 저장한 곡 프리셋 */
-.presets{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-xl);padding:12px 12px 13px}
+.presets{background:var(--panel);border:0;border-radius:var(--r-2xl);padding:16px 16px 15px}
 .presetsHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
-.presetsHead span{font-size:12px;color:var(--muted);letter-spacing:.02em}
+.presetsHead span{font-size:13px;font-weight:600;color:var(--ink)}
 .presetShareBtn{padding:5px 9px;font-size:11px}
 .presetsEmpty{font-size:12px;color:var(--placeholder);line-height:1.5}
 .presetsHint{font-size:12px;color:var(--brass-deep);opacity:.9;margin-top:9px;line-height:1.5}
 .presetList{display:flex;flex-wrap:wrap;gap:8px}
-.presetChip{display:flex;align-items:stretch;background:var(--chip);border:1px solid var(--line-strong);border-radius:var(--r-sm);overflow:hidden}
-.presetChip:hover{border-color:var(--accent)}
+.presetChip{display:flex;align-items:stretch;background:var(--chip);border:0;border-radius:var(--r-md);overflow:hidden}
+.presetChip:hover{background:color-mix(in oklab, var(--ink) 6%, var(--chip))}
 .presetChip.flash{border-color:var(--brass);animation:chipFlash 1.6s ease-out}
 @keyframes chipFlash{
   0%{box-shadow:0 0 0 0 color-mix(in oklab, var(--brass) 55%, transparent)}
@@ -195,18 +208,19 @@ h1 .accent{color:var(--brass-deep)}
 }
 .presetLoad{background:transparent;border:none;color:var(--ink);font-size:13px;padding:7px 10px;cursor:pointer;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .presetLoad:hover{color:var(--brass-deep)}
-.presetDel{background:transparent;border:none;border-left:1px solid var(--line);color:var(--muted);font-size:15px;line-height:1;padding:0 9px;cursor:pointer}
+.presetDel{background:transparent;border:none;color:var(--muted);font-size:15px;line-height:1;padding:0 9px;cursor:pointer}
 .presetDel:hover{color:var(--danger)}
 
-/* ①②③ 스텝 레일: 세로 연결선 + 브라스 원형 번호 — "넣고 → 찍고 → 시작"이 한 흐름으로 보이게 */
-.controls{position:relative;display:flex;flex-direction:column;gap:16px;padding-left:34px}
-.controls::before{content:"";position:absolute;left:12px;top:12px;bottom:12px;width:2px;background:var(--line)}
-.controls .group{position:relative}
+/* ①②③ 스텝: 흰 카드 하나에 담고, 번호는 파란 weak 뱃지 — 레일·연결선 없이 여백으로 구분 */
+.controls{
+  position:relative;display:flex;flex-direction:column;gap:20px;
+  background:var(--panel);border-radius:var(--r-2xl);padding:18px 16px;
+}
+.controls .group{position:relative;padding-left:32px}
 .stepNum{
-  position:absolute;left:-34px;top:-1px;width:24px;height:24px;border-radius:50%;
-  background:var(--brass);color:#fff;font-size:12px;font-weight:800;
+  position:absolute;left:0;top:-1px;width:23px;height:23px;border-radius:8px;
+  background:var(--brassTint);color:var(--brass-deep);font-size:12px;font-weight:700;
   display:flex;align-items:center;justify-content:center;
-  box-shadow:0 0 0 4px var(--side); /* 연결선이 원을 통과해 보이지 않게 사이드바색 링 */
 }
 /* 프리셋 검색: 라벨 옆 브라스 텍스트 링크 */
 .btn.ghost.presetImportBtn{
@@ -222,8 +236,9 @@ h1 .accent{color:var(--brass-deep)}
 .uploadRow .upload{color:var(--muted);font-weight:400;font-size:14px}
 .group .switch-mini{font-weight:400}
 
+/* 토스 box 필드: 조용한 회색 채움, 보더 없음 — 포커스에만 파란 보더+링 */
 input[type=text]{
-  width:100%;background:var(--field);border:1px solid var(--line-strong);border-radius:var(--r-md);
+  width:100%;background:var(--field);border:1px solid transparent;border-radius:var(--r-lg);
   color:var(--ink);font-size:15px;padding:12px 14px;transition:border-color .15s, box-shadow .15s;
 }
 input[type=text]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
@@ -231,7 +246,7 @@ input::placeholder{color:var(--placeholder)}
 
 .time-inputs{display:flex;align-items:center;gap:6px}
 .time-inputs input{
-  width:64px;text-align:center;background:var(--field);border:1px solid var(--line-strong);border-radius:var(--r-md);
+  width:64px;text-align:center;background:var(--field);border:1px solid transparent;border-radius:var(--r-md);
   color:var(--ink);font-size:15px;padding:11px 8px;
 }
 .time-inputs input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
@@ -242,7 +257,7 @@ input::placeholder{color:var(--placeholder)}
 /* ③ 라벨 줄의 컴팩트 카운트 초 입력 — 버튼 라벨 "N초 후 시작"이 이 값을 따라간다 */
 .delayMini{display:inline-flex;align-items:center;gap:4px;margin-left:auto;font-size:12px;color:var(--muted)}
 .delayMini input{
-  width:46px;text-align:center;background:var(--field);border:1px solid var(--line-strong);
+  width:46px;text-align:center;background:var(--field);border:1px solid transparent;
   border-radius:var(--r-sm);color:var(--ink);font-size:13px;padding:5px 4px;
   font-variant-numeric:tabular-nums;
 }
@@ -251,36 +266,40 @@ input::placeholder{color:var(--placeholder)}
 /* 옵션 토글들을 한 줄에 */
 .optRow{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
 
+/* 업로드: 점선 대신 토스식 회색 면 버튼 */
 .upload{
-  display:inline-flex;align-items:center;gap:8px;background:var(--field);border:1px dashed var(--line-strong);
-  border-radius:var(--r-md);color:var(--muted);font-size:14px;padding:12px 16px;cursor:pointer;
-  transition:border-color .15s,color .15s;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:8px;background:var(--field);border:1px solid transparent;
+  border-radius:var(--r-lg);color:var(--body);font-size:14px;font-weight:600;padding:12px 16px;cursor:pointer;
+  transition:background-color .15s,color .15s;white-space:nowrap;
 }
-.upload:hover{border-color:var(--accent);color:var(--ink)}
+.upload:hover{background:color-mix(in oklab, var(--ink) 5%, var(--field));color:var(--ink)}
 .upload input{display:none}
 .upload span{display:inline-flex;align-items:center;gap:7px}
-/* 악보 로드됨: 초록 성공 칩 (체크 + N페이지 불러옴 + 바꾸기) */
+/* 악보 로드됨: weak 블루 확인 칩 (체크 + N페이지 불러옴 + 바꾸기) */
 .uploadRow .upload.loaded{
-  border-style:solid;border-color:var(--ok-line);background:var(--ok-tint);color:var(--accent);
+  background:var(--brassTint);color:var(--brass-deep);
 }
-.uploadRow .upload.loaded:hover{border-color:var(--accent);color:var(--accent)}
+.uploadRow .upload.loaded:hover{background:color-mix(in oklab, var(--brass) 14%, var(--brassTint));color:var(--brass-deep)}
 .upload .pdfChange{margin-left:auto;color:var(--muted);font-size:12px}
 .upload.loaded:hover .pdfChange{color:var(--ink)}
 .uploadRow{display:flex;align-items:stretch;gap:8px}
 .uploadRow .upload{flex:1;min-width:0}
 .pdfClear{
   display:inline-flex;align-items:center;justify-content:center;padding:0 13px;
-  background:var(--panel);border:1px solid var(--line-strong);border-radius:var(--r-md);
-  color:var(--muted);cursor:pointer;transition:color .15s,border-color .15s;
+  background:var(--field);border:0;border-radius:var(--r-lg);
+  color:var(--muted);cursor:pointer;transition:color .15s,background-color .15s;
 }
-.pdfClear:hover{color:var(--danger);border-color:var(--danger)}
+.pdfClear:hover{color:var(--danger);background:color-mix(in oklab, var(--danger) 8%, var(--field))}
 
-.seg{display:flex;gap:6px;background:var(--track);border:1px solid var(--line);border-radius:var(--r-md);padding:5px}
+.seg{display:flex;gap:4px;background:var(--track);border:0;border-radius:var(--r-lg);padding:4px}
 .seg button{
   flex:1;border:none;background:transparent;color:var(--muted);font-size:13px;padding:8px 12px;
   border-radius:var(--r-sm);cursor:pointer;transition:background .15s,color .15s;white-space:nowrap;
 }
-.seg button.active{background:var(--accent);color:#fff;font-weight:600}
+/* 토스식 세그먼트: 회색 트랙 위 흰 알약 + 진한 글자 */
+.seg button.active{background:var(--panel);color:var(--ink);font-weight:600;box-shadow:0 1px 3px rgba(25,31,40,.12)}
+/* 다크: 패널이 트랙보다 어두워 뒤집히므로 알약을 한 단계 밝게 */
+:root[data-theme="dark"] .seg button.active{background:#3b4552;box-shadow:0 1px 3px rgba(0,0,0,.3)}
 .seg button:hover:not(.active){color:var(--ink)}
 
 .slider-row{display:flex;align-items:center;gap:12px;min-width:200px}
@@ -291,7 +310,7 @@ input[type=range]{
 }
 input[type=range]::-webkit-slider-thumb{
   -webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;
-  background:#fff;border:2px solid var(--brass);box-shadow:0 2px 6px rgba(35,40,59,.25);cursor:pointer;
+  background:#fff;border:2px solid var(--brass);box-shadow:0 2px 6px rgba(25,31,40,.25);cursor:pointer;
 }
 input[type=range]::-moz-range-thumb{
   width:18px;height:18px;border-radius:50%;border:2px solid var(--brass);background:#fff;cursor:pointer;
@@ -309,23 +328,23 @@ input[type=range]::-moz-range-thumb{
 .switch-mini{position:relative;display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none}
 .switch-mini input{position:absolute;opacity:0}
 .switch-mini .box{
-  width:44px;height:26px;border-radius:var(--r-pill);background:var(--track);border:1px solid var(--line-strong);
-  position:relative;transition:background .15s,border-color .15s;flex:0 0 auto;
+  width:44px;height:26px;border-radius:var(--r-pill);background:var(--line-strong);border:0;
+  position:relative;transition:background .15s;flex:0 0 auto;
 }
 .switch-mini .box::after{
-  content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
-  background:#fff;box-shadow:0 1px 3px rgba(35,40,59,.3);transition:transform .18s var(--ease-out);
+  content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(25,31,40,.25);transition:transform .18s var(--ease-out);
 }
-.switch-mini input:checked + .box{background:var(--accent);border-color:var(--accent)}
+.switch-mini input:checked + .box{background:var(--accent)}
 .switch-mini input:checked + .box::after{transform:translateX(18px)}
 .switch-mini span{font-size:13px;color:var(--ink)}
 
 /* cue panel (사이드바 안) — 타이밍 카드 */
 .cuePanel{
-  background:var(--panel);border:1px solid var(--line);border-radius:var(--r-xl);padding:15px;
+  background:var(--panel);border:0;border-radius:var(--r-2xl);padding:16px;
 }
 .cueTitleRow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
-.cueTitle{font-size:12.5px;font-weight:700;color:var(--ink)}
+.cueTitle{font-size:13px;font-weight:600;color:var(--ink)}
 /* '들으며 찍기': 브라스 텍스트 버튼 */
 .cueTuneLink{
   display:inline-flex;align-items:center;gap:5px;border:none;background:transparent;
@@ -342,22 +361,21 @@ input[type=range]::-moz-range-thumb{
 .cueActions{display:flex;gap:8px;flex-shrink:0}
 .cueRows{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;max-height:200px;overflow:auto;padding-right:4px}
 .cueRow{
-  position:relative;overflow:hidden; /* hot 줄 좌측 브라스 바(::before)를 모서리에 맞춰 자르기 */
-  display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--rowBg);border:1px solid var(--line);
-  border-radius:var(--r-md);padding:8px 10px;transition:border-color .15s,background-color .15s;
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--rowBg);border:0;
+  border-radius:var(--r-lg);padding:9px 10px;transition:background-color .15s;
 }
-/* 시각은 monospace + 굵게 — 줄 오른쪽 끝에 */
+/* 시각은 monospace + 굵게 — 회색 줄 위라 흰 필드로 반전 */
 .cueRow input[type=text]{
-  flex:0 1 76px;width:76px;min-width:64px;margin-left:auto;text-align:center;
+  flex:0 1 76px;width:76px;min-width:64px;margin-left:auto;text-align:center;background:var(--panel);
   font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;font-size:14px;padding:7px 6px;
 }
-/* 다음에 넘어갈 줄: 브라스 틴트 + 좌측 3px 브라스 바 */
-.cueRow.hot{background:var(--brassTint);border-color:var(--gold-line)}
-.cueRow.hot::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--brass)}
+/* 다음에 넘어갈 줄: weak 블루 면 + 파란 시각 — 보더·바 없이 면으로 신호 */
+.cueRow.hot{background:var(--brassTint)}
 .cueRow.hot input[type=text]{color:var(--brass-deep)}
 .cueLabel{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
 .cueSel{
-  background:var(--panel);border:1px solid var(--line-strong);border-radius:var(--r-sm);color:var(--ink);
+  background:var(--panel);border:1px solid transparent;border-radius:var(--r-sm);color:var(--ink);
   font-size:13px;padding:5px 4px;font-variant-numeric:tabular-nums;cursor:pointer;
 }
 .cueSel:focus{outline:none;border-color:var(--accent)}
@@ -368,7 +386,7 @@ input[type=range]::-moz-range-thumb{
   padding:4px 6px;cursor:pointer;
 }
 .cueDelBtn:hover{color:var(--danger)}
-.cueAdd{width:100%;box-shadow:none}
+.btn.ghost.cueAdd{width:100%;box-shadow:none;background:var(--field);color:var(--body)}
 
 /* 타이밍 입력 모드 */
 .cueRowTools{display:flex;gap:4px}
@@ -381,21 +399,21 @@ input[type=range]::-moz-range-thumb{
 /* "몇 페이지로?" 팝업 (도돌이표 곡에서 찍은 직후, 음악 일시정지 상태) */
 .pickOverlay{z-index:var(--z-top)}
 .pickCard{
-  background:var(--panel);border:1px solid var(--line);border-radius:var(--r-2xl);
-  padding:26px 24px;display:flex;flex-direction:column;gap:14px;align-items:center;
-  box-shadow:0 24px 60px rgba(20,24,40,.35);max-width:min(92vw,420px);
+  background:var(--panel);border:0;border-radius:24px;
+  padding:28px 24px;display:flex;flex-direction:column;gap:14px;align-items:center;
+  box-shadow:0 16px 48px rgba(20,24,40,.28);max-width:min(92vw,420px);
 }
 .pickTime{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--brass-deep);font-variant-numeric:tabular-nums}
-.pickTitle{font-size:19px;font-weight:800}
+.pickTitle{font-size:19px;font-weight:700}
 .pickNext{width:100%;padding:13px 18px;font-size:16px}
 .pickPages{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-height:170px;overflow:auto}
 .pickCard .cancel{margin-top:2px}
 .tuneJumpBtn{
   flex:0 0 auto;min-width:46px;padding:11px 0;border-radius:var(--r-md);cursor:pointer;
-  background:var(--panel);border:1px solid var(--line-strong);color:var(--ink);font-size:16px;
+  background:var(--track);border:0;color:var(--ink);font-size:16px;font-weight:600;
   font-variant-numeric:tabular-nums;
 }
-.tuneJumpBtn:hover:not(:disabled){border-color:var(--brass);color:var(--brass-deep)}
+.tuneJumpBtn:hover:not(:disabled){background:var(--brassTint);color:var(--brass-deep)}
 .tuneJumpBtn:disabled{opacity:.35;cursor:default}
 /* 하단 바가 가리지 않도록 본문·플레이어·토스트를 위로 */
 .app.tune .main{padding-bottom:158px}
@@ -404,17 +422,17 @@ input[type=range]::-moz-range-thumb{
 .tuneBar{
   position:fixed;left:0;right:0;bottom:0;z-index:var(--z-tunebar);
   display:flex;flex-direction:column;gap:8px;
-  padding:10px 14px calc(12px + env(safe-area-inset-bottom));
-  background:var(--barBg);border-top:2px solid var(--brass);
+  padding:12px 16px calc(14px + env(safe-area-inset-bottom));
+  background:var(--barBg);border-top:0;border-radius:20px 20px 0 0;
   -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-  box-shadow:0 -10px 28px rgba(20,24,40,.14);
+  box-shadow:0 -8px 28px rgba(20,24,40,.16);
 }
 .tuneRow1{display:flex;align-items:center;gap:10px}
 .tuneRow1 .spacer{flex:1}
 .tuneBadge{
   display:inline-flex;align-items:center;gap:5px;
-  font-size:12px;color:var(--brass-deep);border:1px solid var(--brass);
-  border-radius:var(--r-pill);padding:4px 10px;white-space:nowrap;background:var(--brassTint);
+  font-size:12px;font-weight:600;color:var(--brass-deep);border:0;
+  border-radius:var(--r-pill);padding:5px 11px;white-space:nowrap;background:var(--brassTint);
 }
 .tuneTime{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 .tuneSeek{width:100%}
@@ -427,21 +445,22 @@ input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:3
 
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  border:none;cursor:pointer;border-radius:var(--r-lg);font-weight:700;font-size:15px;padding:12px 22px;
+  border:none;cursor:pointer;border-radius:var(--r-lg);font-weight:600;font-size:15px;padding:12px 22px;
   color:#fff;background:var(--brass);
-  box-shadow:0 1px 2px rgba(35,40,59,.15);
+  box-shadow:none; /* 토스: 채운 버튼은 플랫 — 그림자·글로우 없음 */
   transition:transform .14s var(--ease-out),filter .15s var(--ease-out);
 }
 .btn svg{flex:0 0 auto}
-.btn:hover:not(:disabled){filter:brightness(1.06)}
+.btn:hover:not(:disabled){filter:brightness(.94)} /* 파랑을 살짝 어둡게 — #3182f6→#2272eb 방향 */
 .btn:active:not(:disabled){transform:translateY(1px) scale(.98)}
-/* disabled여도 정체성 색은 유지 — 회색 떡이 아니라 흐린 브라스 */
+/* disabled여도 정체성 색은 유지 — 회색 떡이 아니라 흐린 파랑 */
 .btn:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
-.btn.ghost{background:var(--panel);border:1px solid var(--line);color:var(--ink);box-shadow:none;font-weight:600}
-.btn.ghost:hover:not(:disabled){color:var(--ink);border-color:var(--line-strong);background:var(--field)}
-/* 보조 액션: tonal은 더 이상 황동 틴트가 아니라 조용한 패널 — 브라스는 시작 버튼 전용 */
-.btn.tonal{background:var(--panel);color:var(--ink);border:1px solid var(--line-strong);box-shadow:none;font-weight:600}
-.btn.tonal:hover:not(:disabled){filter:none;border-color:var(--accent);color:var(--ink)}
+/* ghost: 텍스트에 가까운 조용한 버튼 — 보더 없음 */
+.btn.ghost{background:transparent;border:1px solid transparent;color:var(--body);box-shadow:none;font-weight:600}
+.btn.ghost:hover:not(:disabled){filter:none;color:var(--ink);background:var(--track)}
+/* 보조 액션: 토스 weak 버튼 — 회색 면 + 진한 회색 글자, 보더 없음 */
+.btn.tonal{background:var(--track);color:var(--body);border:1px solid transparent;box-shadow:none;font-weight:600}
+.btn.tonal:hover:not(:disabled){filter:none;background:color-mix(in oklab, var(--ink) 6%, var(--track));color:var(--ink)}
 .btn.small{padding:9px 14px;font-size:13px}
 .btn.tiny{padding:6px 10px;font-size:12px;border-radius:var(--r-sm)}
 
@@ -453,82 +472,74 @@ input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:3
 }
 .kbhint b{color:var(--ink);font-weight:600;font-size:11px}
 .kbMore{
-  width:18px;height:18px;border-radius:50%;border:1px solid var(--line-strong);background:var(--panel);
+  width:18px;height:18px;border-radius:50%;border:0;background:var(--panel);
   color:var(--muted);font-size:11px;line-height:1;cursor:pointer;padding:0;flex:0 0 auto;
 }
-.kbMore:hover{color:var(--ink);border-color:var(--accent)}
+.kbMore:hover{color:var(--ink)}
 .kbPop{
   position:absolute;top:calc(100% + 10px);left:0;z-index:var(--z-pop);min-width:236px;
-  background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);padding:12px 14px;
-  box-shadow:0 16px 40px rgba(20,24,40,.2);
+  background:var(--panel);border:0;border-radius:var(--r-xl);padding:14px 16px;
+  box-shadow:0 8px 28px rgba(20,24,40,.18);
 }
-.kbPopTitle{font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.kbPopTitle{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px}
 .kbRow{display:flex;align-items:center;gap:10px;padding:3px 0;font-size:12px}
 .kbRow kbd{
   flex:0 0 58px;text-align:center;background:var(--kbd);border:1px solid var(--line);
   border-radius:var(--r-xs);padding:2px 6px;color:var(--brass-deep);font-size:11px;
 }
 .kbRow span{color:var(--muted)}
+/* kbd·code 칩: 보더 없는 회색 면으로 통일 */
+.cueDesc code,.cueDesc kbd,.kbRow kbd,.tapBtn kbd{border:0}
 /* 상단 조작 버튼은 작게 — 악보 영역을 최대한 확보.
    ghost는 보더 없는 텍스트 버튼으로: 상단은 시작(브라스) 하나만 눈에 띄면 된다 */
 .navbar .btn{padding:7px 13px;font-size:13px;border-radius:var(--r-sm);box-shadow:none}
 .navbar .btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
 .navbar .btn.ghost:hover:not(:disabled){background:var(--track);border-color:transparent;color:var(--ink)}
 /* 이전·다음: 흰 배경 한 덩어리 세그먼트 (구분선) */
-.navbar .navSeg{display:flex;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
-.navbar .navSeg .btn{border-radius:0;background:transparent;border-color:transparent;color:var(--muted)}
-.navbar .navSeg .btn + .btn{border-left:1px solid var(--line)}
-.navbar .navSeg .btn:hover:not(:disabled){background:var(--field);color:var(--ink)}
-/* 페이지 인디케이터: 칩으로 강조 — 현재 쪽 숫자가 커야 무대에서 읽힌다 */
+.navbar .navSeg{display:flex;align-items:stretch;background:var(--panel);border:0;border-radius:var(--r-md);overflow:hidden}
+.navbar .navSeg .btn{border-radius:0;background:transparent;border-color:transparent;color:var(--body)}
+.navbar .navSeg .btn:hover:not(:disabled){background:var(--track);color:var(--ink)}
+/* 페이지 인디케이터: 흰 칩(보더 없음) — 현재 쪽 숫자가 커야 무대에서 읽힌다 */
 .page-ind{
   display:inline-flex;align-items:baseline;gap:5px;
-  background:var(--panel);border:1px solid var(--line);border-radius:var(--r-sm);
-  padding:5px 12px;font-size:13px;color:var(--placeholder);font-variant-numeric:tabular-nums;white-space:nowrap;
+  background:var(--panel);border:0;border-radius:var(--r-md);
+  padding:6px 12px;font-size:13px;color:var(--placeholder);font-variant-numeric:tabular-nums;white-space:nowrap;
 }
-.page-ind b{font-size:16px;font-weight:800;color:var(--ink)}
+.page-ind b{font-size:16px;font-weight:700;color:var(--ink)}
 .clock{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;margin-left:4px;min-width:64px;text-align:right}
 
-/* 진행바 = 오선보: 5선 위를 브라스 음표가 지나간다 */
-.progress{position:relative;height:13px;margin-bottom:8px;background:transparent;border:none;border-radius:0;overflow:visible}
-.progress::before{
-  content:"";position:absolute;left:0;right:0;top:1px;height:11px;pointer-events:none;
-  background:repeating-linear-gradient(to bottom,var(--line-strong) 0 1px,transparent 1px 2.5px);
-}
+/* 진행바: 토스식 플랫 바 — 회색 트랙 위 파란 채움 (표시 전용) */
+.progress{position:relative;height:4px;margin:4px 0 10px;background:var(--track);border:none;border-radius:var(--r-pill);overflow:hidden}
 .progress .bar{
-  position:relative;height:100%;width:0;border-radius:0;
-  background:linear-gradient(90deg,transparent,color-mix(in oklab, var(--brass) 16%, transparent));
+  position:relative;height:100%;width:0;border-radius:var(--r-pill);
+  background:var(--brass);
   transition:width .08s linear;
-}
-.progress .bar::after{
-  content:"";position:absolute;right:-5px;top:50%;width:11px;height:9px;border-radius:50%;
-  background:var(--brass);transform:translateY(-50%) rotate(-18deg);
-  box-shadow:0 1px 3px rgba(35,40,59,.35);
 }
 
 .stage{
-  background:var(--stageBg);border:1px solid var(--line);border-radius:var(--r-xl);min-height:220px;flex:1;
+  background:var(--stageBg);border:0;border-radius:var(--r-2xl);min-height:220px;flex:1;
   display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden;position:relative;
 }
 .stage.empty{color:var(--muted);font-size:14px;text-align:center;flex-direction:column;gap:10px}
 .stage.empty .big{font-size:40px;color:var(--muted);opacity:.8}
 .privacyHint{font-size:12px;line-height:1.5;opacity:.8}
-canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-shadow:0 14px 36px rgba(35,40,59,.22)}
+canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-shadow:0 6px 20px rgba(25,31,40,.14)}
 
 /* 넘김 예고 배지 (followLoop에서 직접 갱신) */
 .flipHint{
   position:absolute;top:10px;right:12px;z-index:var(--z-stage);pointer-events:none;
-  background:var(--barBg);border:1px solid var(--brass);border-radius:var(--r-pill);
-  color:var(--brass-deep);font-size:12px;padding:6px 12px;opacity:0;transition:opacity .2s;
-  font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 4px 12px rgba(35,40,59,.12);
+  background:var(--barBg);border:0;border-radius:var(--r-pill);
+  color:var(--brass-deep);font-size:12px;font-weight:600;padding:7px 13px;opacity:0;transition:opacity .2s;
+  font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 4px 12px rgba(25,31,40,.12);
 }
 .flipHint.show{opacity:1}
 /* 시트 모드(폰·세로 태블릿): 문장 배지 대신 숫자만 담은 30px 원 — followLoop가 .num을 켠다 */
 .flipHint.num{
   display:flex;align-items:center;justify-content:center;
   width:30px;height:30px;padding:0;border-radius:50%;
-  background:var(--panel);border:1.5px solid var(--brass);
-  color:var(--brass-deep);font-size:15px;font-weight:800;
-  box-shadow:0 4px 12px rgba(35,40,59,.18);
+  background:var(--panel);border:0;
+  color:var(--brass-deep);font-size:15px;font-weight:700;
+  box-shadow:0 4px 12px rgba(25,31,40,.2);
 }
 
 /* 큰 넘김 카운트다운 — 악보 오른쪽 여백 세로 중앙 (followLoop에서 직접 갱신, 여백 좁으면 미표시) */
@@ -539,7 +550,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
 }
 .flipCue.show{opacity:1}
 .flipCueNum{
-  font-weight:800;color:var(--brass);line-height:1;
+  font-weight:700;color:var(--brass);line-height:1;
   font-variant-numeric:tabular-nums;text-shadow:0 2px 14px var(--stageGlow);
 }
 .flipCueNum.pulse{animation:cuePulse .4s ease-out}
@@ -566,7 +577,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
 /* 조작 피드백 토스트 — 밝은 화면 위에 잘 보이게 잉크색 칩 */
 .toast{
   position:absolute;left:50%;bottom:64px;transform:translate(-50%,0);z-index:var(--z-toast);pointer-events:none;
-  background:rgba(35,40,59,.94);border:1px solid rgba(35,40,59,.94);border-radius:var(--r-xl);
+  background:rgba(25,31,40,.94);border:1px solid rgba(25,31,40,.94);border-radius:var(--r-xl);
   color:#fff;font-size:13px;padding:8px 16px;box-shadow:0 8px 24px rgba(20,24,40,.3);
   opacity:1;font-variant-numeric:tabular-nums;
   transition:opacity .18s var(--ease-out),transform .18s var(--ease-out);
@@ -577,7 +588,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
   .toast{opacity:0;transform:translate(-50%,6px)}
 }
 /* 다크에선 토스트를 반전(밝은 칩)해 또렷하게 */
-:root[data-theme="dark"] .toast{background:#EDEEF6;border-color:#EDEEF6;color:#23283B}
+:root[data-theme="dark"] .toast{background:#f2f4f6;border-color:#f2f4f6;color:#191f28}
 
 /* 전체화면 — 사이드바를 숨기고 악보를 최대로. 하단 타이밍 바는 유지 */
 .app.fs .sidebar{display:none}
@@ -610,36 +621,36 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
 .app.video .ytHost::before{display:none}
 .app.video .stage.empty .big,.app.video .stage.empty .emptyHint,.app.video .stage.empty .privacyHint{display:none}
 .ytHost::before{
-  content:"반주 ▾";position:absolute;top:0;left:0;right:0;font-size:11px;color:#cfd0dd;
-  background:rgba(9,8,22,.7);padding:3px 8px;z-index:2;cursor:pointer;
+  content:"반주 ▾";position:absolute;top:0;left:0;right:0;font-size:11px;color:#d1d6db;
+  background:rgba(0,12,30,.72);padding:3px 8px;z-index:2;cursor:pointer;
 }
 .ytHost iframe{width:100%;height:100%;border:0}
 /* 접힘: 악보를 가리지 않는 작은 칩 — 영상만 숨고 소리는 계속 (띠 탭으로 전환) */
 .ytHost.min{width:130px;aspect-ratio:auto;height:26px;border-radius:var(--r-pill)}
 .ytHost.min::before{
   content:"▸ 반주 보기";bottom:0;display:flex;align-items:center;justify-content:center;
-  padding:0;background:rgba(9,8,22,.85);
+  padding:0;background:rgba(0,12,30,.85);
 }
 /* 영어 UI일 때의 띠·칩 문구 (data-lang은 i18n.jsx의 applyLangAttr가 세팅) */
 :root[data-lang="en"] .ytHost::before{content:"Video ▾"}
 :root[data-lang="en"] .ytHost.min::before{content:"▸ Show video"}
 
-/* countdown overlay — 어두운 스크림 위 브라스 숫자 */
+/* countdown overlay — 토스 마케팅 다크(rgba(0,12,30)) 스크림 위 밝은 파랑 숫자 */
 .overlay{
   position:fixed;inset:0;
-  background:radial-gradient(700px 500px at 50% 40%, color-mix(in oklab, var(--accent) 28%, transparent), rgba(18,16,42,.9));
+  background:rgba(0,12,30,.88);
   backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:var(--z-overlay);
 }
 .overlay.show{display:flex}
-.overlay .get-ready{color:#C9CBE0;letter-spacing:.3em;text-transform:uppercase;font-size:13px;margin-bottom:20px}
-.count{font-size:min(42vw,220px);font-weight:800;line-height:1;color:var(--btn-hi);text-shadow:0 0 60px color-mix(in oklab, var(--btn-hi) 50%, transparent)}
+.overlay .get-ready{color:#8b95a1;letter-spacing:.3em;text-transform:uppercase;font-size:13px;margin-bottom:20px}
+.count{font-size:min(42vw,220px);font-weight:700;line-height:1;color:var(--btn-hi);text-shadow:0 0 60px color-mix(in oklab, var(--btn-hi) 50%, transparent)}
 .count.tick{animation:pop .9s ease-out}
 @keyframes pop{
   0%{transform:scale(.4);opacity:0}
   25%{transform:scale(1.08);opacity:1}
   100%{transform:scale(1);opacity:1}
 }
-.overlay .go{color:var(--btn-hi);font-size:min(22vw,120px);font-weight:800;letter-spacing:.05em}
+.overlay .go{color:var(--btn-hi);font-size:min(22vw,120px);font-weight:700;letter-spacing:.05em}
 /* 자동재생 차단 복구: 어두운 스크림 위 큰 탭 버튼 */
 .resumeBtn{font-size:18px;padding:16px 36px;border-radius:var(--r-pill)}
 .cancel{
@@ -653,8 +664,8 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
 
 .presetSearchCard{
   width:min(92vw,440px);max-height:min(86vh,86dvh);overflow-y:auto;
-  background:var(--panel);border:1px solid var(--line);
-  border-radius:var(--r-2xl);padding:24px;box-shadow:0 24px 60px rgba(20,24,40,.35);
+  background:var(--panel);border:0;
+  border-radius:24px;padding:24px;box-shadow:0 16px 48px rgba(20,24,40,.28);
 }
 /* 모달 아이콘 헤더: 브라스틴트 아이콘 + 타이틀·부제 + 닫기 */
 .modalHead{display:flex;align-items:flex-start;gap:10px}
@@ -669,9 +680,9 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
   background:transparent;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;
 }
 .modalClose:hover{color:var(--ink);background:var(--track)}
-.presetSearchTitle{font-size:17px;font-weight:800;color:var(--ink)}
+.presetSearchTitle{font-size:17px;font-weight:700;color:var(--ink)}
 .presetSearchHint{margin-top:3px;color:var(--muted);font-size:12px;line-height:1.5}
-.presetSearchInput{width:100%;margin-top:16px;background:var(--field);border:1px solid var(--line-strong);border-radius:var(--r-md);color:var(--ink);font:inherit;font-size:14px;padding:11px 12px}
+.presetSearchInput{width:100%;margin-top:16px;background:var(--field);border:1px solid transparent;border-radius:var(--r-lg);color:var(--ink);font:inherit;font-size:14px;padding:11px 12px}
 .presetSearchInput:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
 /* 검색 기준 세그먼트 (제목/가수/닉네임) */
 .searchBySeg{margin-top:16px}
@@ -679,7 +690,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
 /* 검색바: 돋보기 + 입력 + 인라인 브라스 검색 버튼을 한 필드에 */
 .searchBar{
   display:flex;align-items:center;gap:8px;margin-top:12px;
-  background:var(--field);border:1px solid var(--line-strong);border-radius:var(--r-lg);
+  background:var(--field);border:1px solid transparent;border-radius:var(--r-lg);
   padding:6px 6px 6px 13px;color:var(--placeholder);
 }
 .searchBar:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
@@ -693,8 +704,8 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
 .presetSearchEmpty{font-size:13px;color:var(--muted);padding:12px 0}
 /* 결과 카드: 악보 썸네일 + 제목·메타 + 불러오기 + 삭제 */
 .sharedPresetRow{
-  display:flex;align-items:center;gap:12px;padding:11px 12px;margin-top:8px;
-  background:var(--rowBg);border:1px solid var(--line);border-radius:var(--r-lg);
+  display:flex;align-items:center;gap:12px;padding:12px;margin-top:8px;
+  background:var(--rowBg);border:0;border-radius:var(--r-xl);
 }
 .sharedThumb{
   flex:0 0 38px;width:38px;height:48px;border-radius:5px;
@@ -715,13 +726,13 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
 .iconBtn.delShareBtn{color:var(--muted)}
 .iconBtn.delShareBtn:hover{color:var(--danger)}
 .delRow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:1;justify-content:flex-end}
-.delRow input{width:110px;background:var(--field);border:1px solid var(--line-strong);border-radius:var(--r-sm);color:var(--ink);font:inherit;font-size:12px;padding:6px 8px}
+.delRow input{width:110px;background:var(--panel);border:1px solid transparent;border-radius:var(--r-sm);color:var(--ink);font:inherit;font-size:12px;padding:6px 8px}
 .delConfirmBtn{background:var(--danger);color:#fff;border-color:var(--danger)}
 .delErr{font-size:11px;color:var(--danger);font-weight:700;width:100%;text-align:right}
 /* 공유 요약 프리뷰: 쪽수 | 넘김 | 링크 */
 .shareSummary{
   display:flex;align-items:stretch;margin-top:16px;padding:12px 6px;
-  background:var(--brassTint);border:1px solid var(--gold-line);border-radius:var(--r-lg);
+  background:var(--brassTint);border:0;border-radius:var(--r-lg);
 }
 .shareSummary span{
   flex:1;display:inline-flex;align-items:center;justify-content:center;gap:7px;
@@ -745,7 +756,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
 /* SEO 본문 — 도구(첫 화면 100vh) 아래. 스크롤해야 보임. 첫 화면 레이아웃엔 영향 없음 */
 .siteInfo{border-top:1px solid var(--line);background:var(--panel);padding:48px 20px 88px;color:var(--ink)}
 .siteInfoInner{max-width:760px;margin:0 auto;line-height:1.65}
-.siteInfo h2{font-size:20px;font-weight:800;margin:0 0 12px}
+.siteInfo h2{font-size:20px;font-weight:700;margin:0 0 12px}
 .siteInfo h3{font-size:15px;font-weight:700;color:var(--brass-deep);margin:28px 0 8px}
 .siteInfoOrigin{font-size:13px;color:var(--brass-deep);margin:0 0 10px;font-style:italic}
 .siteInfoLead{font-size:14px;color:var(--muted);margin:0}
@@ -767,25 +778,26 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
   justify-content:space-between;
 }
 .metroCard{
-  width:100%;max-width:520px;background:var(--panel);border:1px solid var(--line);
-  border-radius:var(--r-2xl);padding:28px 26px;display:flex;flex-direction:column;gap:20px;
-  box-shadow:0 20px 50px rgba(20,24,40,.12);
+  width:100%;max-width:520px;background:var(--panel);border:0;
+  border-radius:24px;padding:28px 26px;display:flex;flex-direction:column;gap:20px;
+  box-shadow:0 6px 24px rgba(20,24,40,.08);
 }
 .bpmBig{display:flex;align-items:baseline;justify-content:center;gap:10px}
 .bpmNum{
-  font-size:88px;font-weight:800;line-height:1;color:var(--ink);
+  font-size:88px;font-weight:700;line-height:1;color:var(--ink);
   font-variant-numeric:tabular-nums;letter-spacing:-.02em;
 }
 .bpmUnit{font-size:16px;color:var(--muted);letter-spacing:.14em}
 .beatDots{display:flex;justify-content:center;gap:14px;min-height:22px}
 .beatDots .dot{
-  width:16px;height:16px;border-radius:50%;background:var(--track);border:1px solid var(--line-strong);
+  width:16px;height:16px;border-radius:50%;background:var(--line-strong);border:1px solid transparent;
   transition:transform .06s,background .06s,box-shadow .06s;
 }
 .beatDots .dot.accent{border-color:var(--brass)}
+/* 일반 박 = 잉크, 강세 박 = 파랑 — 단일 블루 체계에서도 첫박이 구분되게 */
 .beatDots .dot.on{
-  background:var(--accent);border-color:var(--accent);transform:scale(1.45);
-  box-shadow:0 0 12px color-mix(in oklab, var(--accent) 55%, transparent);
+  background:var(--ink);border-color:var(--ink);transform:scale(1.45);
+  box-shadow:0 0 12px color-mix(in oklab, var(--ink) 40%, transparent);
 }
 .beatDots .dot.accent.on{
   background:var(--brass);border-color:var(--brass);box-shadow:0 0 14px color-mix(in oklab, var(--brass) 60%, transparent);
@@ -799,8 +811,9 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
 .bpmCtl input[type=range]{flex:1}
 .mainCtl{gap:12px}
 .metroStart{flex:1;font-size:17px;padding:14px 22px}
+/* 재생 중 = weak 버튼: 파란 채움(시작)과 확실히 구분 */
 .metroStart.running{
-  background:var(--accent);color:#fff;
+  background:var(--brassTint);color:var(--brass-deep);
 }
 .tapBtn{white-space:nowrap;padding:14px 18px}
 .tapBtn kbd{
@@ -808,6 +821,9 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
   padding:1px 6px;font-size:11px;color:var(--muted);margin-left:2px;
 }
 .metroHint{margin-left:0}
+/* 메트로놈 카드 안 보조 버튼(±BPM·탭 템포): weak 회색 면 */
+.metroCard .btn.ghost{background:var(--field);color:var(--body)}
+.metroCard .btn.ghost:hover:not(:disabled){background:color-mix(in oklab, var(--ink) 6%, var(--field));color:var(--ink)}
 
 /* 태블릿·좁은 창: 사이드바를 좁혀 악보 폭 확보 (특히 세로 태블릿) */
 @media (max-width:1080px){
@@ -829,7 +845,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
     position:fixed;left:0;right:0;bottom:0;z-index:var(--z-sheet);
     flex:none;width:auto;height:auto;max-height:88vh;max-height:88dvh;
     padding:0 16px calc(24px + env(safe-area-inset-bottom));
-    border-right:none;border-top:1px solid var(--line);border-radius:24px 24px 0 0;
+    border-right:none;border-top:0;border-radius:24px 24px 0 0;
     box-shadow:0 -18px 50px rgba(20,24,40,.28);
     transform:translateY(102%);visibility:hidden;
     transition:transform .34s var(--ease-drawer),visibility 0s .34s;
@@ -840,25 +856,25 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
     display:flex;align-items:center;justify-content:space-between;gap:8px;
     position:sticky;top:0;z-index:3;margin:0 -16px;
     padding:17px 14px 10px 18px; /* 위 여백은 그래버 핸들 자리 */
-    background:var(--side);border-bottom:1px solid var(--line);border-radius:24px 24px 0 0;
+    background:var(--side);border-bottom:0;border-radius:24px 24px 0 0;
   }
   /* 그래버 핸들 — 끌어내릴 수 있는 시트라는 신호 */
   .sheetTop::before{
     content:"";position:absolute;top:7px;left:50%;transform:translateX(-50%);
     width:40px;height:5px;border-radius:var(--r-pill);background:var(--line-strong);
   }
-  .sheetTop > span{font-size:16px;font-weight:800;letter-spacing:-.01em}
+  .sheetTop > span{font-size:16px;font-weight:700;letter-spacing:-.01em}
   /* 문의 이메일 — 모바일에선 하단 대신 시트 헤더 빈 공간에 (거슬리지 않게 흐리게) */
   .sheetMail{margin-left:auto;margin-right:4px;font-size:11px;color:var(--muted);opacity:.75;text-decoration:none}
   .sheetMail:hover{color:var(--ink)}
   .sheetClose{
     display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
-    border-radius:50%;border:1px solid var(--line-strong);background:var(--panel);
+    border-radius:50%;border:0;background:var(--panel);
     color:var(--muted);cursor:pointer;
   }
-  .sheetClose:hover{color:var(--ink);border-color:var(--accent)}
+  .sheetClose:hover{color:var(--ink)}
   .sheetBackdrop{
-    position:fixed;inset:0;z-index:calc(var(--z-sheet) - 1);background:rgba(18,16,42,.4);
+    position:fixed;inset:0;z-index:calc(var(--z-sheet) - 1);background:rgba(0,12,30,.45);
     animation:backdropIn .2s ease;
   }
   @keyframes backdropIn{from{opacity:0}to{opacity:1}}
@@ -887,7 +903,7 @@ canvas{max-width:100%;max-height:100%;height:auto;border-radius:var(--r-sm);box-
   .mobileBar{
     display:flex;position:fixed;left:0;right:0;bottom:0;z-index:var(--z-bar);align-items:center;gap:8px;
     padding:10px 12px calc(10px + env(safe-area-inset-bottom));
-    background:var(--barBg);border-top:1px solid var(--line-strong);
+    background:var(--barBg);border-top:1px solid var(--line);
     -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
     box-shadow:0 -8px 22px rgba(20,24,40,.12);
   }
