@@ -76,7 +76,7 @@ export default function App() {
   });
   const [delay, setDelay] = useState(4);
   const [volume, setVolume] = useState(80);
-  const [rate, setRate] = useState(1); // 재생 속도 0.5 | 0.75 | 1
+  const [rate, setRate] = useState(1); // 재생 속도 0.5~1.0 (0.1 단위)
   const [soundMode, setSoundMode] = useState("stick"); // 'stick' | 'beep' | 'off'
   const [flipMode, setFlipMode] = useState("cue"); // 'cue' | 'interval'
   const [ivMin, setIvMin] = useState(0);
@@ -972,8 +972,10 @@ export default function App() {
     setUrl(p.url ?? "");
     setDelay(p.delay ?? 4);
     setVolume(p.volume ?? 80);
-    setRate(p.rate ?? 1);
-    rateRef.current = p.rate ?? 1;
+    // 예전 프리셋의 0.75 등은 0.1 단위로 반올림 (0.5~1 범위)
+    const r = Math.min(1, Math.max(0.5, Math.round((p.rate ?? 1) * 10) / 10));
+    setRate(r);
+    rateRef.current = r;
     setSoundMode(p.soundMode ?? "stick");
     soundModeRef.current = p.soundMode ?? "stick";
     // 'even'(곡 길이 균등)은 없어진 모드 — 예전 프리셋은 일정 간격으로 대체
@@ -1922,12 +1924,10 @@ export default function App() {
 
               <div className="group">
                 <label>{t("rateLabel")}</label>
-                <div className="seg">
-                  {[
-                    [0.5, t("rate05")],
-                    [0.75, t("rate075")],
-                    [1, t("rate1")],
-                  ].map(([r, label]) => (
+                <div className="seg rateSeg">
+                  {[0.5, 0.6, 0.7, 0.8, 0.9, 1]
+                    .map((r) => [r, r === 1 ? t("rate1") : r.toFixed(1)])
+                    .map(([r, label]) => (
                     <button
                       key={r}
                       type="button"
