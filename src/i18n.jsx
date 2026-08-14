@@ -213,6 +213,15 @@ export const STR = {
     fsExit: "전체화면 종료",
     fsTitle: "브라우저를 전체화면으로 — 자동 넘김은 그대로 돼요",
     fsExitTitle: "전체화면에서 나가요",
+    ensBtn: "합주모드",
+    ensExit: "합주 종료",
+    ensTitle:
+      "반주 없이 페달(블루투스 페이지 터너)·방향키로 직접 넘겨요",
+    ensBadge: "합주모드 — 페달·방향키·화면 탭으로 넘김",
+    ensToast: "합주모드 — 페달이나 방향키로 넘겨보세요",
+    ensLoadBtn: "악보 불러오기",
+    ensLoadOther: "다른 악보 불러오기",
+    ensEmptyHint: "악보 PDF를 불러오면 바로 페달로 넘길 수 있어요",
     kbhintLine: (
       <>
         <b>Space</b> 재생 · <b>←→</b> 페이지 · <b>Shift</b> 지금 넘김(타이밍
@@ -526,6 +535,15 @@ export const STR = {
     fsExit: "Exit fullscreen",
     fsTitle: "Browser fullscreen — auto page turns keep working",
     fsExitTitle: "Leave fullscreen",
+    ensBtn: "Ensemble",
+    ensExit: "Exit ensemble",
+    ensTitle:
+      "Turn pages yourself with a Bluetooth page-turner pedal or arrow keys",
+    ensBadge: "Ensemble mode — turn with pedal, arrow keys, or tap",
+    ensToast: "Ensemble mode — try your pedal or arrow keys",
+    ensLoadBtn: "Load score",
+    ensLoadOther: "Load another score",
+    ensEmptyHint: "Load a score PDF and turn pages with your pedal right away",
     kbhintLine: (
       <>
         <b>Space</b> play · <b>←→</b> pages · <b>M</b> turn now

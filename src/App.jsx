@@ -18,6 +18,7 @@ import {
   deleteSharedPreset,
 } from "./share.js";
 import {
+  BookOpen,
   Check,
   Drum,
   Eraser,
@@ -1333,6 +1334,98 @@ export default function App() {
     if (clockRef.current) clockRef.current.textContent = "";
   }, [stopFollowing, yt, pdf]);
 
+  // ---- 합주모드: 반주 없이 페달(블루투스 페이지 터너)·방향키·화면 탭으로 수동 넘김 ----
+  // 자동 넘김(타이밍 큐)은 그대로 두고, 실제 합주 때 쓰는 수동 모드를 별도로 제공한다.
+  const [ensemble, setEnsemble] = useState(false);
+  const ensembleRef = useRef(false);
+  const wakeLockRef = useRef(null);
+  const enterEnsemble = useCallback(() => {
+    if (armedRef.current) stopPlayback();
+    setEnsemble(true);
+    ensembleRef.current = true;
+    enterFs(); // 버튼·키 입력은 사용자 제스처라 requestFullscreen이 허용된다
+    // 합주 중 화면이 꺼지지 않게 (미지원 브라우저는 조용히 무시)
+    if (navigator.wakeLock && navigator.wakeLock.request) {
+      navigator.wakeLock.request("screen").then(
+        (l) => {
+          wakeLockRef.current = l;
+        },
+        () => {},
+      );
+    }
+    showToast(t("ensToast"), 2600);
+  }, [stopPlayback, showToast, lang]); // eslint-disable-line
+  const exitEnsemble = useCallback(() => {
+    setEnsemble(false);
+    ensembleRef.current = false;
+    if (wakeLockRef.current) {
+      try {
+        wakeLockRef.current.release();
+      } catch {}
+      wakeLockRef.current = null;
+    }
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if (exit) exit.call(document);
+    }
+  }, []);
+  // 합주모드는 악보가 없어도 바로 진입 — 빈 무대에 '악보 불러오기' 버튼이 뜬다
+  const ensFileRef = useRef(null);
+  const toggleEnsemble = () =>
+    ensembleRef.current ? exitEnsemble() : enterEnsemble();
+
+  // 합주모드: 키보드 외 입력도 전부 페이지 넘김으로 변환한다.
+  // - 휠: '마우스 모드' 페달의 스크롤 틱
+  // - 터치 스와이프: 숏폼 리모컨형 페달은 화면 쓸기(터치)를 흉내낸다 — 실측 로그로 확인됨
+  //   스크롤 자체는 touch-action/overflow 잠금 + touchmove 차단으로 원천 봉쇄
+  const wheelLastRef = useRef(0);
+  useEffect(() => {
+    if (!ensemble) return;
+    const onWheel = (e) => {
+      e.preventDefault();
+      const now = Date.now();
+      if (now - wheelLastRef.current < 300) return; // 연사 방지
+      wheelLastRef.current = now;
+      if (e.deltaY > 0 || e.deltaX > 0) jump(1);
+      else if (e.deltaY < 0 || e.deltaX < 0) jump(-1);
+    };
+    const de = document.documentElement;
+    const prevTA = de.style.touchAction;
+    const prevOv = de.style.overflow;
+    de.style.touchAction = "none";
+    de.style.overflow = "hidden";
+    const start = { x: 0, y: 0 };
+    const onTouchStart = (e) => {
+      const t = e.touches[0];
+      if (t) { start.x = t.clientX; start.y = t.clientY; }
+    };
+    const onTouchMove = (e) => e.preventDefault(); // 어떤 터치 스크롤도 허용하지 않음
+    const onTouchEnd = (e) => {
+      const t = e.changedTouches && e.changedTouches[0];
+      if (!t) return;
+      const dx = t.clientX - start.x;
+      const dy = t.clientY - start.y;
+      if (Math.abs(dx) < 40 && Math.abs(dy) < 40) return; // 탭은 좌우 탭존이 처리
+      const now = Date.now();
+      if (now - wheelLastRef.current < 300) return;
+      wheelLastRef.current = now;
+      if (Math.abs(dy) >= Math.abs(dx)) jump(dy < 0 ? 1 : -1); // 위로 쓸면 다음
+      else jump(dx < 0 ? 1 : -1); // 왼쪽으로 쓸면 다음
+    };
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("touchstart", onTouchStart, { capture: true, passive: true });
+    window.addEventListener("touchmove", onTouchMove, { capture: true, passive: false });
+    window.addEventListener("touchend", onTouchEnd, { capture: true, passive: true });
+    return () => {
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchstart", onTouchStart, { capture: true });
+      window.removeEventListener("touchmove", onTouchMove, { capture: true });
+      window.removeEventListener("touchend", onTouchEnd, { capture: true });
+      de.style.touchAction = prevTA;
+      de.style.overflow = prevOv;
+    };
+  }, [ensemble, jump]);
+
   // ---- 타이밍 입력 모드: 3초 세고 재생하며 넘김 시각을 찍는다 ----
   const enterTune = useCallback(() => {
     setTapCursor(0);
@@ -1399,6 +1492,12 @@ export default function App() {
       else text = t("pdfFail", err && err.message ? err.message : err);
       setMsg({ text, kind: "err" });
     }
+  };
+
+  // 합주모드 안 '악보 불러오기': 기존 로딩 경로(에러 처리 포함) 재사용
+  const onEnsFile = async (e) => {
+    await onFile(e);
+    if (pdf.pdfRef.current && !ensembleRef.current) enterEnsemble();
   };
 
   // ↑↓ 볼륨 조절 (+토스트 피드백)
@@ -1470,11 +1569,34 @@ export default function App() {
     closeSheet: () => setSheetOpen(false),
     toggleFs,
     fsSupported,
+    ensemble,
+    exitEnsemble,
   };
   useEffect(() => {
     const onKey = (e) => {
-      if (e.target.tagName === "INPUT") return;
       const h = kbRef.current;
+      if (h.ensemble) {
+        // 합주모드: 페달이 보내는 어떤 입력이든 페이지 넘김으로만 쓴다.
+        // 기기·OS에 따라 e.code가 비거나 keyCode만 오는 경우가 있어 셋 다 본다.
+        const code = e.code || e.key || "";
+        const kc = e.keyCode || 0;
+        const next =
+          ["ArrowRight", "ArrowDown", "PageDown", "Space", " "].includes(code) ||
+          kc === 32 || kc === 34 || kc === 39 || kc === 40;
+        const prev =
+          ["ArrowLeft", "ArrowUp", "PageUp"].includes(code) ||
+          kc === 33 || kc === 37 || kc === 38;
+        e.preventDefault(); // 스크롤 등 브라우저 기본 동작 전부 차단
+        if (next) {
+          if (!e.repeat) h.jump(1);
+        } else if (prev) {
+          if (!e.repeat) h.jump(-1);
+        } else if (code === "Escape") {
+          h.exitEnsemble();
+        }
+        return;
+      }
+      if (e.target.tagName === "INPUT") return;
       if (e.code === "Space") {
         e.preventDefault();
         if (h.overlayOpen) {
@@ -1488,6 +1610,13 @@ export default function App() {
         h.jump(1);
       } else if (e.code === "ArrowLeft") {
         h.jump(-1);
+      } else if (e.code === "PageDown") {
+        // 페이지 터너 페달이 흔히 보내는 키 — 브라우저 스크롤 대신 페이지 넘김
+        e.preventDefault();
+        if (!e.repeat) h.jump(1);
+      } else if (e.code === "PageUp") {
+        e.preventDefault();
+        if (!e.repeat) h.jump(-1);
       } else if (e.code === "ArrowUp") {
         e.preventDefault();
         h.nudgeVolume(5);
@@ -2161,6 +2290,21 @@ export default function App() {
               )}
             </button>
           )}
+          <button
+            className={"btn ghost navEns" + (ensemble ? " on" : "")}
+            onClick={toggleEnsemble}
+            title={t("ensTitle")}
+            aria-pressed={ensemble}
+          >
+            <BookOpen size={13} /> {ensemble ? t("ensExit") : t("ensBtn")}
+          </button>
+          <input
+            ref={ensFileRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            onChange={onEnsFile}
+            hidden
+          />
           <span className="kbhint" ref={kbWrapRef}>
             {t("kbhintLine")}
             <button
@@ -2200,7 +2344,22 @@ export default function App() {
           className={"stage" + (pdf.total === 0 ? " empty" : "")}
           ref={stageRef}
         >
-          {pdf.total === 0 && (
+          {pdf.total === 0 && ensemble && (
+            <>
+              <div className="big">
+                <BookOpen size={44} />
+              </div>
+              <button
+                type="button"
+                className="btn tonal demoBtn"
+                onClick={() => ensFileRef.current && ensFileRef.current.click()}
+              >
+                <FileText size={14} /> {t("ensLoadBtn")}
+              </button>
+              <div className="emptyHint">{t("ensEmptyHint")}</div>
+            </>
+          )}
+          {pdf.total === 0 && !ensemble && (
             guideVisible ? (
               <>
                 {guideCard()}
@@ -2228,6 +2387,7 @@ export default function App() {
             <div className="flipCueNum"></div>
             <div className="flipCueLabel">{t("nextPageCue")} ›</div>
           </div>
+          {ensemble && <div className="ensBadge">{t("ensBadge")}</div>}
           {pdf.total > 0 && (
             <>
               <div
@@ -2281,6 +2441,21 @@ export default function App() {
 
       {(sheetMode || pdf.total > 0 || armed) && !tuneMode && (
         <div className="mobileBar">
+          {ensemble ? (
+            /* 합주모드: 종료(크게) + 다른 악보 불러오기(작게)만 한 줄로 */
+            <>
+              <button className="btn mbPlay ensExitBig" onClick={exitEnsemble}>
+                {t("ensExit")}
+              </button>
+              <button
+                className="btn ghost ensLoadSmall"
+                onClick={() => ensFileRef.current && ensFileRef.current.click()}
+              >
+                {t("ensLoadOther")}
+              </button>
+            </>
+          ) : (
+            <>
           {sheetMode && (
             <button
               className="btn ghost mbSet"
@@ -2320,6 +2495,14 @@ export default function App() {
               </span>
             </>
           )}
+          <button
+            className={"btn ghost mbNav mbEns" + (ensemble ? " on" : "")}
+            onClick={toggleEnsemble}
+            aria-label={ensemble ? t("ensExit") : t("ensBtn")}
+            aria-pressed={ensemble}
+          >
+            <BookOpen size={16} />
+          </button>
           <span className="mbVol">
             <Volume2 size={15} />
             <input
@@ -2332,6 +2515,8 @@ export default function App() {
               aria-label={t("volAria")}
             />
           </span>
+            </>
+          )}
         </div>
       )}
 
